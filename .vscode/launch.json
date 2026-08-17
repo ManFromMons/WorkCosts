@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "WorkCosts",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/WorkCosts/bin/x64/Debug/net9.0-windows10.0.26100.0/win-x64/WorkCosts.exe",
+      "cwd": "${workspaceFolder}/WorkCosts/bin/x64/Debug/net9.0-windows10.0.26100.0/win-x64",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "WorkCosts (no build)",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "${workspaceFolder}/WorkCosts/bin/x64/Debug/net9.0-windows10.0.26100.0/win-x64/WorkCosts.exe",
+      "cwd": "${workspaceFolder}/WorkCosts/bin/x64/Debug/net9.0-windows10.0.26100.0/win-x64",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": "Run all tests",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "dotnet test WorkCosts.slnx --settings .runsettings --nologo",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

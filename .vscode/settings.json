@@ -1,0 +1,4 @@
+{
+  "dotnet.defaultSolution": "WorkCosts.slnx",
+  "dotnet.unitTests.runSettingsPath": "${workspaceFolder}/.runsettings"
+}
