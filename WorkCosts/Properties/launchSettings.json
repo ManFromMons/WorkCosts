@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WorkCosts": {
+      "commandName": "Project",
+      "dotnetRunMessages": true
+    }
+  }
+}

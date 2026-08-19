@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="WorkCosts.Pages.WorkJobDetailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Background="Transparent"
+    mc:Ignorable="d">
+
+    <Grid Padding="24" ColumnSpacing="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="320" />
+        </Grid.ColumnDefinitions>
+
+        <Grid RowSpacing="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="TitleText" Style="{StaticResource TitleLargeTextBlockStyle}" Text="Work Job" />
+                <TextBlock x:Name="SubtitleText" Opacity="0.7" TextWrapping="WrapWholeWords" />
+            </StackPanel>
+
+            <Grid Grid.Row="1" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ComboBox
+                    x:Name="CategoryPicker"
+                    Header="Filter available products by category"
+                    HorizontalAlignment="Stretch"
+                    SelectionChanged="CategoryPicker_SelectionChanged" />
+                <Button
+                    Grid.Column="1"
+                    VerticalAlignment="Bottom"
+                    Click="AddItem_Click"
+                    Content="Add product"
+                    Style="{ThemeResource AppAccentButtonStyle}" />
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <ListView x:Name="LineList" SelectionMode="None">
+                    <ListView.Header>
+                        <Grid Padding="12,8" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock FontWeight="SemiBold" Text="Product" />
+                            <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Category" />
+                            <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Vendor" />
+                            <TextBlock Grid.Column="3" FontWeight="SemiBold" Text="Qty" />
+                            <TextBlock Grid.Column="4" FontWeight="SemiBold" Text="Line" />
+                        </Grid>
+                    </ListView.Header>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Padding="12,8" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="80" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock VerticalAlignment="Center" Text="{Binding Name}" TextWrapping="Wrap" />
+                                <TextBlock Grid.Column="1" VerticalAlignment="Center" Opacity="0.8" Text="{Binding CategoryName}" />
+                                <TextBlock Grid.Column="2" VerticalAlignment="Center" Opacity="0.8" Text="{Binding Vendor}" />
+                                <NumberBox
+                                    Grid.Column="3"
+                                    Minimum="1"
+                                    Maximum="32767"
+                                    SpinButtonPlacementMode="Compact"
+                                    Value="{Binding Quantity, Mode=OneWay}"
+                                    ValueChanged="Quantity_ValueChanged" />
+                                <TextBlock
+                                    Grid.Column="4"
+                                    VerticalAlignment="Center"
+                                    Text="{Binding LineTotalText}" />
+                                <Button
+                                    Grid.Column="5"
+                                    Click="RemoveLine_Click"
+                                    Content="Remove"
+                                    Tag="{Binding}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <TextBlock
+                    x:Name="EmptyLinesText"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Opacity="0.6"
+                    Text="No products yet. Add tools, parts, and consumables for this job."
+                    Visibility="Collapsed" />
+            </Grid>
+        </Grid>
+
+        <!-- Cost / savings panel -->
+        <Border
+            Grid.Column="1"
+            Padding="20"
+            VerticalAlignment="Top"
+            Style="{ThemeResource AppPanelStyle}">
+            <StackPanel Spacing="14">
+                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="Cost summary" />
+
+                <StackPanel Spacing="2">
+                    <TextBlock Opacity="0.7" Text="Duration" />
+                    <TextBlock x:Name="DurationText" Style="{StaticResource BodyStrongTextBlockStyle}" Text="0:00" />
+                </StackPanel>
+
+                <StackPanel Spacing="2">
+                    <TextBlock Opacity="0.7" Text="Garage price" />
+                    <TextBlock x:Name="GaragePriceText" Style="{StaticResource BodyStrongTextBlockStyle}" Text="£0.00" />
+                </StackPanel>
+
+                <StackPanel Spacing="2">
+                    <TextBlock Opacity="0.7" Text="DIY products total" />
+                    <TextBlock x:Name="DiyTotalText" Style="{StaticResource BodyStrongTextBlockStyle}" Text="£0.00" />
+                </StackPanel>
+
+                <Border
+                    Height="1"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                <StackPanel Spacing="2">
+                    <TextBlock Opacity="0.7" Text="Saving vs garage" />
+                    <TextBlock
+                        x:Name="SavingText"
+                        FontSize="28"
+                        FontWeight="SemiBold"
+                        Text="£0.00" />
+                </StackPanel>
+
+                <TextBlock
+                    x:Name="NotesPreview"
+                    Opacity="0.75"
+                    TextWrapping="WrapWholeWords" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>

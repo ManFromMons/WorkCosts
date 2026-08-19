@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="WorkCosts.Controls.MarkdownEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Pivot x:Name="EditorPivot" SelectionChanged="Pivot_SelectionChanged">
+        <PivotItem Header="Write">
+            <Grid RowSpacing="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border
+                    x:Name="ToolbarBorder"
+                    Padding="4,2"
+                    Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1"
+                    PointerPressed="Toolbar_PointerPressed">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                        <Button
+                            x:Name="UndoButton"
+                            Click="Undo_Click"
+                            IsEnabled="False"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Undo (Ctrl+Z)">
+                            <FontIcon FontSize="14" Glyph="&#xE7A7;" />
+                        </Button>
+                        <Button
+                            x:Name="RedoButton"
+                            Click="Redo_Click"
+                            IsEnabled="False"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Redo (Ctrl+Y)">
+                            <FontIcon FontSize="14" Glyph="&#xE7A6;" />
+                        </Button>
+                        <Border
+                            Width="1"
+                            Margin="4,6"
+                            Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+                        <Button
+                            Click="Bold_Click"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Bold (**text**)">
+                            <FontIcon FontSize="14" Glyph="&#xE8DD;" />
+                        </Button>
+                        <Button
+                            Click="Italic_Click"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Italic (*text*)">
+                            <FontIcon FontSize="14" Glyph="&#xE8DB;" />
+                        </Button>
+                        <Button
+                            Click="Heading_Click"
+                            Content="H1"
+                            Style="{ThemeResource ToolbarLabelButtonStyle}"
+                            Tag="1"
+                            ToolTipService.ToolTip="Heading 1" />
+                        <Button
+                            Click="Heading_Click"
+                            Content="H2"
+                            Style="{ThemeResource ToolbarLabelButtonStyle}"
+                            Tag="2"
+                            ToolTipService.ToolTip="Heading 2" />
+                        <Button
+                            Click="Heading_Click"
+                            Content="H3"
+                            Style="{ThemeResource ToolbarLabelButtonStyle}"
+                            Tag="3"
+                            ToolTipService.ToolTip="Heading 3" />
+                        <Button
+                            Click="List_Click"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Bullet list">
+                            <FontIcon FontSize="14" Glyph="&#xEA37;" />
+                        </Button>
+                        <Button
+                            Click="Quote_Click"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Block quote">
+                            <FontIcon FontSize="14" Glyph="&#xE8F2;" />
+                        </Button>
+                        <Button
+                            Click="Link_Click"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Insert link">
+                            <FontIcon FontSize="14" Glyph="&#xE71B;" />
+                        </Button>
+                        <Button
+                            Click="Code_Click"
+                            Style="{ThemeResource ToolbarButtonStyle}"
+                            ToolTipService.ToolTip="Inline code">
+                            <FontIcon FontSize="14" Glyph="&#xE943;" />
+                        </Button>
+                    </StackPanel>
+                </Border>
+
+                <TextBox
+                    x:Name="EditorBox"
+                    Grid.Row="1"
+                    AcceptsReturn="True"
+                    BorderThickness="0"
+                    FontFamily="Consolas"
+                    FontSize="{StaticResource AppInputFontSize}"
+                    GotFocus="EditorBox_GotFocus"
+                    KeyDown="EditorBox_KeyDown"
+                    KeyUp="EditorBox_SelectionActivity"
+                    LosingFocus="EditorBox_LosingFocus"
+                    PlaceholderText="Write Markdown notes for this job…"
+                    PointerReleased="EditorBox_SelectionActivity"
+                    SelectionChanged="EditorBox_SelectionChanged"
+                    TextChanged="EditorBox_TextChanged"
+                    TextChanging="EditorBox_TextChanging"
+                    TextWrapping="Wrap"
+                    ScrollViewer.VerticalScrollBarVisibility="Auto" />
+            </Grid>
+        </PivotItem>
+        <PivotItem Header="Preview">
+            <Grid>
+                <WebView2 x:Name="PreviewView" DefaultBackgroundColor="Transparent" />
+                <TextBlock
+                    x:Name="PreviewFallback"
+                    Padding="8"
+                    TextWrapping="Wrap"
+                    Visibility="Collapsed" />
+            </Grid>
+        </PivotItem>
+    </Pivot>
+</UserControl>

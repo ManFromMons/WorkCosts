@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page
+    x:Class="WorkCosts.Pages.CategoriesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:WorkCosts.Pages"
+    xmlns:controls="using:WorkCosts.Controls"
+    Background="Transparent"
+    Loaded="Page_Loaded"
+    SizeChanged="Page_SizeChanged"
+    mc:Ignorable="d">
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Top panel: categories (content height, capped at 30% of page) -->
+        <Grid x:Name="CategoryPanelHost" RowSpacing="8" VerticalAlignment="Top">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel x:Name="CategoryHeader" Orientation="Horizontal" Spacing="12">
+                <TextBlock FontWeight="SemiBold" Text="Categories" VerticalAlignment="Center" />
+                <Button
+                    Click="AddInline_Click"
+                    ToolTipService.ToolTip="Add category"
+                    Padding="6"
+                    MinWidth="36" Width="36" Height="36"
+                    Style="{StaticResource SubtleButtonStyle}">
+                    <FontIcon Glyph="&#xE710;" FontSize="16" />
+                </Button>
+            </StackPanel>
+
+            <ScrollViewer
+                x:Name="CategoryListScroll"
+                Grid.Row="1"
+                VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{x:Bind CategoryTiles, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <controls:WrapPanel HorizontalSpacing="10" VerticalSpacing="10" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="HorizontalAlignment" Value="Left" />
+                            <Setter Property="VerticalAlignment" Value="Top" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:CategoryTileVM">
+                            <Border
+                                Padding="12,8"
+                                CornerRadius="20"
+                                BorderThickness="2"
+                                BorderBrush="{x:Bind BorderBrush, Mode=OneWay}"
+                                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Top"
+                                PointerEntered="Tile_PointerEntered"
+                                PointerExited="Tile_PointerExited"
+                                PointerPressed="Tile_PointerPressed"
+                                Tag="{x:Bind}">
+                                <Grid ColumnSpacing="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Display mode -->
+                                    <StackPanel Spacing="2" Visibility="{x:Bind DisplayVisible, Mode=OneWay}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock
+                                                MaxWidth="{x:Bind NameMaxWidth, Mode=OneWay}"
+                                                Text="{x:Bind Name, Mode=OneWay}"
+                                                TextTrimming="{x:Bind NameTextTrimming, Mode=OneWay}"
+                                                VerticalAlignment="Center" />
+                                            <TextBlock Text="{x:Bind ItemCountText, Mode=OneWay}" Opacity="0.6" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock
+                                            Text="{x:Bind TotalCostText, Mode=OneWay}"
+                                            Opacity="0.7"
+                                            VerticalAlignment="Center" />
+                                    </StackPanel>
+
+                                    <!-- Edit mode -->
+                                    <StackPanel Orientation="Horizontal" Spacing="4"
+                                                Visibility="{x:Bind EditVisible, Mode=OneWay}">
+                                        <TextBox x:Name="EditBox" Text="{x:Bind EditName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 MinWidth="100" Padding="4,2" />
+                                        <Button Click="ConfirmEdit_Click" Tag="{x:Bind}" Padding="4" MinWidth="30" Width="30" Height="30"
+                                                Style="{StaticResource SubtleButtonStyle}">
+                                            <FontIcon Glyph="&#xE73E;" FontSize="14" />
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!-- Action buttons (revealed on expand) -->
+                                    <StackPanel
+                                        Grid.Column="1"
+                                        Orientation="Horizontal"
+                                        Spacing="2"
+                                        VerticalAlignment="Top"
+                                        Visibility="{x:Bind ActionButtonsVisible, Mode=OneWay}">
+                                        <Button Click="EditTile_Click" Tag="{x:Bind}" Padding="4" MinWidth="28" Width="28" Height="28"
+                                                Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Edit">
+                                            <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                                        </Button>
+                                        <Button Click="DeleteTile_Click" Tag="{x:Bind}" Padding="4" MinWidth="28" Width="28" Height="28"
+                                                Style="{StaticResource SubtleButtonStyle}" ToolTipService.ToolTip="Delete">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Bottom panel: details for selected category -->
+        <Grid Grid.Row="1" Padding="20,8,20,0">
+            <Grid>
+                <TextBlock
+                    x:Name="NoSelectionText"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Opacity="0.6"
+                    Text="Select a category to see its details." />
+
+                <Grid x:Name="DetailPanel" RowSpacing="12" Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Summary row -->
+                    <StackPanel Orientation="Horizontal" Spacing="24">
+                        <TextBlock x:Name="SummaryItemCount" FontWeight="SemiBold" />
+                        <TextBlock x:Name="SummaryTotalCost" FontWeight="SemiBold" />
+                    </StackPanel>
+
+                    <!-- Per-job filters -->
+                    <ItemsRepeater x:Name="JobCardsRepeater" Grid.Row="1">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout Orientation="Horizontal"
+                                               MinItemWidth="200"
+                                               MinColumnSpacing="12"
+                                               MinRowSpacing="12"
+                                               ItemsStretch="Fill" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="local:JobCostCard">
+                                <Border Padding="12" CornerRadius="8"
+                                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1">
+                                    <StackPanel Spacing="4">
+                                        <ToggleSwitch
+                                            HorizontalAlignment="Left"
+                                            Header="{x:Bind JobName}"
+                                            IsOn="{x:Bind IsOn, Mode=TwoWay}"
+                                            OffContent="Off"
+                                            OnContent="On"
+                                            Toggled="JobFilter_Toggled" />
+                                        <TextBlock Text="{x:Bind ItemsText}" Opacity="0.7" />
+                                        <TextBlock Text="{x:Bind CostText}" Opacity="0.7" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+
+                    <!-- Product table -->
+                    <Grid Grid.Row="2" RowSpacing="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Padding="8,12,8,8" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="120" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Grid.Column="1"
+                                FontWeight="SemiBold"
+                                Text="Total"
+                                VerticalAlignment="Center" />
+                            <TextBlock
+                                x:Name="SelectedTotalText"
+                                Grid.Column="2"
+                                HorizontalAlignment="Right"
+                                FontSize="22"
+                                FontWeight="Bold"
+                                VerticalAlignment="Center" />
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{x:Bind ProductRows, Mode=OneWay}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ProductRow">
+                                        <Grid Padding="8,6" ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="120" />
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox
+                                                IsChecked="{x:Bind IsIncluded, Mode=TwoWay}"
+                                                Checked="ProductRow_IncludedChanged"
+                                                Unchecked="ProductRow_IncludedChanged"
+                                                VerticalAlignment="Top" />
+                                            <StackPanel Grid.Column="1" Spacing="2">
+                                                <TextBlock
+                                                    Text="{x:Bind Name, Mode=OneWay}"
+                                                    TextWrapping="WrapWholeWords" />
+                                                <TextBlock
+                                                    Opacity="0.6"
+                                                    Text="{x:Bind JobsText, Mode=OneWay}"
+                                                    TextWrapping="WrapWholeWords" />
+                                            </StackPanel>
+                                            <TextBlock
+                                                Grid.Column="2"
+                                                HorizontalAlignment="Right"
+                                                VerticalAlignment="Top"
+                                                FontSize="22"
+                                                FontWeight="Bold"
+                                                Text="{x:Bind CostText, Mode=OneWay}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

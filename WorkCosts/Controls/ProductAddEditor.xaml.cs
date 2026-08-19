@@ -1,0 +1,579 @@
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using WorkCosts.Helpers;
+using WorkCosts.Models;
+using WorkCosts.Services;
+
+namespace WorkCosts.Controls;
+
+public sealed partial class ProductAddEditor : UserControl
+{
+    private readonly ObservableCollection<JobOption> _jobOptions = [];
+    private readonly ProductImageService _images = new();
+    private byte[]? _imageBlob;
+    private string? _imageContentType;
+    private string _source = string.Empty;
+    private bool _readOnly;
+    private bool _suppressDirty;
+    private Guid _savedCategoryId;
+    private string _savedPricePoint = string.Empty;
+    private bool _savedIsAllJobs;
+    private HashSet<Guid> _savedJobIds = [];
+
+    /// <summary>
+    /// Return false to skip fetching (for example after loading an existing product).
+    /// </summary>
+    public Func<string, Task<bool>>? ShouldContinueLoadingUrlAsync { get; set; }
+
+    public bool IsDirty { get; private set; }
+
+    public event EventHandler? DirtyChanged;
+
+    public ProductAddEditor()
+    {
+        InitializeComponent();
+        JobChecks.ItemsSource = _jobOptions;
+        PricePointRadios.ItemsSource = ProductPricePoints.Options;
+        CategoryRadios.SelectionChanged += (_, _) => RecalcAssignmentsDirty();
+        PricePointRadios.SelectionChanged += (_, _) => RecalcAssignmentsDirty();
+        AllJobsToggle.Toggled += (_, _) => RecalcAssignmentsDirty();
+        BindInputToolTips();
+    }
+
+    private void BindInputToolTips()
+    {
+        InputToolTip.Bind(UrlBox);
+        InputToolTip.Bind(NameBox);
+        InputToolTip.Bind(VendorBox);
+        InputToolTip.Bind(ManufacturerBox);
+        InputToolTip.Bind(MfrBox);
+        InputToolTip.Bind(CostBox);
+        InputToolTip.Bind(EanBox);
+        InputToolTip.Bind(VariationBox);
+        InputToolTip.Bind(OemBox);
+        InputToolTip.Bind(CategoryRadios, () => (CategoryRadios.SelectedItem as Category)?.Name);
+        InputToolTip.Bind(PricePointRadios, () => (PricePointRadios.SelectedItem as PricePointOption)?.Label);
+        InputToolTip.Bind(AllJobsToggle, "All Jobs");
+        RefreshUrlDisplay();
+        UpdateVendorDisplay();
+    }
+
+    public void SetLookups(IReadOnlyList<Category> categories, IReadOnlyList<Job> jobs)
+    {
+        _suppressDirty = true;
+        CategoryRadios.ItemsSource = categories;
+        if (categories.Count > 0 && CategoryRadios.SelectedItem is null)
+        {
+            CategoryRadios.SelectedItem = categories[0];
+        }
+
+        foreach (var job in _jobOptions)
+        {
+            job.PropertyChanged -= JobOption_PropertyChanged;
+        }
+
+        _jobOptions.Clear();
+        foreach (var job in jobs)
+        {
+            var option = new JobOption(job.Id, job.Name);
+            option.PropertyChanged += JobOption_PropertyChanged;
+            _jobOptions.Add(option);
+        }
+
+        NoJobsText.Visibility = jobs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        JobChecks.Visibility = jobs.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        _suppressDirty = false;
+    }
+
+    public void LoadEmpty()
+    {
+        _suppressDirty = true;
+        SetReadOnly(false);
+        ClearPageFields();
+        ResetAssignments();
+        UrlBox.Text = string.Empty;
+        SetUrlEditMode(false);
+        _suppressDirty = false;
+        CaptureAssignmentBaseline();
+    }
+
+    public async Task LoadExistingAsync(Product product, IEnumerable<Guid> selectedJobIds)
+    {
+        _suppressDirty = true;
+        UrlBox.Text = product.Url ?? string.Empty;
+        SetUrlEditMode(false);
+        RefreshUrlDisplay();
+        NameBox.Text = product.Name;
+        _source = product.Source ?? string.Empty;
+        VendorBox.Text = product.Vendor;
+        UpdateVendorDisplay();
+        ManufacturerBox.Text = product.Manufacturer;
+        MfrBox.Text = product.ManufacturerReference;
+        EanBox.Text = product.Ean;
+        VariationBox.Text = product.Variation;
+        OemBox.Text = product.OemEquivalent;
+        CostBox.Value = (double)product.UnitCost;
+
+        if (CategoryRadios.ItemsSource is IEnumerable<Category> source)
+        {
+            var cats = source.ToList();
+            CategoryRadios.SelectedItem = cats.FirstOrDefault(c => c.Id == product.CategoryId)
+                ?? cats.FirstOrDefault();
+        }
+
+        SelectPricePoint(product.PricePoint);
+        AllJobsToggle.IsOn = product.IsAllJobs;
+        var selected = selectedJobIds.ToHashSet();
+        foreach (var job in _jobOptions)
+        {
+            job.IsSelected = selected.Contains(job.Id);
+            job.IsEnabled = true;
+        }
+
+        _imageBlob = product.ImageBlob;
+        _imageContentType = product.ImageContentType;
+        PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
+        SetReadOnly(true);
+        _suppressDirty = false;
+        CaptureAssignmentBaseline();
+    }
+
+    public void MarkClean() => CaptureAssignmentBaseline();
+
+    private void CaptureAssignmentBaseline()
+    {
+        _savedCategoryId = CategoryRadios.SelectedItem is Category category ? category.Id : Guid.Empty;
+        _savedPricePoint = GetSelectedPricePoint();
+        _savedIsAllJobs = AllJobsToggle.IsOn;
+        _savedJobIds = _jobOptions.Where(job => job.IsSelected).Select(job => job.Id).ToHashSet();
+        SetDirty(false);
+    }
+
+    private void JobOption_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(JobOption.IsSelected) or null)
+        {
+            RecalcAssignmentsDirty();
+        }
+    }
+
+    private void RecalcAssignmentsDirty()
+    {
+        if (_suppressDirty)
+        {
+            return;
+        }
+
+        var categoryId = CategoryRadios.SelectedItem is Category category ? category.Id : Guid.Empty;
+        var jobs = _jobOptions.Where(job => job.IsSelected).Select(job => job.Id).ToHashSet();
+        var dirty = categoryId != _savedCategoryId
+            || !string.Equals(_savedPricePoint, GetSelectedPricePoint(), StringComparison.Ordinal)
+            || _savedIsAllJobs != AllJobsToggle.IsOn
+            || !_savedJobIds.SetEquals(jobs);
+        SetDirty(dirty);
+    }
+
+    private void SetDirty(bool dirty)
+    {
+        if (IsDirty == dirty)
+        {
+            return;
+        }
+
+        IsDirty = dirty;
+        DirtyChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void SetReadOnly(bool readOnly)
+    {
+        _readOnly = readOnly;
+        NameBox.IsReadOnly = readOnly;
+        VendorBox.IsReadOnly = readOnly;
+        ManufacturerBox.IsReadOnly = readOnly;
+        MfrBox.IsReadOnly = readOnly;
+        EanBox.IsReadOnly = readOnly;
+        VariationBox.IsReadOnly = readOnly;
+        OemBox.IsReadOnly = readOnly;
+        CostBox.IsEnabled = !readOnly;
+        FetchImagesButton.IsEnabled = !readOnly;
+        ClearImageButton.IsEnabled = !readOnly;
+        UrlDisplayButton.IsEnabled = !readOnly;
+        UrlBox.IsReadOnly = readOnly;
+        CategoryRadios.IsEnabled = true;
+        PricePointRadios.IsEnabled = true;
+        AllJobsToggle.IsEnabled = true;
+        JobChecks.IsEnabled = true;
+        foreach (var job in _jobOptions)
+        {
+            job.IsEnabled = true;
+        }
+
+        if (readOnly)
+        {
+            SetUrlEditMode(false);
+        }
+    }
+
+    /// <summary>Starts the details stage with a URL from the entry panel and loads the page.</summary>
+    public async Task BeginWithUrlAsync(string url)
+    {
+        SetReadOnly(false);
+        UrlBox.Text = url.Trim();
+        SetUrlEditMode(false);
+        RefreshUrlDisplay();
+        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: false);
+    }
+
+    public bool TryRead(out ProductEditorValues values, out string? error)
+    {
+        values = default!;
+        var name = NameBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            error = "Name is required.";
+            return false;
+        }
+
+        if (CategoryRadios.SelectedItem is not Category category)
+        {
+            error = "Category is required.";
+            return false;
+        }
+
+        if (double.IsNaN(CostBox.Value) || CostBox.Value < 0)
+        {
+            error = "Unit cost must be zero or greater.";
+            return false;
+        }
+
+        var isAll = AllJobsToggle.IsOn;
+        var chosenJobs = _jobOptions.Where(j => j.IsSelected).Select(j => j.Id).ToList();
+        if (!isAll && chosenJobs.Count == 0)
+        {
+            error = "Select at least one job, or enable 'Available for all jobs'.";
+            return false;
+        }
+
+        values = new ProductEditorValues(
+            name,
+            VendorBox.Text.Trim(),
+            _source.Trim(),
+            ManufacturerBox.Text.Trim(),
+            MfrBox.Text.Trim(),
+            EanBox.Text.Trim(),
+            VariationBox.Text.Trim(),
+            OemBox.Text.Trim(),
+            UrlBox.Text.Trim(),
+            (decimal)CostBox.Value,
+            category.Id,
+            category.Name,
+            isAll,
+            GetSelectedPricePoint(),
+            chosenJobs,
+            _imageBlob,
+            _imageContentType);
+        error = null;
+        return true;
+    }
+
+    private void ResetAssignments()
+    {
+        if (CategoryRadios.Items.Count > 0)
+        {
+            CategoryRadios.SelectedIndex = 0;
+        }
+
+        AllJobsToggle.IsOn = false;
+        SelectPricePoint(null);
+        foreach (var job in _jobOptions)
+        {
+            job.IsSelected = false;
+            job.IsEnabled = true;
+        }
+    }
+
+    private void ClearPageFields()
+    {
+        NameBox.Text = string.Empty;
+        _source = string.Empty;
+        VendorBox.Text = string.Empty;
+        UpdateVendorDisplay();
+        ManufacturerBox.Text = string.Empty;
+        MfrBox.Text = string.Empty;
+        EanBox.Text = string.Empty;
+        VariationBox.Text = string.Empty;
+        OemBox.Text = string.Empty;
+        CostBox.Value = 0;
+        _imageBlob = null;
+        _imageContentType = null;
+        PreviewImage.Source = null;
+    }
+
+    private void UrlDisplay_Click(object sender, RoutedEventArgs e)
+    {
+        if (_readOnly)
+        {
+            return;
+        }
+
+        SetUrlEditMode(true);
+    }
+
+    private void UrlBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshUrlDisplay();
+
+    private async void UrlAccept_Click(object sender, RoutedEventArgs e)
+    {
+        SetUrlEditMode(false);
+        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: true);
+    }
+
+    private async void FetchImages_Click(object sender, RoutedEventArgs e) =>
+        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: true);
+
+    private async Task LoadFromUrlAsync(bool resetAssignmentsIfUncached, bool checkExisting)
+    {
+        if (_readOnly)
+        {
+            return;
+        }
+
+        var url = UrlBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            SetUrlEditMode(true);
+            await DialogHelper.ShowMessageAsync(XamlRoot, "URL required",
+                "Enter a product page URL, then Accept to load details.");
+            return;
+        }
+
+        if (checkExisting && ShouldContinueLoadingUrlAsync is not null
+            && !await ShouldContinueLoadingUrlAsync(url))
+        {
+            return;
+        }
+
+        var cached = _images.IsCached(url);
+        if (resetAssignmentsIfUncached && !cached)
+        {
+            ClearPageFields();
+            ResetAssignments();
+        }
+
+        SetFetchBusy(true);
+        SetFetchStatus("Loading product page…");
+        try
+        {
+            var page = await ProductImagePicker.FetchPageAsync(
+                XamlRoot,
+                url,
+                SetFetchStatus);
+            ApplyPageMetadata(page.Metadata);
+
+            if (page.Images.Count > 0)
+            {
+                var chosen = page.Images[0];
+                _imageBlob = chosen.Bytes;
+                _imageContentType = chosen.ContentType;
+                PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
+                SetFetchStatus(page.Images.Count == 1
+                    ? null
+                    : $"Loaded {page.Images.Count} images; using the first. Fetch again to pick another.");
+            }
+            else
+            {
+                SetFetchStatus("Page loaded, but no product images were captured.");
+            }
+
+            var inferredSource = ProductVendorHelper.InferSourceFromUrl(url);
+            if (!string.IsNullOrWhiteSpace(inferredSource))
+            {
+                _source = inferredSource;
+                UpdateVendorDisplay();
+            }
+
+            RefreshUrlDisplay();
+        }
+        catch (Exception ex)
+        {
+            SetFetchStatus(ex.Message);
+        }
+        finally
+        {
+            SetFetchBusy(false);
+        }
+    }
+
+    private void ApplyPageMetadata(ProductPageMetadata metadata)
+    {
+        var values = ProductPageClientValues.From(metadata);
+        if (values.Name is not null)
+        {
+            NameBox.Text = values.Name;
+        }
+
+        if (values.Manufacturer is not null)
+        {
+            ManufacturerBox.Text = values.Manufacturer;
+        }
+
+        if (values.ManufacturerReference is not null)
+        {
+            MfrBox.Text = values.ManufacturerReference;
+        }
+
+        if (values.Vendor is not null)
+        {
+            VendorBox.Text = values.Vendor;
+        }
+
+        if (values.Source is not null)
+        {
+            _source = values.Source;
+        }
+
+        UpdateVendorDisplay();
+
+        if (values.Ean is not null)
+        {
+            EanBox.Text = values.Ean;
+        }
+
+        if (values.Variation is not null)
+        {
+            VariationBox.Text = values.Variation;
+        }
+
+        if (values.OemEquivalent is not null)
+        {
+            OemBox.Text = values.OemEquivalent;
+        }
+
+        if (values.UnitPrice is decimal price)
+        {
+            CostBox.Value = (double)price;
+        }
+    }
+
+    private void SetFetchBusy(bool busy)
+    {
+        FetchImagesButton.IsEnabled = !busy && !_readOnly;
+        FetchImagesButton.Opacity = busy ? 0.4 : 1;
+        FetchImagesIcon.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
+        FetchImagesRing.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        FetchImagesRing.IsActive = busy;
+        ToolTipService.SetToolTip(FetchImagesButton, busy ? "Loading…" : "Load images from product URL");
+    }
+
+    private void SetFetchStatus(string? message)
+    {
+        var text = message?.Trim() ?? string.Empty;
+        FetchStatusText.Text = text;
+        FetchStatusText.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void VendorBox_TextChanged(object sender, TextChangedEventArgs e) => UpdateVendorDisplay();
+
+    private void UpdateVendorDisplay()
+    {
+        var hasSource = !string.IsNullOrWhiteSpace(_source);
+        VendorBreadcrumb.Visibility = hasSource ? Visibility.Visible : Visibility.Collapsed;
+        VendorBox.Visibility = hasSource ? Visibility.Collapsed : Visibility.Visible;
+        VendorBreadcrumb.Text = ProductVendorHelper.FormatBreadcrumb(_source, VendorBox.Text);
+        InputToolTip.Set(VendorBreadcrumb, "Vendor", VendorBreadcrumb.Text);
+        InputToolTip.Set(VendorBox, "Vendor", VendorBox.Text);
+    }
+
+    private void ClearImage_Click(object sender, RoutedEventArgs e)
+    {
+        if (_readOnly)
+        {
+            return;
+        }
+
+        _imageBlob = null;
+        _imageContentType = null;
+        PreviewImage.Source = null;
+    }
+
+    private void SetUrlEditMode(bool editing)
+    {
+        UrlEditPanel.Visibility = editing ? Visibility.Visible : Visibility.Collapsed;
+        UrlDisplayButton.Visibility = editing ? Visibility.Collapsed : Visibility.Visible;
+        RefreshUrlDisplay();
+        if (editing)
+        {
+            UrlBox.Focus(FocusState.Programmatic);
+        }
+    }
+
+    private void RefreshUrlDisplay()
+    {
+        var url = UrlBox.Text.Trim();
+        UrlDisplayButton.Content = string.IsNullOrWhiteSpace(url) ? "Set product URL…" : url;
+        InputToolTip.Set(UrlDisplayButton, UrlBox.PlaceholderText ?? "https://...", url);
+    }
+
+    private void SelectPricePoint(string? value)
+    {
+        PricePointRadios.SelectedItem = ProductPricePoints.Find(value);
+    }
+
+    private string GetSelectedPricePoint() =>
+        PricePointRadios.SelectedItem is PricePointOption option ? option.Value : string.Empty;
+
+    private sealed class JobOption : INotifyPropertyChanged
+    {
+        private bool _isSelected;
+        private bool _isEnabled = true;
+
+        public JobOption(Guid id, string name)
+        {
+            Id = id;
+            Name = name;
+        }
+
+        public Guid Id { get; }
+        public string Name { get; }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (_isSelected == value)
+                {
+                    return;
+                }
+
+                _isSelected = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(ToolTipText));
+            }
+        }
+
+        public string ToolTipText => InputToolTip.Format(Name, IsSelected ? "Yes" : "No");
+
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set
+            {
+                if (_isEnabled == value)
+                {
+                    return;
+                }
+
+                _isEnabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private void OnPropertyChanged([CallerMemberName] string? name = null) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+}

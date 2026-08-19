@@ -51,5 +51,12 @@ _ReSharper*/
 
 *_wpftmp.csproj
 
+# Local database files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
 # WebView2 / local runtime caches under output
 **/EBWebView/

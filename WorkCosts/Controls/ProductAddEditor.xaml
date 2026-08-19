@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="WorkCosts.Controls.ProductAddEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid ColumnSpacing="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Left: fields captured from the product URL -->
+        <ScrollViewer
+            VerticalAlignment="Stretch"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            Padding="0,0,8,8">
+            <StackPanel Spacing="12" Padding="0,0,0,8">
+                <Grid ColumnSpacing="12" RowSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock FontWeight="SemiBold" Text="Product image" />
+                        <TextBlock
+                            x:Name="FetchStatusText"
+                            Opacity="0.7"
+                            TextWrapping="WrapWholeWords"
+                            Visibility="Collapsed" />
+                        <Grid HorizontalAlignment="Left">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border
+                                Width="118"
+                                Height="118"
+                                Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                CornerRadius="6">
+                                <Image x:Name="PreviewImage" Stretch="UniformToFill" />
+                            </Border>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="5,0,0,0"
+                                VerticalAlignment="Top"
+                                Orientation="Vertical"
+                                Spacing="2">
+                                <Grid Width="36" Height="36">
+                                    <Button
+                                        x:Name="FetchImagesButton"
+                                        Click="FetchImages_Click"
+                                        Style="{ThemeResource BorderlessIconButtonStyle}"
+                                        ToolTipService.ToolTip="Load images from product URL">
+                                        <FontIcon x:Name="FetchImagesIcon" FontSize="16" Glyph="&#xE8B9;" />
+                                    </Button>
+                                    <ProgressRing
+                                        x:Name="FetchImagesRing"
+                                        Width="20"
+                                        Height="20"
+                                        IsActive="False"
+                                        Visibility="Collapsed" />
+                                </Grid>
+                                <Button
+                                    x:Name="ClearImageButton"
+                                    Click="ClearImage_Click"
+                                    Style="{ThemeResource BorderlessIconButtonStyle}"
+                                    ToolTipService.ToolTip="Clear image">
+                                    <FontIcon FontSize="16" Glyph="&#xE74D;" />
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <Grid Grid.Column="1" VerticalAlignment="Top">
+                        <Button
+                            x:Name="UrlDisplayButton"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Click="UrlDisplay_Click"
+                            Content="Set product URL…"
+                            Style="{StaticResource SubtleButtonStyle}" />
+                        <Grid
+                            x:Name="UrlEditPanel"
+                            ColumnSpacing="8"
+                            Visibility="Collapsed">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox
+                                x:Name="UrlBox"
+                                PlaceholderText="https://..."
+                                TextChanged="UrlBox_TextChanged" />
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Bottom"
+                                Click="UrlAccept_Click"
+                                Content="Accept"
+                                Style="{ThemeResource AppAccentButtonStyle}" />
+                        </Grid>
+                    </Grid>
+
+                    <Grid Grid.Column="1" Grid.Row="1" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox
+                            x:Name="NameBox"
+                            Header="Name"
+                            PlaceholderText="Product name" />
+                        <StackPanel Grid.Column="1" Spacing="4">
+                            <TextBlock FontWeight="SemiBold" Style="{ThemeResource AppTextBlockStyle}" Text="Vendor" />
+                            <TextBlock
+                                x:Name="VendorBreadcrumb"
+                                Style="{ThemeResource AppTextBlockStyle}"
+                                Text="—"
+                                TextWrapping="WrapWholeWords" />
+                            <TextBox
+                                x:Name="VendorBox"
+                                PlaceholderText="Vendor"
+                                TextChanged="VendorBox_TextChanged"
+                                Visibility="Collapsed" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox
+                        x:Name="ManufacturerBox"
+                        PlaceholderText="Manufacturer" />
+                    <TextBox
+                        x:Name="MfrBox"
+                        Grid.Column="1"
+                        PlaceholderText="Manufacturer reference" />
+                    <NumberBox
+                        x:Name="CostBox"
+                        Grid.Column="2"
+                        Width="88"
+                        PlaceholderText="Unit cost"
+                        Minimum="0"
+                        SpinButtonPlacementMode="Compact" />
+                </Grid>
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="EanBox" PlaceholderText="EAN / GTIN" />
+                    <TextBox
+                        x:Name="VariationBox"
+                        Grid.Column="1"
+                        PlaceholderText="Variation" />
+                </Grid>
+                <TextBox
+                    x:Name="OemBox"
+                    PlaceholderText="OEM equivalent"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Right: category / jobs (not filled from the page) -->
+        <ScrollViewer
+            Grid.Column="1"
+            VerticalAlignment="Stretch"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto"
+            Padding="0,0,8,8">
+            <StackPanel Spacing="12" Padding="0,0,0,8">
+                <RadioButtons
+                    x:Name="CategoryRadios"
+                    Header="Usage category"
+                    MaxColumns="3">
+                    <RadioButtons.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock
+                                Text="{Binding Name}"
+                                ToolTipService.ToolTip="{Binding Name, Converter={StaticResource PromptValue}, ConverterParameter=Usage category}" />
+                        </DataTemplate>
+                    </RadioButtons.ItemTemplate>
+                </RadioButtons>
+                <RadioButtons
+                    x:Name="PricePointRadios"
+                    Header="Price point"
+                    MaxColumns="3">
+                    <RadioButtons.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock
+                                Text="{Binding Label}"
+                                ToolTipService.ToolTip="{Binding Label, Converter={StaticResource PromptValue}, ConverterParameter=Price point}" />
+                        </DataTemplate>
+                    </RadioButtons.ItemTemplate>
+                </RadioButtons>
+                <ToggleSwitch
+                    x:Name="AllJobsToggle"
+                    HorizontalAlignment="Left"
+                    OffContent="!All jobs"
+                    OnContent="All Jobs" />
+                <TextBlock FontWeight="SemiBold" Text="Assign to specific jobs" />
+                <ItemsControl x:Name="JobChecks" HorizontalAlignment="Stretch">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VariableSizedWrapGrid
+                                Orientation="Horizontal"
+                                HorizontalChildrenAlignment="Left"
+                                VerticalChildrenAlignment="Top" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox
+                                Margin="0,0,12,8"
+                                Content="{Binding Name}"
+                                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                IsEnabled="{Binding IsEnabled, Mode=OneWay}"
+                                ToolTipService.ToolTip="{Binding ToolTipText}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock
+                    x:Name="NoJobsText"
+                    Opacity="0.7"
+                    Text="No jobs defined yet."
+                    Visibility="Collapsed" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
