@@ -27,7 +27,7 @@ Delete: confirm Yes/No, then `ProductCommands.DeleteAsync`.
 1. URL stage (coerce `https://` if missing). Enter/Add opens **details immediately**, then loads the page **in the sheet** (browser engine not in a nested dialog).  
 2. Status text while fetching. Auto-use first image when possible.  
 3. If URL already exists: **in-sheet banner** Overwrite / Keep existing (read-only) / Cancel — not a second modal.  
-4. Planned: **Paste HTML** ([paste-html.md](../parsing/paste-html.md)).  
+4. Planned: **Paste HTML** ([docs/features/paste-html.md](../features/paste-html.md)).  
 5. Esc closes; do not steal Enter from confirmations.
 
 Top-right Products **Add** while the sheet is open **continues** from the current URL (does not wipe the form).

@@ -1,5 +1,7 @@
 # Paste HTML (planned)
 
+Source of truth: [docs/features/paste-html.md](../features/paste-html.md). This page is background only.
+
 **Product feature — implement on Windows, then GNOME and iPad.** Live scrape stays; this is the fallback.
 
 ## Why
