@@ -15,17 +15,40 @@ Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour r
 
 ## Planning a feature
 
-Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent.
+Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent. Specs are written on **`Planning`**, then landed with `merge-planning` (not a GitHub feature PR).
 
 ## Implementing a feature
 
-Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. Commit **buildable code only** on the working branch.
+Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
 
 The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land edits with skill `update-to-review` (`scripts/Update-ToReviewOnMain.ps1`). Do not commit that file on `Planning` or a feature branch. Resume when answers are ticked on `main`.
 
-## Landing Planning on main
+## Branches and pull requests
 
-Rebase + squash + fast-forward only. Never `git merge Planning` onto `main` (no merge commits). Never force-push `main`. Use skill `merge-planning` and run:
+Long-lived branches: **`main`** (shippable app) and **`Planning`** (specs and agent docs). Never force-push `main`.
+
+### Feature branches (agent implementation)
+
+Name:
+
+`feature/<feature_code>-<Title>`
+
+- **`<feature_code>`** is the spec id: the kebab name of `docs/features/<feature_code>.md` (`paste-html`, `zip-export-import`).
+- **`<Title>`** is a short human title for the feature. Use hyphens instead of spaces (git-safe). Do not use slashes in the title.
+
+Examples: `feature/paste-html-Paste-HTML`, `feature/zip-export-import-Zip-export-and-import`.
+
+Create the branch from current `origin/main`. Do not implement on `Planning` or commit product WIP on `main`.
+
+### Landing agent work
+
+All **implementation** lands on `main` as a **squash pull request**. Open the PR against `main` (GitHub). The human tests and reviews there, then squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks.
+
+Do not use merge commits onto `main`. After a squash merge, delete the feature branch.
+
+### Landing Planning
+
+Specs and agent-doc changes on `Planning` are not a feature PR. Rebase + squash + fast-forward only. Never `git merge Planning` onto `main`. Never force-push `main`. Use skill `merge-planning`:
 
 ```powershell
 powershell -File scripts/Merge-PlanningToMain.ps1

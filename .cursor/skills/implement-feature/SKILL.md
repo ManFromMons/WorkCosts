@@ -32,7 +32,9 @@ If that path does not exist on `origin/main` yet, the inbox is empty. If the fea
 
 ## Code units
 
-Work on a branch. Each commit must be **code that builds** (`dotnet build WorkCosts.slnx`). Include the tests the spec names when you claim a unit is done.
+Branch from up-to-date `origin/main` as `feature/<feature_code>-<Title>` (see `AGENTS.md`). Do not implement on `Planning` or `main`. Each commit must be **code that builds** (`dotnet build WorkCosts.slnx`). Include the tests the spec names when you claim a unit is done.
+
+Push the feature branch and open a **squash PR to `main`**. Do not merge it; the human reviews and tests on GitHub.
 
 - Do not mix inbox edits into code commits.
 - Do not `git add docs/features/to-review.md` on this branch.
@@ -75,6 +77,6 @@ When folding answers, do not invent extra spec sections. Update **Implementation
 
 - Implement during planning, or plan during implementation (no new feature file from this skill).
 - Host questions or status only in chat, or commit the inbox off `main`.
-- Merge Planning to main, pack MSIX, or drive-by refactor unrelated files.
-- Force-push, or mark the feature **Status** `done` without a human scan.
+- Merge Planning to main, squash-merge the feature PR, pack MSIX, or drive-by refactor unrelated files.
+- Force-push `main`, or mark the feature **Status** `done` without a human scan.
 - Duplicate existing helpers; do not invent a DI container unless the spec requires it.
