@@ -40,8 +40,18 @@ BundleArtifacts/
 
 # Publish output
 publish/
-*.pubxml
 PublishScripts/
+
+# Inno Setup installer output
+WorkCosts.Installer/Output/
+
+# Keep RID publish profiles in source control (do not put passwords in them).
+*.pubxml.user
+
+# Sideload / packaging certificates (never commit private keys)
+*.pfx
+*.pvk
+*.cer
 
 # Code analysis and tooling
 _ReSharper*/

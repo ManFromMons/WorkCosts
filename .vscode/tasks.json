@@ -50,6 +50,15 @@
         "isDefault": true
       },
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "pack-msix",
+      "type": "shell",
+      "command": "powershell -File WorkCosts.Package/Pack-Msix.ps1 -Runtime x64 -Version 1.0.0.0",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
     }
   ]
 }

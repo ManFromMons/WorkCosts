@@ -59,9 +59,10 @@
     <ProjectReference Include="..\WorkCosts.Core\WorkCosts.Core.csproj" />
   </ItemGroup>
 
-  <!-- Trim/R2R only for Release publish so Debug F5 does not churn the restore graph. -->
+  <!-- R2R only for Release publish so Debug F5 does not churn the restore graph.
+       Do not trim: WinUI, EF Core, and the HTML parsers rely on reflection. -->
   <PropertyGroup Condition="'$(Configuration)' == 'Release' and '$(PublishProtocol)' != ''">
     <PublishReadyToRun>true</PublishReadyToRun>
-    <PublishTrimmed>true</PublishTrimmed>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
 </Project>
