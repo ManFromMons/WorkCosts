@@ -13,6 +13,10 @@ You are working on **Will I DIY?** (repo folder names still use WorkCosts). It i
 
 Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour reference. GNOME and iPad may use native widgets and spacing, but they keep the same information architecture, workflows, and data.
 
+## Planning a feature
+
+Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent.
+
 ## Solutions and projects
 
 | Project | Role |
