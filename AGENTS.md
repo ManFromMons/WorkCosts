@@ -17,6 +17,17 @@ Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour r
 
 Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent.
 
+## Landing Planning on main
+
+Rebase + squash + fast-forward only. Never `git merge Planning` onto `main` (no merge commits). Never force-push `main`. Use skill `merge-planning` and run:
+
+```powershell
+powershell -File scripts/Merge-PlanningToMain.ps1
+powershell -File scripts/Merge-PlanningToMain.ps1 -Message "Add paste-HTML feature spec."
+```
+
+That updates `main` locally, then pushes `main` and `Planning`. Planning may be force-pushed with `--force-with-lease` because rebase/squash rewrites it.
+
 ## Solutions and projects
 
 | Project | Role |

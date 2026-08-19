@@ -59,6 +59,23 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "merge-planning",
+      "type": "shell",
+      "command": "powershell -File scripts/Merge-PlanningToMain.ps1 -Message '${input:planningSquashMessage}'",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "planningSquashMessage",
+      "type": "promptString",
+      "description": "Squash commit message for Planning (used when more than one commit)",
+      "default": "Apply Planning branch."
     }
   ]
 }
