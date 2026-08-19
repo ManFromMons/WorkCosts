@@ -2,6 +2,7 @@
 
 - **Id:** `docs/features/<kebab-case-name>.md`
 - **Status:** draft | ready-for-agent | done
+  (`blocked` / `in-progress` / `resume` / `scan` are **not** feature Status; they belong in `docs/features/to-review.md` on **main**. )
 - **Windows:** required first unless stated
 - **Related screens:** `docs/screens/…`
 - **Related code:** types you inspected
@@ -54,3 +55,5 @@ Each item: *Assumption:* … → **Question:** …?
 
 1. …
 2. Do not: …
+
+Coder deviations (existing type instead of a new one) are extra numbered notes here. Do not add new spec sections for work state; that lives in `docs/features/to-review.md` on `main`.

@@ -17,6 +17,12 @@ Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour r
 
 Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent.
 
+## Implementing a feature
+
+Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. Commit **buildable code only** on the working branch.
+
+The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land edits with skill `update-to-review` (`scripts/Update-ToReviewOnMain.ps1`). Do not commit that file on `Planning` or a feature branch. Resume when answers are ticked on `main`.
+
 ## Landing Planning on main
 
 Rebase + squash + fast-forward only. Never `git merge Planning` onto `main` (no merge commits). Never force-push `main`. Use skill `merge-planning` and run:
@@ -26,7 +32,7 @@ powershell -File scripts/Merge-PlanningToMain.ps1
 powershell -File scripts/Merge-PlanningToMain.ps1 -Message "Add paste-HTML feature spec."
 ```
 
-That updates `main` locally, then pushes `main` and `Planning`. Planning may be force-pushed with `--force-with-lease` because rebase/squash rewrites it.
+That updates `main` locally, then pushes `main` and `Planning`. Planning may be force-pushed with `--force-with-lease` because rebase/squash rewrites it. The merge script keeps `docs/features/to-review.md` from `main` if it already exists.
 
 ## Solutions and projects
 

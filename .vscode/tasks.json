@@ -68,6 +68,15 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "update-to-review",
+      "type": "shell",
+      "command": "powershell -File scripts/Update-ToReviewOnMain.ps1 -Message '${input:toReviewMessage}'",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -76,6 +85,12 @@
       "type": "promptString",
       "description": "Squash commit message for Planning (used when more than one commit)",
       "default": "Apply Planning branch."
+    },
+    {
+      "id": "toReviewMessage",
+      "type": "promptString",
+      "description": "Commit message for docs/features/to-review.md on main",
+      "default": "Update docs/features/to-review.md."
     }
   ]
 }

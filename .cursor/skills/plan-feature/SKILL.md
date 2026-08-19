@@ -9,7 +9,7 @@ Planning produces a **feature**, not a chat summary. The source of truth is one 
 
 `docs/features/<kebab-case-name>.md`
 
-Copy the structure from [template.md](template.md). Do not implement the feature until the user asks and that file is complete enough for an unsupervised agent.
+Copy the structure from [template.md](template.md). Do not implement the feature until the user asks and that file is complete enough for an unsupervised agent. Implementation is skill `implement-feature`, not this skill.
 
 ## Workflow
 
