@@ -1,4 +1,6 @@
 <Solution>
+  <Folder Name="/WillIDIY/" />
+  <Project Path="WorkCosts.Core/WorkCosts.Core.csproj" />
   <Project Path="WorkCosts.Parsing/WorkCosts.Parsing.csproj" />
   <Project Path="WorkCosts.Tests/WorkCosts.Tests.csproj" />
   <Project Path="WorkCosts/WorkCosts.csproj" />

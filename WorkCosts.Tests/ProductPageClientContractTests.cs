@@ -40,6 +40,7 @@ public class ProductPageClientContractTests
         Assert.Equal("5012345678900", client.Ean);
         Assert.Equal("10L", client.Variation);
         Assert.Equal("OEM X", client.OemEquivalent);
+        Assert.Equal("Amazon", client.Source);
     }
 
     [Fact]
@@ -113,6 +114,7 @@ public class ProductPageClientContractTests
             { nameof(ProductPageClientValues.Ean), Only(ean: "5012345678900"), "5012345678900" },
             { nameof(ProductPageClientValues.Variation), Only(variation: "6L"), "6L" },
             { nameof(ProductPageClientValues.OemEquivalent), Only(oem: "Only OEM"), "Only OEM" },
+            { nameof(ProductPageClientValues.Source), Only(source: "Only Source"), "Only Source" },
         };
 
     [Fact]
@@ -143,7 +145,8 @@ public class ProductPageClientContractTests
             "Vendor X",
             "5012345678900",
             "10L",
-            "OEM X");
+            "OEM X",
+            "Amazon");
 
     private static ProductPageMetadata Only(
         string? name = null,
@@ -153,8 +156,9 @@ public class ProductPageClientContractTests
         string? vendor = null,
         string? ean = null,
         string? variation = null,
-        string? oem = null) =>
-        new(name, manufacturer, mfrRef, price, vendor, ean, variation, oem);
+        string? oem = null,
+        string? source = null) =>
+        new(name, manufacturer, mfrRef, price, vendor, ean, variation, oem, source);
 
     private static void AssertAllOtherFieldsNull(ProductPageClientValues client, string except)
     {

@@ -3,6 +3,7 @@ using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using System.Globalization;
 using System.Net;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace WorkCosts.Services;
@@ -42,6 +43,11 @@ public static class ProductPageMetadataParser
             return ParseAmazon(document);
         }
 
+        if (IsAutodocHost(pageUri.Host))
+        {
+            return ParseAutodoc(document);
+        }
+
         return ParseGeneric(document, pageUri);
     }
 
@@ -49,9 +55,12 @@ public static class ProductPageMetadataParser
         host.Contains("amazon.", StringComparison.OrdinalIgnoreCase)
         || host.Contains("amzn.", StringComparison.OrdinalIgnoreCase);
 
+    public static bool IsAutodocHost(string host) =>
+        host.Contains("autodoc.", StringComparison.OrdinalIgnoreCase);
+
     private static ProductPageMetadata ParseAmazon(IDocument document)
     {
-        var name = StripAmazonTitleSuffix(
+        var name = StripTitleAfterPipe(
             Clean(document.QuerySelector("#productTitle")?.TextContent)
             ?? Clean(document.QuerySelector("#title")?.TextContent)
             ?? MetaContent(document, "og:title"));
@@ -97,11 +106,100 @@ public static class ProductPageMetadataParser
         return new ProductPageMetadata(name, manufacturer, null, unitPrice, Source: source);
     }
 
+    private static ProductPageMetadata ParseAutodoc(IDocument document)
+    {
+        if (IsAutodocListingPage(document))
+        {
+            return ParseAutodocListing(document);
+        }
+
+        var json = ReadAutodocJsonLd(document);
+
+        var name = StripTitleAfterPipe(
+            json?.Name
+            ?? AutodocHeading(document)
+            ?? MetaContent(document, "og:title"));
+
+        var manufacturer =
+            json?.Brand
+            ?? json?.Manufacturer
+            ?? AutodocDescriptionValue(document, "Manufacturer");
+
+        var mfrRef =
+            json?.Mpn
+            ?? json?.Sku
+            ?? AutodocLabeledArticle(document, "Article number")
+            ?? AutodocLabeledArticle(document, "Item number")
+            ?? AutodocDescriptionValue(document, "Item number")
+            ?? AutodocDescriptionValue(document, "Article number");
+
+        var unitPrice = json?.Price
+            ?? ParsePriceText(document.QuerySelector("[data-product-page][data-price]")?.GetAttribute("data-price"))
+            ?? ParsePriceText(Clean(document.QuerySelector(".product-block__price-new-wrap")?.TextContent))
+            ?? ParsePriceText(AutodocDescriptionValue(document, "Our price"));
+
+        var vendor = AutodocVendor(document) ?? AutodocSellerName(json?.Seller);
+
+        var ean = NormalizeGtin(
+            json?.Ean
+            ?? AutodocLabeledArticle(document, "EAN")
+            ?? AutodocDescriptionValue(document, "EAN number")
+            ?? AutodocDescriptionValue(document, "EAN"));
+
+        var oem = json?.Oem
+            ?? AutodocDescriptionValue(document, "OE numbers")
+            ?? AutodocDescriptionValue(document, "OEM numbers")
+            ?? AutodocDescriptionValue(document, "OEM Equivalent Part Number")
+            ?? AutodocOemList(document);
+
+        return new ProductPageMetadata(name, manufacturer, mfrRef, unitPrice, vendor, ean, null, oem, "Autodoc");
+    }
+
+    private static bool IsAutodocListingPage(IDocument document) =>
+        document.QuerySelector(".listing-page, h1.listing-title__name") is not null
+        && document.QuerySelector("[data-product-page], h1.product-block__title") is null;
+
+    private static ProductPageMetadata ParseAutodocListing(IDocument document)
+    {
+        var name = StripTitleAfterPipe(
+            Clean(document.QuerySelector("h1.listing-title__name")?.TextContent)
+            ?? AutodocHeading(document)
+            ?? MetaContent(document, "og:title"));
+
+        var variation = AutodocSelectedFilters(document);
+
+        return new ProductPageMetadata(
+            name,
+            Manufacturer: null,
+            ManufacturerReference: null,
+            UnitPrice: null,
+            Vendor: null,
+            Ean: null,
+            Variation: variation,
+            OemEquivalent: null,
+            Source: "Autodoc");
+    }
+
+    private static string? AutodocSelectedFilters(IDocument document)
+    {
+        var selected = document.QuerySelectorAll(".selected-filter__title")
+            .Select(n => Clean(n.TextContent))
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return selected.Count == 0 ? null : string.Join(" / ", selected);
+    }
+
     private static string? InferGenericSource(Uri pageUri)
     {
         if (IsAmazonHost(pageUri.Host))
         {
             return "Amazon";
+        }
+
+        if (IsAutodocHost(pageUri.Host))
+        {
+            return "Autodoc";
         }
 
         return null;
@@ -309,7 +407,7 @@ public static class ProductPageMetadataParser
         return string.IsNullOrWhiteSpace(cleaned) ? null : cleaned;
     }
 
-    private static string? StripAmazonTitleSuffix(string? name)
+    private static string? StripTitleAfterPipe(string? name)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -318,6 +416,300 @@ public static class ProductPageMetadataParser
 
         var pipe = name.IndexOf(" | ", StringComparison.Ordinal);
         return pipe > 0 ? name[..pipe].Trim() : name;
+    }
+
+    private sealed record AutodocJsonProduct(
+        string? Name,
+        string? Brand,
+        string? Manufacturer,
+        string? Mpn,
+        string? Sku,
+        decimal? Price,
+        string? Seller,
+        string? Ean,
+        string? Oem);
+
+    private static AutodocJsonProduct? ReadAutodocJsonLd(IDocument document)
+    {
+        foreach (var script in document.QuerySelectorAll("script[type='application/ld+json']"))
+        {
+            var text = script.TextContent;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                continue;
+            }
+
+            try
+            {
+                using var json = JsonDocument.Parse(text);
+                if (TryReadAutodocJsonProduct(json.RootElement, out var product))
+                {
+                    return product;
+                }
+            }
+            catch (JsonException)
+            {
+                // Ignore non-JSON or truncated ld+json blocks.
+            }
+        }
+
+        return null;
+    }
+
+    private static bool TryReadAutodocJsonProduct(JsonElement element, out AutodocJsonProduct product)
+    {
+        product = null!;
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                if (TryReadAutodocJsonProduct(item, out product))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        if (element.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        if (element.TryGetProperty("@graph", out var graph)
+            && TryReadAutodocJsonProduct(graph, out product))
+        {
+            return true;
+        }
+
+        if (!JsonTypeIs(element, "Product"))
+        {
+            return false;
+        }
+
+        string? additionalManufacturer = null;
+        string? additionalEan = null;
+        string? additionalOem = null;
+        string? additionalMpn = null;
+        if (element.TryGetProperty("additionalProperty", out var properties)
+            && properties.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var property in properties.EnumerateArray())
+            {
+                var propertyName = JsonString(property, "name");
+                var propertyValue = JsonString(property, "value");
+                if (string.IsNullOrWhiteSpace(propertyName) || string.IsNullOrWhiteSpace(propertyValue))
+                {
+                    continue;
+                }
+
+                if (propertyName.Equals("Manufacturer", StringComparison.OrdinalIgnoreCase))
+                {
+                    additionalManufacturer = propertyValue;
+                }
+                else if (propertyName.Equals("EAN number", StringComparison.OrdinalIgnoreCase)
+                    || propertyName.Equals("EAN", StringComparison.OrdinalIgnoreCase))
+                {
+                    additionalEan = propertyValue;
+                }
+                else if (propertyName.Equals("Item number", StringComparison.OrdinalIgnoreCase)
+                    || propertyName.Equals("Article number", StringComparison.OrdinalIgnoreCase))
+                {
+                    additionalMpn ??= propertyValue;
+                }
+                else if (propertyName.Equals("OE numbers", StringComparison.OrdinalIgnoreCase)
+                    || propertyName.Equals("OEM numbers", StringComparison.OrdinalIgnoreCase)
+                    || propertyName.Equals("OEM Equivalent Part Number", StringComparison.OrdinalIgnoreCase))
+                {
+                    additionalOem = propertyValue;
+                }
+            }
+        }
+
+        var brand = JsonName(element, "brand");
+        var offers = element.TryGetProperty("offers", out var offersElement) ? offersElement : default;
+        var price = JsonDecimal(offers, "price");
+        var seller = AutodocSellerName(JsonName(offers, "seller"));
+
+        product = new AutodocJsonProduct(
+            JsonString(element, "name"),
+            brand,
+            additionalManufacturer,
+            JsonString(element, "mpn") ?? additionalMpn,
+            JsonString(element, "sku"),
+            price,
+            seller,
+            additionalEan,
+            additionalOem);
+        return true;
+    }
+
+    private static bool JsonTypeIs(JsonElement element, string type)
+    {
+        if (!element.TryGetProperty("@type", out var typeElement))
+        {
+            return false;
+        }
+
+        if (typeElement.ValueKind == JsonValueKind.String)
+        {
+            return typeElement.GetString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true;
+        }
+
+        if (typeElement.ValueKind == JsonValueKind.Array)
+        {
+            return typeElement.EnumerateArray().Any(item =>
+                item.ValueKind == JsonValueKind.String
+                && item.GetString()?.Equals(type, StringComparison.OrdinalIgnoreCase) == true);
+        }
+
+        return false;
+    }
+
+    private static string? JsonString(JsonElement element, string name)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out var value))
+        {
+            return null;
+        }
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.String => Clean(value.GetString()),
+            JsonValueKind.Number => value.GetRawText(),
+            _ => null
+        };
+    }
+
+    private static decimal? JsonDecimal(JsonElement element, string name)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out var value))
+        {
+            return null;
+        }
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out var number))
+        {
+            return number;
+        }
+
+        return ParsePriceText(JsonString(element, name));
+    }
+
+    private static string? JsonName(JsonElement element, string name)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(name, out var value))
+        {
+            return null;
+        }
+
+        if (value.ValueKind == JsonValueKind.String)
+        {
+            return Clean(value.GetString());
+        }
+
+        if (value.ValueKind == JsonValueKind.Object)
+        {
+            return JsonString(value, "name");
+        }
+
+        return null;
+    }
+
+    private static string? AutodocLabeledArticle(IDocument document, string label)
+    {
+        foreach (var node in document.QuerySelectorAll(".product-block__article"))
+        {
+            var text = Clean(node.TextContent);
+            if (text is null)
+            {
+                continue;
+            }
+
+            var parts = text.Split(':', 2);
+            if (parts.Length != 2 || !LabelMatches(Clean(parts[0]), label))
+            {
+                continue;
+            }
+
+            var value = Clean(parts[1]);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? AutodocDescriptionValue(IDocument document, string label)
+    {
+        foreach (var item in document.QuerySelectorAll(".product-description__item"))
+        {
+            var title = Clean(item.QuerySelector(".product-description__item-title")?.TextContent)?.TrimEnd(':').Trim();
+            if (!LabelMatches(title, label))
+            {
+                continue;
+            }
+
+            var value = Clean(item.QuerySelector(".product-description__item-value")?.TextContent);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? AutodocVendor(IDocument document) =>
+        VendorFromText(Clean(document.QuerySelector("p.sold-by, .sold-by")?.TextContent));
+
+    private static string? AutodocSellerName(string? name)
+    {
+        var cleaned = Clean(name);
+        if (string.IsNullOrWhiteSpace(cleaned))
+        {
+            return null;
+        }
+
+        if (Uri.TryCreate(cleaned, UriKind.Absolute, out var uri) && IsAutodocHost(uri.Host))
+        {
+            return "AUTODOC";
+        }
+
+        return cleaned;
+    }
+
+    private static string? AutodocHeading(IDocument document)
+    {
+        var heading = document.QuerySelector("h1.product-block__title") ?? document.QuerySelector("h1");
+        if (heading is null)
+        {
+            return null;
+        }
+
+        var text = Clean(heading.TextContent);
+        var subtitle = Clean(heading.QuerySelector(".product-block__seo-subtitle")?.TextContent);
+        if (!string.IsNullOrWhiteSpace(text)
+            && !string.IsNullOrWhiteSpace(subtitle)
+            && text.EndsWith(subtitle, StringComparison.Ordinal))
+        {
+            text = Clean(text[..^subtitle.Length]);
+        }
+
+        return text;
+    }
+
+    private static string? AutodocOemList(IDocument document)
+    {
+        var values = document.QuerySelectorAll(".product-oem__link, .product-oem__item, [data-oe-number], [data-oem-number]")
+            .Select(n => Clean(n.TextContent) ?? Clean(n.GetAttribute("data-oe-number")) ?? Clean(n.GetAttribute("data-oem-number")))
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return values.Count == 0 ? null : string.Join(", ", values);
     }
 
     private static string? NormalizeGtin(string? value)
