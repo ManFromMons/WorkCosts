@@ -1,0 +1,16 @@
+---
+description: Will I DIY? product intent and rebuild constraints
+alwaysApply: true
+---
+
+# Product
+
+Display name is **Will I DIY?**. Currency is **GBP**. Offline-first; no accounts.
+
+Read `AGENTS.md` and `docs/architecture.md` before changing behaviour. Windows WinUI is the reference; GNOME (Gir.Core) and iPad (SwiftUI) keep the same workflows and schema, with native chrome.
+
+Do not add `net9.0-ios` or `net9.0-macos` to `WorkCosts/WorkCosts.csproj`. Core and Parsing stay portable `net9.0`. iPad does not embed the .NET runtime.
+
+Persistence: SQLite catalogue, files for images and page cache. Export/import is a zip (XML + blobs); spec only until implemented. Import merges.
+
+Seeded categories and jobs must remain. Garage background and theme switch ship on every platform.

@@ -120,3 +120,7 @@ A folder publish (no installer) is still available via the `WorkCosts/Properties
 ## License
 
 This project is open-source. See repository license for details.
+
+## Agent specs
+
+Rebuild and layout rules for GNOME and iPad live on the `Planning` branch: start at [AGENTS.md](AGENTS.md).

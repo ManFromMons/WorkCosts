@@ -1,0 +1,17 @@
+---
+description: Screen layout grammar (master/detail, Add, sheets, stack)
+alwaysApply: true
+---
+
+# Layout
+
+Follow `docs/layout-grammar.md` and the screen spec under `docs/screens/`. Use **OS spacing**, not WinUI pixel copies.
+
+- Header: title + subtitle left; **primary Add** on the right (or trailing toolbar).
+- Wide: list beside detail. **Narrow: stack** (list, then push/navigate to detail).
+- Add Product is a **sheet/overlay**, never a dialog that hosts the browser.
+- Settings is a **page**. iPad compact chrome is a **tab bar**.
+- Markdown notes use full Write/Preview + formatting toolbar.
+- Enter confirms, Esc/back dismisses, other shortcuts follow the OS.
+
+Do not place WebView2 / WebKit / WKWebView inside a blocking ContentDialog, GtkDialog, or UIAlertController.

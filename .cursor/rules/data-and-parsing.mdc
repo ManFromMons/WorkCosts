@@ -1,0 +1,15 @@
+---
+description: SQLite schema, files for blobs, parsing contract
+globs: WorkCosts.Core/**,WorkCosts.Parsing/**,WorkCosts.Tests/**
+alwaysApply: false
+---
+
+# Data and parsing
+
+Schema lives in EF Core (`WorkCostsDbContext` + `Data/Migrations`). Swift follows those migrations. Do not fork column names.
+
+Product images and page cache are **files**; SQLite holds paths/metadata (`CachedWebPages`, `CachedWebImages`). Do not put new large blobs in the database.
+
+Parsers: `ProductPageMetadataParser` + HTML fixtures in `WorkCosts.Tests/Fixtures`. New host = detector + parser + snippet tests + `ProductPageClientValues` fields. Source/vendor come from the URL host and page seller.
+
+Live fetch uses a real browser session when HttpClient is blocked (Autodoc). Paste-HTML is a planned product feature (`docs/parsing/paste-html.md`).
