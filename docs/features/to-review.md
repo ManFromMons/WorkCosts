@@ -19,8 +19,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## paste-html
 
 - **Feature:** [docs/features/paste-html.md](paste-html.md)
-- **Status:** in-progress
-- **Last note:** Implementing Paste HTML on Windows from `docs/features/paste-html.md`.
+- **Status:** scan
+- **Last note:** Windows Paste HTML implemented on `feature/paste-html-Paste-HTML`. `PasteHtmlParserTests` and `LoadFromHtmlAsyncTests` passed with the rest of `WorkCosts.Tests` (59 tests). Ready for human scan; do not mark the feature file done until then.
 
 ### Questions
 
@@ -28,10 +28,10 @@ _(none)_
 
 ### Deviations to scan
 
-_(none)_
+- [ ] Added `DatabaseService(string databasePath)` so `LoadFromHtmlAsync` tests can cache HTML without writing the user `workcosts.db`.
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
 
