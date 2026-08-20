@@ -28,10 +28,10 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Added `DatabaseService(string databasePath)` so `LoadFromHtmlAsync` tests can cache HTML without writing the user `workcosts.db`.
+- [x] Added `DatabaseService(string databasePath)` so `LoadFromHtmlAsync` tests can cache HTML without writing the user `workcosts.db`.
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
