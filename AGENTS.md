@@ -19,9 +19,9 @@ Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `do
 
 ## Implementing a feature
 
-Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
+Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. To take the next queued story, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
 
-The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land edits with skill `update-to-review` (`scripts/Update-ToReviewOnMain.ps1`). Do not commit that file on `Planning` or a feature branch. Resume when answers are ticked on `main`.
+The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land edits with skill `update-to-review` (`scripts/Update-ToReviewOnMain.ps1`). Do not commit that file on `Planning` or a feature branch. Resume when answers are ticked on `main`. After a PR exists, set **PR** on the story header and add a short `docs/features/<name>-delivery.md` on the feature branch (what landed + tests + deviations, not a diary).
 
 ## Branches and pull requests
 
@@ -39,6 +39,8 @@ Name:
 Examples: `feature/paste-html-Paste-HTML`, `feature/zip-export-import-Zip-export-and-import`.
 
 Create the branch from current `origin/main`. Do not implement on `Planning` or commit product WIP on `main`.
+
+Stories are queued by **Seq** (integer, never reused) and **Depends-on** (kebab ids, or `none`). Skill `pickup-next-feature` takes the lowest Seq that is `ready-for-agent` whose dependencies are `done`.
 
 ### Landing agent work
 

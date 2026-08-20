@@ -1,8 +1,11 @@
 # Feature: &lt;Title&gt;
 
 - **Id:** `docs/features/<kebab-case-name>.md`
+- **Seq:** &lt;integer, assigned by plan-feature, never reuse&gt;
+- **Depends-on:** none | `kebab-id`, `other-id`
 - **Status:** draft | ready-for-agent | done
   (`blocked` / `in-progress` / `resume` / `scan` are **not** feature Status; they belong in `docs/features/to-review.md` on **main**. )
+- **PR:** none | `https://github.com/…/pull/N`
 - **Windows:** required first unless stated
 - **Related screens:** `docs/screens/…`
 - **Related code:** types you inspected
@@ -56,4 +59,4 @@ Each item: *Assumption:* … → **Question:** …?
 1. …
 2. Do not: …
 
-Coder deviations (existing type instead of a new one) are extra numbered notes here. Do not add new spec sections for work state; that lives in `docs/features/to-review.md` on `main`.
+Coder deviations (existing type instead of a new one) are extra numbered notes here. Do not add new spec sections for work state; that lives in `docs/features/to-review.md` on `main`. PR URL goes in the header **PR** field and in `docs/features/<kebab>-delivery.md`, not only here.

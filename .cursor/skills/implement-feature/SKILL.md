@@ -36,6 +36,12 @@ Branch from up-to-date `origin/main` as `feature/<feature_code>-<Title>` (see `A
 
 Push the feature branch and open a **squash PR to `main`**. Do not merge it; the human reviews and tests on GitHub.
 
+Then, on the **feature branch** (not `main`):
+
+1. Set **PR** in the story header to the GitHub URL.
+2. Add `docs/features/<kebab>-delivery.md` from [delivery-template.md](delivery-template.md). Bullets for what landed, tests, deviations. No chain of thought.
+3. Commit those two files and push. Do not `git add docs/features/to-review.md`.
+
 - Do not mix inbox edits into code commits.
 - Do not `git add docs/features/to-review.md` on this branch.
 - Do not stash unfinished code in order to update the inbox. Commit a buildable unit or revert until the tree is clean except the inbox file.
@@ -71,7 +77,7 @@ One named spec per pass, unless the user named more than one ready-for-agent fil
 
 `draft | ready-for-agent | done` only. `blocked` / `in-progress` / `resume` / `scan` belong in `docs/features/to-review.md` on `main`, not on the spec.
 
-When folding answers, do not invent extra spec sections. Update **Implementation notes** (and **Accepted defaults** / the conflicting section) only.
+When folding answers, do not invent extra spec sections. Update **Implementation notes** (and **Accepted defaults** / the conflicting section) only. After the PR exists, also set **PR** in the header and keep `docs/features/<kebab>-delivery.md` in sync (still no diary).
 
 ## Do not
 

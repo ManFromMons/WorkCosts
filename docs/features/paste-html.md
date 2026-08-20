@@ -1,7 +1,10 @@
 # Feature: Paste HTML
 
 - **Id:** `docs/features/paste-html.md`
+- **Seq:** 1
+- **Depends-on:** none
 - **Status:** ready-for-agent
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/1
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/paste-html.md`, `docs/parsing/overview.md`
 - **Related code:** `ProductsPage` (`AddOverlay`, `AddUrlStage`, `ContinueFromUrlStageAsync`, `ResolveExistingUrlAsync`, `SaveNewProductAsync`), `ProductAddEditor` (`BeginWithUrlAsync`, `LoadFromUrlAsync`, `ApplyPageMetadata`, `TryRead`, `FetchImages_Click`), `ProductUrl.TryCoerceHttpUrl`, `ProductPageMetadataParser.ParseHtmlAsync`, `ProductImageService` (`IsUsablePageHtml`, `FormatUnusablePageMessage`, `LoadPageAsync`), `WebCacheStore.SaveHtmlAsync`, `ProductImagePicker`, `ChromiumPageLoader`, `DialogHelper`

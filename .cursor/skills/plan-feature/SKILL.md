@@ -11,6 +11,8 @@ Planning produces a **feature**, not a chat summary. The source of truth is one 
 
 Copy the structure from [template.md](template.md). Do not implement the feature until the user asks and that file is complete enough for an unsupervised agent. Implementation is skill `implement-feature`, not this skill. Write specs on **`Planning`**. The kebab file name is the **`<feature_code>`** used later for `feature/<feature_code>-<Title>` (see `AGENTS.md`).
 
+Assign **Seq** as one higher than the current max Seq on `origin/main` and on this branch (`docs/features/*.md`, not `*-delivery.md`). Never reuse a Seq. Set **Depends-on** to `none` or kebab ids that must be **Status** `done` before pickup. Leave **PR** as `none` until the coder opens a GitHub PR.
+
 ## Workflow
 
 1. Read `AGENTS.md`, `docs/layout-grammar.md`, and any screen/parsing docs the feature touches. Search the codebase for existing types, controls, and services.
@@ -34,6 +36,8 @@ Use the headings in [template.md](template.md):
 - **Open questions** — only unanswered items, each tied to an assumption
 - **Accepted defaults** — choices you made that do not change UX/architecture
 - **Implementation notes for an agent** — files to touch, order of work, what not to do
+
+Header also requires **Seq**, **Depends-on**, and **PR** (see [template.md](template.md)). Do not put the PR only in implementation notes. The coder adds a short `docs/features/<kebab>-delivery.md` (not a diary) when the PR exists.
 
 ## Technical design rules
 
