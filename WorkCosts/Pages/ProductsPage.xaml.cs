@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -11,10 +12,12 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Windows.ApplicationModel.DataTransfer;
 using WorkCosts.Controls;
 using WorkCosts.Data;
 using WorkCosts.Helpers;
 using WorkCosts.Models;
+using WorkCosts.Services;
 
 namespace WorkCosts.Pages;
 
@@ -54,6 +57,7 @@ public sealed partial class ProductsPage : Page
             AddEditor.ShouldContinueLoadingUrlAsync = async url =>
                 await ResolveExistingUrlAsync(url) == ExistingUrlDecision.Fetch;
             AddEditor.DirtyChanged += AddEditor_DirtyChanged;
+            AddEditor.ProductImageStateChanged += (_, _) => UpdateAddSaveEnabled();
         }
         catch (Exception ex)
         {
@@ -807,6 +811,7 @@ public sealed partial class ProductsPage : Page
         AddSaveButtons.Visibility = Visibility.Visible;
         AddViewButtons.Visibility = Visibility.Collapsed;
         AddViewSaveButton.Visibility = Visibility.Collapsed;
+        UpdateAddSaveEnabled();
     }
 
     private void EnterViewExistingMode(Guid productId)
@@ -1114,6 +1119,121 @@ public sealed partial class ProductsPage : Page
     private async void AddUrlContinue_Click(object sender, RoutedEventArgs e) =>
         await ContinueFromUrlStageAsync();
 
+    private async void PasteHtml_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetCoercedAddUrl(out var url))
+        {
+            return;
+        }
+
+        var html = await TryReadClipboardHtmlAsync();
+        if (html is null)
+        {
+            AddUrlError.Text = "Clipboard is empty.";
+            AddUrlError.Visibility = Visibility.Visible;
+            return;
+        }
+
+        await ContinueFromHtmlAsync(url, html);
+    }
+
+    private async void OpenHtmlFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (!TryGetCoercedAddUrl(out var url))
+        {
+            return;
+        }
+
+        var html = await TryReadHtmlFileAsync();
+        if (html is null)
+        {
+            return;
+        }
+
+        await ContinueFromHtmlAsync(url, html);
+    }
+
+    private bool TryGetCoercedAddUrl(out string url)
+    {
+        if (!ProductUrl.TryCoerceHttpUrl(AddUrlBox.Text, out url))
+        {
+            AddUrlError.Text = "Enter a valid http(s) product page URL.";
+            AddUrlError.Visibility = Visibility.Visible;
+            AddUrlBox.Focus(FocusState.Programmatic);
+            return false;
+        }
+
+        AddUrlError.Visibility = Visibility.Collapsed;
+        AddUrlBox.Text = url;
+        return true;
+    }
+
+    private async Task<string?> TryReadClipboardHtmlAsync()
+    {
+        try
+        {
+            var content = Clipboard.GetContent();
+            if (content is null || !content.Contains(StandardDataFormats.Text))
+            {
+                return null;
+            }
+
+            var text = await content.GetTextAsync();
+            return string.IsNullOrWhiteSpace(text) ? null : text;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<string?> TryReadHtmlFileAsync()
+    {
+        var picker = new Windows.Storage.Pickers.FileOpenPicker();
+        BindPickerToAppWindow(picker);
+        picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
+        picker.FileTypeFilter.Add(".html");
+        picker.FileTypeFilter.Add(".htm");
+
+        var file = await picker.PickSingleFileAsync();
+        if (file is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            var html = await File.ReadAllTextAsync(file.Path, Encoding.UTF8);
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                AddUrlError.Text = "The HTML file is empty or could not be read.";
+                AddUrlError.Visibility = Visibility.Visible;
+                return null;
+            }
+
+            return html;
+        }
+        catch (Exception ex)
+        {
+            AddUrlError.Text = string.IsNullOrWhiteSpace(ex.Message)
+                ? "The HTML file is empty or could not be read."
+                : ex.Message;
+            AddUrlError.Visibility = Visibility.Visible;
+            return null;
+        }
+    }
+
+    private static void BindPickerToAppWindow(object picker)
+    {
+        if (App.MainAppWindow is null)
+        {
+            throw new InvalidOperationException("Main window is not available.");
+        }
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainAppWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+    }
+
     private async Task ContinueFromUrlStageAsync()
     {
         if (_continuingFromUrl)
@@ -1124,16 +1244,11 @@ public sealed partial class ProductsPage : Page
         _continuingFromUrl = true;
         try
         {
-            if (!ProductUrl.TryCoerceHttpUrl(AddUrlBox.Text, out var url))
+            if (!TryGetCoercedAddUrl(out var url))
             {
-                AddUrlError.Text = "Enter a valid http(s) product page URL.";
-                AddUrlError.Visibility = Visibility.Visible;
-                AddUrlBox.Focus(FocusState.Programmatic);
                 return;
             }
 
-            AddUrlError.Visibility = Visibility.Collapsed;
-            AddUrlBox.Text = url;
             StartupLog.Write($"Add product continue: {url}");
 
             ShowAddDetailsStage();
@@ -1159,7 +1274,7 @@ public sealed partial class ProductsPage : Page
         catch (Exception ex)
         {
             StartupLog.Write("ContinueFromUrlStageAsync failed", ex);
-            SetAddLoadStatus(ex.Message);
+            ShowAddUrlStage();
             AddUrlError.Text = ex.Message;
             AddUrlError.Visibility = Visibility.Visible;
         }
@@ -1167,6 +1282,68 @@ public sealed partial class ProductsPage : Page
         {
             _continuingFromUrl = false;
         }
+    }
+
+    private async Task ContinueFromHtmlAsync(string url, string html)
+    {
+        if (_continuingFromUrl)
+        {
+            return;
+        }
+
+        _continuingFromUrl = true;
+        try
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var pageUri)
+                || !ProductImageService.IsUsablePageHtml(html, pageUri))
+            {
+                AddUrlError.Text = Uri.TryCreate(url, UriKind.Absolute, out var messageUri)
+                    ? ProductImageService.FormatUnusablePageMessage(messageUri, html)
+                    : "Enter a valid http(s) product page URL.";
+                AddUrlError.Visibility = Visibility.Visible;
+                return;
+            }
+
+            ShowAddDetailsStage();
+            SetAddLoadStatus("Checking library…");
+            await SlideDetailsInAsync();
+
+            var decision = await ResolveExistingUrlAsync(url);
+            if (decision == ExistingUrlDecision.Abort)
+            {
+                return;
+            }
+
+            if (decision == ExistingUrlDecision.ShowExisting)
+            {
+                SetAddLoadStatus(null);
+                UpdateAddSaveEnabled();
+                return;
+            }
+
+            SetAddLoadStatus("Reading pasted HTML…");
+            await AddEditor.BeginWithHtmlAsync(url, html);
+            SetAddLoadStatus(null);
+            UpdateAddSaveEnabled();
+        }
+        catch (Exception ex)
+        {
+            StartupLog.Write("ContinueFromHtmlAsync failed", ex);
+            ShowAddUrlStage();
+            AddUrlError.Text = ex.Message;
+            AddUrlError.Visibility = Visibility.Visible;
+        }
+        finally
+        {
+            _continuingFromUrl = false;
+        }
+    }
+
+    private void UpdateAddSaveEnabled()
+    {
+        var enabled = !AddEditor.RequiresProductImage || AddEditor.HasProductImage;
+        AddSaveButton.IsEnabled = enabled;
+        AddSaveAndCloseButton.IsEnabled = enabled;
     }
 
     private void SetAddLoadStatus(string? message)

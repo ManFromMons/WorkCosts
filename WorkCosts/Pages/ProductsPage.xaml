@@ -386,26 +386,25 @@
                 Spacing="8"
                 MaxWidth="720"
                 HorizontalAlignment="Stretch">
-                <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox
-                        x:Name="AddUrlBox"
-                        PlaceholderText="https://product-page-url..."
-                        KeyDown="AddUrlBox_KeyDown" />
+                <TextBox
+                    x:Name="AddUrlBox"
+                    PlaceholderText="https://product-page-url..."
+                    KeyDown="AddUrlBox_KeyDown" />
+                <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
                     <Button
-                        Grid.Column="1"
                         Click="AddUrlContinue_Click"
                         Content="Add"
                         Style="{ThemeResource AppAccentButtonStyle}" />
                     <Button
-                        Grid.Column="2"
+                        Click="PasteHtml_Click"
+                        Content="Paste HTML" />
+                    <Button
+                        Click="OpenHtmlFile_Click"
+                        Content="Open HTML file" />
+                    <Button
                         Click="AddCancel_Click"
                         Content="Cancel" />
-                </Grid>
+                </controls:WrapPanel>
                 <TextBlock
                     x:Name="AddUrlError"
                     Opacity="0.9"
@@ -475,10 +474,12 @@
                         Orientation="Horizontal"
                         Spacing="8">
                         <Button
+                            x:Name="AddSaveButton"
                             Click="AddSave_Click"
                             Content="Add"
                             Style="{ThemeResource AppAccentButtonStyle}" />
                         <Button
+                            x:Name="AddSaveAndCloseButton"
                             Click="AddSaveAndClose_Click"
                             Content="Add and Close"
                             Style="{ThemeResource AppAccentButtonStyle}" />
