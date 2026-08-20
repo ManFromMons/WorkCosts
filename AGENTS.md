@@ -21,7 +21,16 @@ Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `do
 
 Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. To take the next queued story, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
 
-The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land edits with skill `update-to-review` (`scripts/Update-ToReviewOnMain.ps1`). Do not commit that file on `Planning` or a feature branch. Resume when answers are ticked on `main`. After a PR exists, set **PR** on the story header and add a short `docs/features/<name>-delivery.md` on the feature branch (what landed + tests + deviations, not a diary).
+The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land every inbox edit with skill `update-to-review` and:
+
+```powershell
+git fetch origin
+git show origin/main:docs/features/to-review.md > docs/features/to-review.md
+# edit only that file, then:
+powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: <kebab> <status>"
+```
+
+Do not `git add` that file on `Planning` or a feature branch. Do **not** open a GitHub PR until the inbox for that feature is **Status** `done` (questions and deviations approved). Then set **PR** on the story header and add `docs/features/<name>-delivery.md` on the feature branch.
 
 ## Branches and pull requests
 
@@ -44,7 +53,7 @@ Stories are queued by **Seq** (integer, never reused) and **Depends-on** (kebab 
 
 ### Landing agent work
 
-All **implementation** lands on `main` as a **squash pull request**. Open the PR against `main` (GitHub). The human tests and reviews there, then squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks.
+All **implementation** lands on `main` as a **squash pull request** opened **after** the to-review scan is accepted (**Status** `done`). Open the PR against `main` (GitHub). The human then squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks. Do not open the PR while questions or deviations are still unchecked.
 
 Do not use merge commits onto `main`. After a squash merge, delete the feature branch.
 
