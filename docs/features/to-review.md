@@ -19,8 +19,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## paste-html
 
 - **Feature:** [docs/features/paste-html.md](paste-html.md)
-- **Status:** scan
-- **Last note:** Windows Paste HTML implemented on `feature/paste-html-Paste-HTML`. `PasteHtmlParserTests` and `LoadFromHtmlAsyncTests` passed with the rest of `WorkCosts.Tests` (59 tests). Ready for human scan; do not mark the feature file done until then.
+- **Status:** done
+- **Last note:** Scan accepted. Feature file Status is `done`. PR https://github.com/ManFromMons/WorkCosts/pull/1 remains open (not squash-merged).
 
 ### Questions
 
