@@ -3,7 +3,7 @@
 - **Id:** `docs/features/paste-html.md`
 - **Seq:** 1
 - **Depends-on:** none
-- **Status:** ready-for-agent
+- **Status:** done
 - **PR:** https://github.com/ManFromMons/WorkCosts/pull/1
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/paste-html.md`, `docs/parsing/overview.md`
@@ -85,6 +85,7 @@
 - No extra size cap. No script-stripping before AngleSharp.
 - `IsUsablePageHtml` length/challenge rules apply to paste (short test **parser** tests stay on `ParseHtmlAsync` without that gate).
 - GBP/schema unchanged. No extra TFMs.
+- `DatabaseService(string databasePath)` is allowed for isolated `LoadFromHtmlAsync` tests.
 
 ## Implementation notes for an agent
 
