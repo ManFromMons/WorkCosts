@@ -16,4 +16,22 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 ## Entries
 
+## paste-html
+
+- **Feature:** [docs/features/paste-html.md](paste-html.md)
+- **Status:** in-progress
+- **Last note:** Implementing Paste HTML on Windows from `docs/features/paste-html.md`.
+
+### Questions
+
 _(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
