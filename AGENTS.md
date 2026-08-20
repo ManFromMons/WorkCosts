@@ -19,7 +19,7 @@ Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `do
 
 ## Implementing a feature
 
-Use the project skill `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. To take the next queued story, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
+To kick off a new coder chat, invoke skill `start-implement` (named spec, or next in the queue). Use `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. To take the next queued story without that kickoff, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
 
 The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land every inbox edit with skill `update-to-review` and:
 

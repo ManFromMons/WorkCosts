@@ -30,6 +30,6 @@ If it prints a kebab id (for example `paste-html`), that is the job.
 
 ## Implement
 
-Follow skill `implement-feature` for that id. Branch `feature/<feature_code>-<Title>` from `origin/main` as in `AGENTS.md`.
+Follow skill `start-implement` for that id (it loads `implement-feature`). Branch `feature/<feature_code>-<Title>` from `origin/main` as in `AGENTS.md`.
 
 One job per pass unless the user named more than one.
