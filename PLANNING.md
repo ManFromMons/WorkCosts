@@ -36,4 +36,4 @@ Windows WinUI remains the running reference in this repo.
 | Linux package | Flatpak; data under the app’s sandbox data dir |
 | Repo | This repo; later `src/linux`, `src/ios` |
 
-Open `docs/` from [AGENTS.md](AGENTS.md). Historical questions live only here; the specs are the source of truth going forward.
+Open `docs/` from [AGENTS.md](AGENTS.md). File-by-file map and Cursor CLI skill usage: [docs/agent-handbook.md](docs/agent-handbook.md). Historical questions live only here; the specs are the source of truth going forward.

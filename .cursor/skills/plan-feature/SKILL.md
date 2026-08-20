@@ -9,13 +9,13 @@ Planning produces a **feature**, not a chat summary. The source of truth is one 
 
 `docs/features/<kebab-case-name>.md`
 
-Copy the structure from [template.md](template.md). Do not implement the feature until the user asks and that file is complete enough for an unsupervised agent. Implementation is skill `implement-feature`, not this skill. Write specs on **`Planning`**. The kebab file name is the **`<feature_code>`** used later for `feature/<feature_code>-<Title>` (see `AGENTS.md`).
+If the user wants a **new supplier website**, do not fold it into a mega-queue file. Copy `.cursor/skills/add-product-source/template.md` to `docs/features/source-<host>.md`. The kebab `<host>` is the host family (`halfords`, `eurocarparts`). **Required parameters:** sample product URL, expected Name, expected UnitPrice (GBP). Leave **Status** `draft` until those three are filled. Implementation is skill `add-product-source` / invoke `start-add-source`, not this skill.
 
 Assign **Seq** as one higher than the current max Seq on `origin/main` and on this branch (`docs/features/*.md`, not `*-delivery.md`). Never reuse a Seq. Set **Depends-on** to `none` or kebab ids that must be **Status** `done` before pickup. Leave **PR** as `none` until the coder opens a GitHub PR.
 
 ## Workflow
 
-1. Read `AGENTS.md`, `docs/layout-grammar.md`, and any screen/parsing docs the feature touches. Search the codebase for existing types, controls, and services.
+1. Read `AGENTS.md`, `docs/agent-handbook.md` if you need the file/skill map, `docs/layout-grammar.md`, and any screen/parsing docs the feature touches. Search the codebase for existing types, controls, and services.
 2. Create or update `docs/features/<name>.md`. Fill every section in the template. Name files after the user-facing feature (`paste-html`, `zip-export-import`), not tickets.
 3. **Assumptions become questions.** If you assumed a control, class, merge rule, or shortcut, write a numbered question that states the assumption. Stop and wait for answers before treating the spec as done.
 4. After answers, rewrite the feature file. Remove resolved questions. List only leftover mechanical defaults under **Accepted defaults**.

@@ -123,4 +123,4 @@ This project is open-source. See repository license for details.
 
 ## Agent specs
 
-Rebuild and layout rules for GNOME and iPad live on the `Planning` branch: start at [AGENTS.md](AGENTS.md).
+Rebuild and layout rules for GNOME and iPad live on the `Planning` branch: start at [AGENTS.md](AGENTS.md). Catalogue of docs and skills, including how to run them from the Cursor CLI (`agent`): [docs/agent-handbook.md](docs/agent-handbook.md).

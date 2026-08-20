@@ -4,18 +4,21 @@ You are working on **Will I DIY?** (repo folder names still use WorkCosts). It i
 
 ## Read this first
 
-1. [PLANNING.md](PLANNING.md) — locked product decisions  
-2. [docs/architecture.md](docs/architecture.md) — process map and projects  
-3. [docs/layout-grammar.md](docs/layout-grammar.md) — how screens are put together  
-4. The screen file for the surface you are changing under [docs/screens/](docs/screens/)  
-5. [docs/data/schema.md](docs/data/schema.md) and [docs/data/connection.md](docs/data/connection.md) for persistence  
-6. [docs/parsing/overview.md](docs/parsing/overview.md) if you touch import or HTML  
+1. [docs/agent-handbook.md](docs/agent-handbook.md) — map of every spec, skill, and script; **Cursor CLI** (`agent`) invocations  
+2. [PLANNING.md](PLANNING.md) — locked product decisions  
+3. [docs/architecture.md](docs/architecture.md) — process map and projects  
+4. [docs/layout-grammar.md](docs/layout-grammar.md) — how screens are put together  
+5. The screen file for the surface you are changing under [docs/screens/](docs/screens/)  
+6. [docs/data/schema.md](docs/data/schema.md) and [docs/data/connection.md](docs/data/connection.md) for persistence  
+7. [docs/parsing/overview.md](docs/parsing/overview.md) if you touch import or HTML  
 
 Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour reference. GNOME and iPad may use native widgets and spacing, but they keep the same information architecture, workflows, and data.
 
 ## Planning a feature
 
 Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent. Specs are written on **`Planning`**, then landed with `merge-planning` (not a GitHub feature PR).
+
+New supplier websites: one story per host (`docs/features/source-<host>.md`) with a **product URL**, **expected Name**, and **expected UnitPrice (GBP)**. Invoke `@start-add-source` or skill `add-product-source` (discover fetch, fixtures, tests, then parser). See [docs/parsing/adding-a-source.md](docs/parsing/adding-a-source.md).
 
 ## Implementing a feature
 
