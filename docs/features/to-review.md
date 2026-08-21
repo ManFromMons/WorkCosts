@@ -10,9 +10,11 @@ Unchecked items need a human.
 - **Deviations to scan:** tick when you accept the reuse (or say to follow the spec instead).
 - **Verify:** tick when tests and deviations are accepted. Then the feature file **Status** may become `done`.
 
+Coder: when development is finished, set this heading **Status** to `ready-for-review` (not `done`).
+
 Copy a new heading from `.cursor/skills/implement-feature/to-review-entry.md`.
 
-Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in-progress`, `blocked`, `resume`, `scan`) live only here.
+Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in-progress`, `blocked`, `resume`, `ready-for-review`) live only here.
 
 ## Entries
 
