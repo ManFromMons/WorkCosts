@@ -87,7 +87,7 @@ public static class ProductImagePicker
 
         var selected = page.Images.Count == 1
             ? page.Images[0]
-            : await ChooseImageAsync(xamlRoot, page.Images);
+            : await ChooseFromCandidatesAsync(xamlRoot, page.Images);
         if (selected is null)
         {
             return null;
@@ -96,10 +96,11 @@ public static class ProductImagePicker
         return new ProductImagePickResult(selected.Bytes, selected.ContentType, page.Metadata);
     }
 
-    private static async Task<ProductImageCandidate?> ChooseImageAsync(
+    public static async Task<ProductImageCandidate?> ChooseFromCandidatesAsync(
         XamlRoot xamlRoot,
         IReadOnlyList<ProductImageCandidate> images)
     {
+        StartupLog.Write($"ChooseFromCandidatesAsync count={images.Count}");
         var grid = new GridView
         {
             SelectionMode = ListViewSelectionMode.Single,
@@ -107,51 +108,93 @@ public static class ProductImagePicker
             MinWidth = 480
         };
 
+        ContentDialog? dialog = null;
+        ProductImageCandidate? doubleTapChoice = null;
+
         foreach (var candidate in images)
         {
-            var image = new Image
+            try
             {
-                Width = 120,
-                Height = 120,
-                Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill,
-                Source = await ToBitmapAsync(candidate.Bytes)
-            };
-            grid.Items.Add(new Border
+                var image = new Image
+                {
+                    Width = 120,
+                    Height = 120,
+                    Stretch = Microsoft.UI.Xaml.Media.Stretch.UniformToFill,
+                    Source = await ToBitmapAsync(candidate.Bytes)
+                };
+                var border = new Border
+                {
+                    Width = 128,
+                    Height = 128,
+                    Margin = new Thickness(4),
+                    CornerRadius = new CornerRadius(6),
+                    BorderThickness = new Thickness(1),
+                    BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
+                    Child = image,
+                    Tag = candidate
+                };
+                border.DoubleTapped += (_, _) =>
+                {
+                    doubleTapChoice = candidate;
+                    dialog?.Hide();
+                };
+                grid.Items.Add(border);
+            }
+            catch (Exception ex)
             {
-                Width = 128,
-                Height = 128,
-                Margin = new Thickness(4),
-                CornerRadius = new CornerRadius(6),
-                BorderThickness = new Thickness(1),
-                BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-                Child = image,
-                Tag = candidate
-            });
+                StartupLog.Write($"ChooseFromCandidatesAsync skipped thumbnail {candidate.SourceUrl}", ex);
+            }
         }
 
-        if (grid.Items.Count > 0)
+        if (grid.Items.Count == 0)
         {
-            grid.SelectedIndex = 0;
+            StartupLog.Write("ChooseFromCandidatesAsync: no thumbnails could be decoded.");
+            return images.Count > 0 ? images[0] : null;
         }
 
-        var dialog = new ContentDialog
+        grid.SelectedIndex = 0;
+        grid.DoubleTapped += (_, _) =>
+        {
+            if (grid.SelectedItem is Border { Tag: ProductImageCandidate selected })
+            {
+                doubleTapChoice = selected;
+                dialog?.Hide();
+            }
+        };
+
+        dialog = new ContentDialog
         {
             Title = "Select product image",
             Content = grid,
             PrimaryButtonText = "Use image",
             CloseButtonText = "Cancel",
             DefaultButton = ContentDialogButton.Primary,
-            IsPrimaryButtonEnabled = grid.Items.Count > 0,
+            IsPrimaryButtonEnabled = true,
             XamlRoot = xamlRoot
         };
 
-        var result = await DialogHelper.ShowAsync(dialog, xamlRoot);
-        if (result != ContentDialogResult.Primary)
+        try
         {
-            return null;
-        }
+            var result = await DialogHelper.ShowAsync(dialog, xamlRoot);
+            if (doubleTapChoice is not null)
+            {
+                StartupLog.Write("ChooseFromCandidatesAsync accepted by double-click.");
+                return doubleTapChoice;
+            }
 
-        return grid.SelectedItem is Border { Tag: ProductImageCandidate chosen } ? chosen : null;
+            if (result != ContentDialogResult.Primary)
+            {
+                StartupLog.Write("ChooseFromCandidatesAsync cancelled.");
+                return null;
+            }
+
+            return grid.SelectedItem is Border { Tag: ProductImageCandidate chosen } ? chosen : null;
+        }
+        catch (Exception ex)
+        {
+            StartupLog.Write("ChooseFromCandidatesAsync dialog failed", ex);
+            throw;
+        }
     }
 
     public static async Task<BitmapImage?> ToBitmapAsync(byte[]? bytes)

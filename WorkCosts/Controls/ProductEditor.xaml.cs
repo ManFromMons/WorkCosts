@@ -17,6 +17,7 @@ public sealed partial class ProductEditor
 {
     private readonly ObservableCollection<JobOption> _jobOptions = [];
     private readonly ObservableCollection<EquivalentProductItem> _equivalentProducts = [];
+    private readonly ProductImageService _images = new();
     private bool _suppressEvents;
     private byte[]? _imageBlob;
     private string? _imageContentType;
@@ -275,19 +276,101 @@ public sealed partial class ProductEditor
     private async void UrlGo_Click(object sender, RoutedEventArgs e) =>
         await FetchImagesFromUrlAsync(commitUrlOnImagePick: true);
 
-    private async void FetchImages_Click(object sender, RoutedEventArgs e)
+    private async void ChooseCachedImages_Click(object sender, RoutedEventArgs e)
     {
-        // Reload from the committed product URL (not a pending import buffer).
-        if (string.IsNullOrWhiteSpace(_committedUrl))
+        IReadOnlyList<ProductImageCandidate> images = [];
+        if (!string.IsNullOrWhiteSpace(_committedUrl))
         {
-            SetUrlEditMode(true);
-            await DialogHelper.ShowMessageAsync(XamlRoot, "URL required",
-                "Use Import new to enter a product page URL, then Go to choose an image.");
+            images = await _images.TryGetCachedImagesAsync(_committedUrl);
+        }
+
+        if (images.Count > 0)
+        {
+            var picked = await ProductImagePicker.ChooseFromCandidatesAsync(XamlRoot, images);
+            if (picked is null)
+            {
+                return;
+            }
+
+            await ApplyChosenImageAsync(picked);
             return;
         }
 
-        UrlBox.Text = _committedUrl;
-        await FetchImagesFromUrlAsync(commitUrlOnImagePick: true);
+        await PickImageFileAsync();
+    }
+
+    private async Task ApplyChosenImageAsync(ProductImageCandidate chosen)
+    {
+        _imageBlob = chosen.Bytes;
+        _imageContentType = chosen.ContentType;
+        PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
+        RaiseChanged();
+    }
+
+    private async Task PickImageFileAsync()
+    {
+        Windows.Storage.StorageFile? file;
+        try
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            BindPickerToAppWindow(picker);
+            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".webp");
+            file = await picker.PickSingleFileAsync();
+        }
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Image file", ex.Message);
+            return;
+        }
+
+        if (file is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var bytes = await File.ReadAllBytesAsync(file.Path);
+            if (bytes.Length == 0)
+            {
+                await DialogHelper.ShowMessageAsync(XamlRoot, "Image file",
+                    "The image file is empty or could not be read.");
+                return;
+            }
+
+            _imageBlob = bytes;
+            _imageContentType = file.FileType.ToLowerInvariant() switch
+            {
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+            PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
+            RaiseChanged();
+        }
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Image file",
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "The image file is empty or could not be read."
+                    : ex.Message);
+        }
+    }
+
+    private static void BindPickerToAppWindow(object picker)
+    {
+        if (App.MainAppWindow is null)
+        {
+            throw new InvalidOperationException("Main window is not available.");
+        }
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainAppWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
     }
 
     private async Task FetchImagesFromUrlAsync(bool commitUrlOnImagePick)
@@ -421,7 +504,7 @@ public sealed partial class ProductEditor
         UrlGoButton.IsEnabled = !busy;
         ImportNewButton.IsEnabled = !busy;
         OpenUrlButton.IsEnabled = !busy && !string.IsNullOrWhiteSpace(_committedUrl);
-        ToolTipService.SetToolTip(FetchImagesButton, busy ? "Loading…" : "Load images from product URL");
+        ToolTipService.SetToolTip(FetchImagesButton, busy ? "Loading…" : "Choose from downloaded images");
     }
 
     private void ClearImage_Click(object sender, RoutedEventArgs e)

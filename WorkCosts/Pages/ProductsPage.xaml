@@ -389,6 +389,8 @@
                 <TextBox
                     x:Name="AddUrlBox"
                     PlaceholderText="https://product-page-url..."
+                    IsSpellCheckEnabled="False"
+                    IsTextPredictionEnabled="False"
                     KeyDown="AddUrlBox_KeyDown" />
                 <controls:WrapPanel HorizontalSpacing="8" VerticalSpacing="8">
                     <Button
@@ -401,6 +403,9 @@
                     <Button
                         Click="OpenHtmlFile_Click"
                         Content="Open HTML file" />
+                    <Button
+                        Click="SkipUrlStage_Click"
+                        Content="Skip" />
                     <Button
                         Click="AddCancel_Click"
                         Content="Cancel" />

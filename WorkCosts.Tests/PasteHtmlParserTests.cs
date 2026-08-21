@@ -55,4 +55,36 @@ public class PasteHtmlParserTests
         Assert.Equal(autodoc.Name, autodocOnAutodocHost.Name);
         Assert.NotEqual(autodocOnAutodocHost.Source, autodocOnAmazonHost.Source);
     }
+
+    [Fact]
+    public async Task FindPageUrl_prefers_canonical_then_og_url()
+    {
+        const string html = """
+            <html><head>
+            <link rel="canonical" href="https://www.amazon.co.uk/dp/B0TESTURL01">
+            <meta property="og:url" content="https://www.example.com/ignored">
+            </head></html>
+            """;
+
+        var found = await ProductPageMetadataParser.FindPageUrlAsync(html);
+        Assert.Equal("https://www.amazon.co.uk/dp/B0TESTURL01", found);
+    }
+
+    [Fact]
+    public async Task FindPageUrl_reads_saved_from_url_comment()
+    {
+        const string html = """
+            <!-- saved from url=(0063)https://www.autodoc.co.uk/car-parts/123 -->
+            <html><body>Just a page</body></html>
+            """;
+
+        var found = await ProductPageMetadataParser.FindPageUrlAsync(html);
+        Assert.Equal("https://www.autodoc.co.uk/car-parts/123", found);
+    }
+
+    [Fact]
+    public async Task FindPageUrl_returns_null_when_html_has_no_page_url()
+    {
+        Assert.Null(await ProductPageMetadataParser.FindPageUrlAsync("<html><body>no url</body></html>"));
+    }
 }

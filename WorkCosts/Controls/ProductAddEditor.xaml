@@ -74,7 +74,7 @@
                                     x:Name="ChooseImageFileButton"
                                     Click="ChooseImageFile_Click"
                                     Style="{ThemeResource BorderlessIconButtonStyle}"
-                                    ToolTipService.ToolTip="Choose image file">
+                                    ToolTipService.ToolTip="Choose from downloaded images, or an image file">
                                     <FontIcon FontSize="16" Glyph="&#xE8E5;" />
                                 </Button>
                                 <Button

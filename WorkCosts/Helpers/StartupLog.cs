@@ -26,6 +26,7 @@ internal static class StartupLog
         }
 
         var line = builder.ToString();
+        Console.WriteLine(line);
         Debug.WriteLine(line);
 
         try
@@ -43,6 +44,7 @@ internal static class StartupLog
         }
         catch (Exception writeEx)
         {
+            Console.WriteLine($"StartupLog write failed: {writeEx}");
             Debug.WriteLine($"StartupLog write failed: {writeEx}");
         }
     }

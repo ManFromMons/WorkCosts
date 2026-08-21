@@ -51,6 +51,10 @@ public sealed partial class ProductsPage : Page
         try
         {
             InitializeComponent();
+            AddUrlBox.InputScope = new InputScope
+            {
+                Names = { new InputScopeName(InputScopeNameValue.Default) }
+            };
             FilterProductList.ItemsSource = _filterProducts;
             AllProductList.ItemsSource = _allProducts;
             DetailEditor.ValuesChanged += DetailEditor_ValuesChanged;
@@ -1000,6 +1004,11 @@ public sealed partial class ProductsPage : Page
         if (e.Key == Windows.System.VirtualKey.Escape)
         {
             e.Handled = true;
+            if (AddEditor.TryCancelUrlEdit())
+            {
+                return;
+            }
+
             await TryDiscardAddOverlayAsync();
             return;
         }
@@ -1119,13 +1128,11 @@ public sealed partial class ProductsPage : Page
     private async void AddUrlContinue_Click(object sender, RoutedEventArgs e) =>
         await ContinueFromUrlStageAsync();
 
+    private async void SkipUrlStage_Click(object sender, RoutedEventArgs e) =>
+        await ContinueFromSkipAsync();
+
     private async void PasteHtml_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetCoercedAddUrl(out var url))
-        {
-            return;
-        }
-
         var html = await TryReadClipboardHtmlAsync();
         if (html is null)
         {
@@ -1134,23 +1141,48 @@ public sealed partial class ProductsPage : Page
             return;
         }
 
+        var url = await TryResolveHtmlSourceUrlAsync(html);
+        if (url is null)
+        {
+            return;
+        }
+
         await ContinueFromHtmlAsync(url, html);
     }
 
     private async void OpenHtmlFile_Click(object sender, RoutedEventArgs e)
     {
-        if (!TryGetCoercedAddUrl(out var url))
-        {
-            return;
-        }
-
         var html = await TryReadHtmlFileAsync();
         if (html is null)
         {
             return;
         }
 
+        var url = await TryResolveHtmlSourceUrlAsync(html);
+        if (url is null)
+        {
+            return;
+        }
+
         await ContinueFromHtmlAsync(url, html);
+    }
+
+    /// <summary>
+    /// Paste/file ignore the URL box. Use a page URL found in the HTML only.
+    /// </summary>
+    private async Task<string?> TryResolveHtmlSourceUrlAsync(string html)
+    {
+        var fromHtml = await ProductPageMetadataParser.FindPageUrlAsync(html);
+        if (ProductUrl.TryCoerceHttpUrl(fromHtml, out var extracted))
+        {
+            AddUrlError.Visibility = Visibility.Collapsed;
+            AddUrlBox.Text = extracted;
+            return extracted;
+        }
+
+        AddUrlError.Text = "This HTML has no product page URL. Use Skip to enter details, or paste a page that includes a canonical URL.";
+        AddUrlError.Visibility = Visibility.Visible;
+        return null;
     }
 
     private bool TryGetCoercedAddUrl(out string url)
@@ -1159,7 +1191,6 @@ public sealed partial class ProductsPage : Page
         {
             AddUrlError.Text = "Enter a valid http(s) product page URL.";
             AddUrlError.Visibility = Visibility.Visible;
-            AddUrlBox.Focus(FocusState.Programmatic);
             return false;
         }
 
@@ -1234,6 +1265,29 @@ public sealed partial class ProductsPage : Page
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
     }
 
+    private async Task ContinueFromSkipAsync()
+    {
+        if (_continuingFromUrl)
+        {
+            return;
+        }
+
+        _continuingFromUrl = true;
+        try
+        {
+            AddUrlError.Visibility = Visibility.Collapsed;
+            ShowAddDetailsStage();
+            SetAddLoadStatus(null);
+            await SlideDetailsInAsync();
+            AddEditor.LoadEmpty();
+            UpdateAddSaveEnabled();
+        }
+        finally
+        {
+            _continuingFromUrl = false;
+        }
+    }
+
     private async Task ContinueFromUrlStageAsync()
     {
         if (_continuingFromUrl)
@@ -1306,6 +1360,7 @@ public sealed partial class ProductsPage : Page
 
             ShowAddDetailsStage();
             SetAddLoadStatus("Checking library…");
+            StartupLog.Write($"ContinueFromHtmlAsync url={url} htmlChars={html.Length}");
             await SlideDetailsInAsync();
 
             var decision = await ResolveExistingUrlAsync(url);
@@ -1321,9 +1376,7 @@ public sealed partial class ProductsPage : Page
                 return;
             }
 
-            SetAddLoadStatus("Reading pasted HTML…");
-            await AddEditor.BeginWithHtmlAsync(url, html);
-            SetAddLoadStatus(null);
+            await AddEditor.BeginWithHtmlAsync(url, html, SetAddLoadStatus);
             UpdateAddSaveEnabled();
         }
         catch (Exception ex)
