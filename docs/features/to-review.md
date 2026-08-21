@@ -40,8 +40,8 @@ _(none)_
 ## product-extra-data
 
 - **Feature:** [docs/features/product-extra-data.md](product-extra-data.md)
-- **Status:** ready-for-review
-- **Last note:** Implementation finished on `feature/product-extra-data-Product-extra-YAML`. WorkCosts.Tests 71 passed. No PR until this heading is Status `done`.
+- **Status:** done
+- **Last note:** Scan accepted. Opening squash PR for `feature/product-extra-data-Product-extra-YAML`.
 
 ### Questions
 
