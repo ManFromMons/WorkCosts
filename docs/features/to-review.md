@@ -30,13 +30,13 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Sample 2 fixture uses the confirmed unit price **£98.50**; live HttpClient HTML on 2026-08-21 showed **£103.30** (RRP £109.09).
-- [ ] Vendor is the host label `"Car Battery Market"` (first-party shop; no sold-by node).
+- [x] Sample 2 fixture uses the confirmed unit price **£98.50**; live HttpClient HTML on 2026-08-21 showed **£103.30** (RRP £109.09).
+- [x] Vendor is the host label `"Car Battery Market"` (first-party shop; no sold-by node).
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
 ## source-eurocarparts
 
