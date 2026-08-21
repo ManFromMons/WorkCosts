@@ -21,8 +21,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## source-eurocarparts
 
 - **Feature:** [docs/features/source-eurocarparts.md](source-eurocarparts.md)
-- **Status:** ready-for-review
-- **Last note:** HttpClient fetch (no Chromium gate). Dedicated parser + three fixtures. `WorkCosts.Tests` 89 passed.
+- **Status:** done
+- **Last note:** Scan accepted. Feature file Status is `done`. PR https://github.com/ManFromMons/WorkCosts/pull/3 remains open (not squash-merged).
 
 ### Questions
 
