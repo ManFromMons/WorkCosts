@@ -115,6 +115,11 @@ public static class ProductPageMetadataParser
             return ParseAutodoc(document);
         }
 
+        if (IsEuroCarPartsHost(pageUri.Host))
+        {
+            return ParseEuroCarParts(document);
+        }
+
         return ParseGeneric(document, pageUri);
     }
 
@@ -124,6 +129,9 @@ public static class ProductPageMetadataParser
 
     public static bool IsAutodocHost(string host) =>
         host.Contains("autodoc.", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsEuroCarPartsHost(string host) =>
+        host.Contains("eurocarparts.", StringComparison.OrdinalIgnoreCase);
 
     private static ProductPageMetadata ParseAmazon(IDocument document)
     {
@@ -269,7 +277,209 @@ public static class ProductPageMetadataParser
             return "Autodoc";
         }
 
+        if (IsEuroCarPartsHost(pageUri.Host))
+        {
+            return "Euro Car Parts";
+        }
+
         return null;
+    }
+
+    private static ProductPageMetadata ParseEuroCarParts(IDocument document)
+    {
+        var name = Clean(document.QuerySelector("h1[data-testid='productName'], [data-testid='productName']")?.TextContent)
+            ?? StripTitleAfterPipe(MetaContent(document, "og:title"));
+
+        var manufacturer = EuroCarPartsManufacturer(document);
+        var unitPrice = EuroCarPartsPrice(document);
+        var extras = EuroCarPartsExtras(document, name);
+
+        return new ProductPageMetadata(
+            name,
+            manufacturer,
+            ManufacturerReference: null,
+            unitPrice,
+            Vendor: "Euro Car Parts",
+            Ean: null,
+            Variation: null,
+            OemEquivalent: null,
+            Source: "Euro Car Parts",
+            extras.Capacity,
+            extras.LengthMm,
+            extras.WidthMm,
+            extras.HeightMm,
+            extras.Cca,
+            extras.Technology);
+    }
+
+    private static string? EuroCarPartsManufacturer(IDocument document)
+    {
+        var image = document.QuerySelector("img[data-testid='brandImage']");
+        var brand = Clean(image?.GetAttribute("alt")) ?? Clean(image?.GetAttribute("title"));
+        if (string.IsNullOrWhiteSpace(brand))
+        {
+            return null;
+        }
+
+        // Confirmed manufacturer is the maker (Eicher), not the range on the logo (Eicher Premium).
+        var first = brand.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries)[0];
+        return Clean(first);
+    }
+
+    private static decimal? EuroCarPartsPrice(IDocument document)
+    {
+        foreach (var node in document.QuerySelectorAll("[data-testid='pdpPrice']"))
+        {
+            if (IsEuroCarPartsAddonPrice(node))
+            {
+                continue;
+            }
+
+            var price = ParsePriceText(Clean(node.TextContent));
+            if (price is not null)
+            {
+                return price;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsEuroCarPartsAddonPrice(IElement node)
+    {
+        for (var parent = node.ParentElement; parent is not null; parent = parent.ParentElement)
+        {
+            var testId = parent.GetAttribute("data-testid") ?? string.Empty;
+            if (testId.Contains("bundle", StringComparison.OrdinalIgnoreCase)
+                || testId.StartsWith("fbt", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            var className = parent.ClassName ?? string.Empty;
+            if (className.Contains("FrequentlyBoughtTogether", StringComparison.OrdinalIgnoreCase)
+                || className.Contains("FbtProductPrice", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static (int? Capacity, int? LengthMm, int? WidthMm, int? HeightMm, int? Cca, string? Technology)
+        EuroCarPartsExtras(IDocument document, string? name)
+    {
+        var specs = EuroCarPartsSpecMap(document);
+
+        var capacity = ParseLeadingInt(GetSpec(specs, "Capacity Ah"))
+            ?? ParsePatternInt(name, @"(\d+)\s*AH\b");
+        var lengthMm = ParseLeadingInt(GetSpec(specs, "Length mm"))
+            ?? ParseLabeledMillimetres(document, "Length");
+        var widthMm = ParseLeadingInt(GetSpec(specs, "Width mm"))
+            ?? ParseLabeledMillimetres(document, "Width");
+        var heightMm = ParseLeadingInt(GetSpec(specs, "Height mm"))
+            ?? ParseLabeledMillimetres(document, "Height");
+        // CCA from the product name / cranking line (950CCA). Do not use Cold Test Current ENA.
+        var cca = ParsePatternInt(name, @"(\d+)\s*CCA\b")
+            ?? ParseEuroCarPartsCrankingAmps(document);
+        var technology = ProductTechnology.Normalize(name)
+            ?? ProductTechnology.Normalize(GetSpec(specs, "Battery Type"));
+
+        return (capacity, lengthMm, widthMm, heightMm, cca, technology);
+    }
+
+    private static Dictionary<string, string> EuroCarPartsSpecMap(IDocument document)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var cells = document.QuerySelectorAll("[data-testid='productSpecificationGrid'] > *")
+            .Select(n => Clean(n.TextContent))
+            .Where(v => !string.IsNullOrWhiteSpace(v))
+            .ToList();
+        for (var i = 0; i + 1 < cells.Count; i += 2)
+        {
+            map[cells[i]!] = cells[i + 1]!;
+        }
+
+        return map;
+    }
+
+    private static string? GetSpec(IReadOnlyDictionary<string, string> specs, string label) =>
+        specs.TryGetValue(label, out var value) ? value : null;
+
+    private static int? ParseLabeledMillimetres(IDocument document, string label)
+    {
+        foreach (var item in document.QuerySelectorAll("li"))
+        {
+            var text = Clean(item.TextContent);
+            if (text is null || !text.StartsWith(label, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var mm = ParsePatternInt(text, @"(\d+)\s*mm\b");
+            if (mm is not null)
+            {
+                return mm;
+            }
+        }
+
+        return null;
+    }
+
+    private static int? ParseEuroCarPartsCrankingAmps(IDocument document)
+    {
+        foreach (var item in document.QuerySelectorAll("li"))
+        {
+            var text = Clean(item.TextContent);
+            if (text is null
+                || (!text.Contains("CCA", StringComparison.OrdinalIgnoreCase)
+                    && !text.Contains("Cold Cranking", StringComparison.OrdinalIgnoreCase)))
+            {
+                continue;
+            }
+
+            var fromItem = ParsePatternInt(text, @"(\d+)\s*cca\b");
+            if (fromItem is not null)
+            {
+                return fromItem;
+            }
+
+            var sibling = Clean(item.NextSibling?.TextContent);
+            var fromSibling = ParsePatternInt(sibling, @"(\d+)\s*cca\b");
+            if (fromSibling is not null)
+            {
+                return fromSibling;
+            }
+        }
+
+        return null;
+    }
+
+    private static int? ParseLeadingInt(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(text, @"^\s*(\d+)");
+        return match.Success && int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : null;
+    }
+
+    private static int? ParsePatternInt(string? text, string pattern)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(text, pattern, RegexOptions.IgnoreCase);
+        return match.Success && int.TryParse(match.Groups[1].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value)
+            ? value
+            : null;
     }
 
     private static decimal? ParseAmazonPrice(IDocument document)

@@ -38,6 +38,11 @@ public static class ProductVendorHelper
             return "Autodoc";
         }
 
+        if (Services.ProductPageMetadataParser.IsEuroCarPartsHost(uri.Host))
+        {
+            return "Euro Car Parts";
+        }
+
         return null;
     }
 }

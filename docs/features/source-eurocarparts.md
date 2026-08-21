@@ -3,8 +3,8 @@
 - **Id:** `docs/features/source-eurocarparts.md`
 - **Seq:** 2
 - **Depends-on:** `product-extra-data`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/3
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/features/product-extra-data.md`
 - **Related code:** `ProductPageMetadataParser`, `ProductPageClientValues`, `ProductExtra` / `ExtraYaml` (from `product-extra-data`), `ProductUrl`, `ProductVendorHelper`, `ProductImageService`, `ProductImagePicker`, `ChromiumPageLoader`, `IsUsablePageHtml`
@@ -91,7 +91,8 @@ Parse pitfalls (must not fail the sample asserts):
 ## Accepted defaults
 
 - Currency GBP. Trimmed snippet fixtures, not full homepages.
-- Source display string `"Euro Car Parts"`. Vendor on the page is also Euro Car Parts (confirmed).
+- Source display string `"Euro Car Parts"`. Vendor is that host label (first-party shop; no sold-by node). Accepted on scan.
+- Manufacturer is the first token of `brandImage` alt, so “Eicher Premium” matches confirmed **Eicher**. Accepted on scan.
 - Euro Car Parts SKU is fixture/URL id only, not a required `ManufacturerReference`.
 - Quantity selector and “price per …” copy do not change `UnitPrice`.
 - ExtraYaml keys and technology tokens identical to `product-extra-data`.
@@ -102,5 +103,6 @@ Parse pitfalls (must not fail the sample asserts):
 
 1. Do not implement until `product-extra-data` is **Status** `done`. Then follow skill `add-product-source`: discover fetch → one fixture per sample → failing tests for Name, UnitPrice, Manufacturer, Vendor, **and** ExtraYaml battery specs (sample 2 filled; 1 and 3 empty) → detector / parser / source label / Chromium gate if needed.
 2. Record the chosen fetch path in to-review **Deviations** if you add this host to the Chromium list.
-3. After land, `docs/parsing/overview.md` can list Euro Car Parts next to Amazon/Autodoc if a dedicated parser was required; skip that if generic parse already passed Name/price (still assert extra on sample 2).
-4. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; a second ExtraYaml column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
+3. Discovery (2026-08-21): HttpClient with Chrome identity returned HTTP 200 Next.js product HTML for all three sample URLs (~760–800 KB). `IsUsablePageHtml` passes (no challenge in the prefix). **No Chromium host gate.** Generic parse is not enough: `og:title` is the short brand (“Crosland”), and there is no `product:price:amount`. Dedicated `IsEuroCarPartsHost` / `ParseEuroCarParts`. CCA is `950CCA` from the name / cranking line, not Cold Test Current ENA (920).
+4. Scan accepted: manufacturer first-token of `brandImage` alt; vendor host label `"Euro Car Parts"`. `docs/parsing/overview.md` lists Euro Car Parts.
+5. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; a second ExtraYaml column; `git add` to-review on this branch; open a PR before to-review scan is accepted.
