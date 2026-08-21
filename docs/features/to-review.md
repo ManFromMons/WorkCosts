@@ -21,8 +21,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## source-onlinecarparts
 
 - **Feature:** [docs/features/source-onlinecarparts.md](source-onlinecarparts.md)
-- **Status:** ready-for-review
-- **Last note:** HttpClient fetch (no Chromium gate). Dedicated `IsOnlineCarPartsHost` / `ParseOnlineCarParts`. ExtraUnknown merges into ProductExtra YAML. `WorkCosts.Tests` 103 passed.
+- **Status:** done
+- **Last note:** Scan accepted. Feature file Status is `done`. Opening squash PR.
 
 ### Questions
 
