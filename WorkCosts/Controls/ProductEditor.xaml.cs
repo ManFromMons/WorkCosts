@@ -24,6 +24,7 @@ public sealed partial class ProductEditor
     private string _source = string.Empty;
     /// <summary>URL last saved to the database (or empty). Edit buffer does not update this until an image is chosen.</summary>
     private string _committedUrl = string.Empty;
+    private ProductExtra _extra = new();
 
     public ProductEditor()
     {
@@ -31,6 +32,7 @@ public sealed partial class ProductEditor
         JobChecks.ItemsSource = _jobOptions;
         EquivalentProductsList.ItemsSource = _equivalentProducts;
         PricePointRadios.ItemsSource = ProductPricePoints.Options;
+        FillTechnologyBox(TechnologyBox);
         BindInputToolTips();
     }
 
@@ -45,6 +47,12 @@ public sealed partial class ProductEditor
         InputToolTip.Bind(EanBox);
         InputToolTip.Bind(VariationBox);
         InputToolTip.Bind(OemBox);
+        InputToolTip.Bind(CapacityBox);
+        InputToolTip.Bind(LengthBox);
+        InputToolTip.Bind(WidthBox);
+        InputToolTip.Bind(HeightBox);
+        InputToolTip.Bind(CcaBox);
+        InputToolTip.Bind(TechnologyBox, () => TechnologyBox.SelectedItem as string);
         InputToolTip.Bind(CategoryRadios, () => (CategoryRadios.SelectedItem as Category)?.Name);
         InputToolTip.Bind(PricePointRadios, () => (PricePointRadios.SelectedItem as PricePointOption)?.Label);
         InputToolTip.Bind(AllJobsToggle, "All Jobs");
@@ -88,6 +96,7 @@ public sealed partial class ProductEditor
         EanBox.Text = string.Empty;
         VariationBox.Text = string.Empty;
         OemBox.Text = string.Empty;
+        ClearExtraFields();
         _committedUrl = string.Empty;
         UrlBox.Text = string.Empty;
         CostBox.Value = 0;
@@ -127,6 +136,7 @@ public sealed partial class ProductEditor
         EanBox.Text = product.Ean;
         VariationBox.Text = product.Variation;
         OemBox.Text = product.OemEquivalent;
+        LoadExtraFields(product.ExtraYaml);
         _committedUrl = product.Url ?? string.Empty;
         UrlBox.Text = _committedUrl;
         CostBox.Value = (double)product.UnitCost;
@@ -205,7 +215,8 @@ public sealed partial class ProductEditor
             GetSelectedPricePoint(),
             chosenJobs,
             _imageBlob,
-            _imageContentType);
+            _imageContentType,
+            ReadExtraYaml());
         error = null;
         return true;
     }
@@ -390,6 +401,8 @@ public sealed partial class ProductEditor
         {
             CostBox.Value = (double)price;
         }
+
+        ApplyExtraClient(values);
 
         _suppressEvents = false;
         if (raiseChanged)
@@ -651,6 +664,104 @@ public sealed partial class ProductEditor
         private void OnPropertyChanged([CallerMemberName] string? name = null) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
+
+    private void ExtraNumber_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args) =>
+        RaiseChanged();
+
+    private void TechnologyBox_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+        RaiseChanged();
+
+    private void LoadExtraFields(string? yaml)
+    {
+        _extra = ProductExtra.Parse(yaml);
+        SetIntBox(CapacityBox, _extra.Capacity);
+        SetIntBox(LengthBox, _extra.LengthMm);
+        SetIntBox(WidthBox, _extra.WidthMm);
+        SetIntBox(HeightBox, _extra.HeightMm);
+        SetIntBox(CcaBox, _extra.Cca);
+        TechnologyBox.SelectedItem = _extra.Technology ?? "";
+    }
+
+    private void ClearExtraFields()
+    {
+        _extra = new ProductExtra();
+        SetIntBox(CapacityBox, null);
+        SetIntBox(LengthBox, null);
+        SetIntBox(WidthBox, null);
+        SetIntBox(HeightBox, null);
+        SetIntBox(CcaBox, null);
+        TechnologyBox.SelectedItem = "";
+    }
+
+    private string ReadExtraYaml()
+    {
+        _extra = _extra.WithKnown(
+            ReadIntBox(CapacityBox),
+            ReadIntBox(LengthBox),
+            ReadIntBox(WidthBox),
+            ReadIntBox(HeightBox),
+            ReadIntBox(CcaBox),
+            TechnologyBox.SelectedItem as string);
+        return _extra.ToYaml();
+    }
+
+    private void ApplyExtraClient(ProductPageClientValues values)
+    {
+        if (values.Capacity is int capacity)
+        {
+            SetIntBox(CapacityBox, capacity);
+        }
+
+        if (values.LengthMm is int lengthMm)
+        {
+            SetIntBox(LengthBox, lengthMm);
+        }
+
+        if (values.WidthMm is int widthMm)
+        {
+            SetIntBox(WidthBox, widthMm);
+        }
+
+        if (values.HeightMm is int heightMm)
+        {
+            SetIntBox(HeightBox, heightMm);
+        }
+
+        if (values.Cca is int cca)
+        {
+            SetIntBox(CcaBox, cca);
+        }
+
+        if (values.Technology is not null)
+        {
+            TechnologyBox.SelectedItem = values.Technology;
+        }
+    }
+
+    private static void FillTechnologyBox(ComboBox box)
+    {
+        box.Items.Clear();
+        box.Items.Add("");
+        foreach (var token in ProductExtra.TechnologyTokens)
+        {
+            box.Items.Add(token);
+        }
+
+        box.SelectedItem = "";
+    }
+
+    private static int? ReadIntBox(NumberBox box)
+    {
+        if (double.IsNaN(box.Value) || box.Value < 0)
+        {
+            return null;
+        }
+
+        return (int)Math.Round(box.Value);
+    }
+
+    private static void SetIntBox(NumberBox box, int? value) =>
+        box.Value = value is int n ? n : double.NaN;
 }
 
 public sealed record ProductEditorValues(
@@ -670,4 +781,5 @@ public sealed record ProductEditorValues(
     string PricePoint,
     IReadOnlyList<Guid> JobIds,
     byte[]? ImageBlob,
-    string? ImageContentType);
+    string? ImageContentType,
+    string ExtraYaml = "");

@@ -36,6 +36,14 @@ public static class InputToolTip
         Update();
     }
 
+    public static void Bind(ComboBox box, Func<string?> getValue)
+    {
+        var prompt = PromptOf(box.Header, box.PlaceholderText);
+        void Update() => Set(box, prompt, getValue());
+        box.SelectionChanged += (_, _) => Update();
+        Update();
+    }
+
     public static void Bind(RadioButtons radios, Func<string?> getValue)
     {
         var prompt = PromptOf(radios.Header, null);

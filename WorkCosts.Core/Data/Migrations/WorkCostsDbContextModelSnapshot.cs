@@ -108,6 +108,11 @@ namespace WorkCosts.Data.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ExtraYaml")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PricePoint")
                         .IsRequired()
                         .HasMaxLength(20)

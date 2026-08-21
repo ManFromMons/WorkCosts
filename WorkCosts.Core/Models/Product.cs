@@ -13,6 +13,7 @@ public class Product
     public string Ean { get; set; } = string.Empty;
     public string Variation { get; set; } = string.Empty;
     public string OemEquivalent { get; set; } = string.Empty;
+    public string ExtraYaml { get; set; } = string.Empty;
     public string PricePoint { get; set; } = string.Empty;
     public byte[]? ImageBlob { get; set; }
     public string? ImageContentType { get; set; }
