@@ -4,7 +4,7 @@
 - **Seq:** 3
 - **Depends-on:** `product-extra-data`
 - **Status:** done
-- **PR:** none
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/4
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/features/product-extra-data.md`
 - **Related code:** `ProductPageMetadataParser`, `ProductPageClientValues`, `ProductExtra` / `ExtraYaml` (from `product-extra-data`), `ProductUrl`, `ProductVendorHelper`, `ProductImageService`, `ProductImagePicker`, `ChromiumPageLoader`, `IsUsablePageHtml`
