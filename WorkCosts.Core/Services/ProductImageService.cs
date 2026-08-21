@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using AngleSharp;
 using AngleSharp.Html.Dom;
@@ -108,6 +109,38 @@ public sealed class ProductImageService
 
         var images = await _cache.TryReadImagesAsync(cacheKey, cancellationToken);
         return images.Count > 0;
+    }
+
+    /// <summary>Cached chooser images for this product URL, or an empty list when none are stored.</summary>
+    public async Task<IReadOnlyList<ProductImageCandidate>> TryGetCachedImagesAsync(
+        string pageUrl,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Uri.TryCreate(pageUrl, UriKind.Absolute, out var pageUri)
+            || (pageUri.Scheme != Uri.UriSchemeHttp && pageUri.Scheme != Uri.UriSchemeHttps))
+        {
+            return [];
+        }
+
+        var cacheKey = ProductUrl.Normalize(pageUri);
+        if (PageCache.TryGetValue(cacheKey, out var memory) && memory.Images.Count > 0)
+        {
+            return memory.Images;
+        }
+
+        return await _cache.TryReadImagesAsync(cacheKey, cancellationToken);
+    }
+
+    private static void Log(string message, Exception? exception = null)
+    {
+        var line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}  ProductImageService: {message}";
+        if (exception is not null)
+        {
+            line += Environment.NewLine + exception;
+        }
+
+        Console.WriteLine(line);
+        Debug.WriteLine(line);
     }
 
     private static HttpClient CreateClient()
@@ -293,6 +326,58 @@ public sealed class ProductImageService
         return new ProductPageLoadResult(metadata, results, html);
     }
 
+    /// <summary>
+    /// Parses supplied page HTML (paste or file). Never starts Chromium.
+    /// Images are optional: HttpClient downloads of &lt;img&gt; / OG URLs may return none.
+    /// </summary>
+    public async Task<ProductPageLoadResult> LoadFromHtmlAsync(
+        string pageUrl,
+        string html,
+        CancellationToken cancellationToken = default,
+        Action<string>? status = null)
+    {
+        Log($"LoadFromHtmlAsync start url={pageUrl} htmlChars={html.Length}");
+        if (!Uri.TryCreate(pageUrl, UriKind.Absolute, out var pageUri)
+            || (pageUri.Scheme != Uri.UriSchemeHttp && pageUri.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new InvalidOperationException("Enter a valid http(s) product URL.");
+        }
+
+        if (!IsUsablePageHtml(html, pageUri))
+        {
+            throw new InvalidOperationException(FormatUnusablePageMessage(pageUri, html));
+        }
+
+        var cacheKey = ProductUrl.Normalize(pageUri);
+        status?.Invoke("Parsing pasted HTML…");
+        var metadata = await ProductPageMetadataParser.ParseHtmlAsync(html, pageUrl);
+        Log($"LoadFromHtmlAsync parsed name={metadata.Name ?? "(none)"}");
+
+        var context = BrowsingContext.New(Configuration.Default);
+        var document = await context.OpenAsync(req => req.Content(html).Address(pageUri.ToString()), cancellationToken);
+        var imageUrls = CollectHtmlImageUrls(document, pageUri);
+        Log($"LoadFromHtmlAsync found {imageUrls.Count} image URLs");
+
+        List<ProductImageCandidate> results;
+        try
+        {
+            results = imageUrls.Count == 0
+                ? []
+                : await DownloadImagesAsync(imageUrls, pageUri.ToString(), cancellationToken, status);
+        }
+        catch (Exception ex)
+        {
+            Log("LoadFromHtmlAsync image download failed; continuing without images", ex);
+            results = [];
+        }
+
+        await _cache.SaveHtmlAsync(pageUri, cacheKey, html, cancellationToken);
+        await _cache.SaveImagesAsync(pageUri, cacheKey, results, cancellationToken);
+        PageCache[cacheKey] = new CachedPage(html, results);
+        Log($"LoadFromHtmlAsync done images={results.Count}");
+        return new ProductPageLoadResult(metadata, results, html);
+    }
+
     private async Task<string> LoadHtmlAsync(Uri pageUri, string cacheKey, CancellationToken cancellationToken)
     {
         if (PageCache.TryGetValue(cacheKey, out var memory) && !string.IsNullOrWhiteSpace(memory.Html))
@@ -345,7 +430,7 @@ public sealed class ProductImageService
         return html;
     }
 
-    internal static bool IsUsablePageHtml(string html, Uri pageUri)
+    public static bool IsUsablePageHtml(string html, Uri pageUri)
     {
         if (string.IsNullOrWhiteSpace(html) || html.Length < 800)
         {
@@ -383,7 +468,15 @@ public sealed class ProductImageService
             || prefix.Contains("Enable JavaScript and cookies to continue", StringComparison.OrdinalIgnoreCase);
     }
 
-    internal static string FormatUnusablePageMessage(
+    public static string FormatUnusablePageMessage(Uri pageUri, string html) =>
+        FormatUnusablePageMessage(
+            ProductPageMetadataParser.IsAutodocHost(pageUri.Host) ? "Autodoc" : "The site",
+            httpStatus: 0,
+            cfMitigated: null,
+            html,
+            inChromium: false);
+
+    public static string FormatUnusablePageMessage(
         string site,
         int httpStatus,
         string? cfMitigated,
@@ -434,11 +527,16 @@ public sealed class ProductImageService
     private async Task<List<ProductImageCandidate>> DownloadImagesAsync(
         IReadOnlyList<string> imageUrls,
         string pageUrlString,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Action<string>? status = null)
     {
         var results = new List<ProductImageCandidate>();
-        foreach (var imageUrl in imageUrls.Take(40))
+        var candidates = imageUrls.Take(40).ToList();
+        Log($"DownloadImagesAsync {candidates.Count} urls page={pageUrlString}");
+        for (var i = 0; i < candidates.Count; i++)
         {
+            var imageUrl = candidates[i];
+            status?.Invoke($"Downloading images ({results.Count} saved, {i + 1}/{candidates.Count})…");
             try
             {
                 if (ImageCache.TryGetValue(imageUrl, out var cachedImage))
@@ -452,22 +550,27 @@ public sealed class ProductImageService
                     continue;
                 }
 
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                timeout.CancelAfter(TimeSpan.FromSeconds(12));
                 using var imageRequest = CreateImageRequest(imageUrl, pageUrlString);
-                using var imageResponse = await Http.SendAsync(imageRequest, cancellationToken);
+                using var imageResponse = await Http.SendAsync(imageRequest, timeout.Token);
                 if (!imageResponse.IsSuccessStatusCode)
                 {
+                    Log($"Skip image HTTP {(int)imageResponse.StatusCode} {imageUrl}");
                     continue;
                 }
 
                 var contentType = imageResponse.Content.Headers.ContentType?.MediaType ?? "image/jpeg";
                 if (!contentType.StartsWith("image/", StringComparison.OrdinalIgnoreCase))
                 {
+                    Log($"Skip image non-image content-type {contentType} {imageUrl}");
                     continue;
                 }
 
-                var bytes = await imageResponse.Content.ReadAsByteArrayAsync(cancellationToken);
+                var bytes = await imageResponse.Content.ReadAsByteArrayAsync(timeout.Token);
                 if (bytes.Length < 2_048 || bytes.Length > 8_000_000)
                 {
+                    Log($"Skip image size {bytes.Length} {imageUrl}");
                     continue;
                 }
 
@@ -485,12 +588,13 @@ public sealed class ProductImageService
                     break;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Skip images that fail to download.
+                Log($"Skip image {imageUrl}", ex);
             }
         }
 
+        Log($"DownloadImagesAsync finished saved={results.Count}");
         return results;
     }
 
@@ -557,6 +661,36 @@ public sealed class ProductImageService
     }
 
     private sealed record CachedPage(string Html, IReadOnlyList<ProductImageCandidate> Images);
+
+    private static List<string> CollectHtmlImageUrls(AngleSharp.Dom.IDocument document, Uri pageUri)
+    {
+        var imageUrls = new List<string>();
+        foreach (var img in document.Images.OfType<IHtmlImageElement>())
+        {
+            foreach (var candidate in EnumerateImageUrls(img, pageUri))
+            {
+                if (!imageUrls.Contains(candidate, StringComparer.OrdinalIgnoreCase))
+                {
+                    imageUrls.Add(candidate);
+                }
+            }
+        }
+
+        foreach (var meta in document.QuerySelectorAll("meta[property='og:image'], meta[name='og:image']"))
+        {
+            var content = meta.GetAttribute("content");
+            if (string.IsNullOrWhiteSpace(content)
+                || !TryMakeAbsolute(content, pageUri, out var ogUrl)
+                || imageUrls.Contains(ogUrl, StringComparer.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            imageUrls.Add(ogUrl);
+        }
+
+        return imageUrls;
+    }
 
     private static IEnumerable<string> EnumerateImageUrls(IHtmlImageElement img, Uri pageUri)
     {

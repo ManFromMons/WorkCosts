@@ -42,6 +42,67 @@ public static class ProductPageMetadataParser
         return Parse(document, pageUri);
     }
 
+    /// <summary>
+    /// Absolute http(s) page URL from canonical, og:url, base href, or IE "saved from url" markup.
+    /// </summary>
+    public static async Task<string?> FindPageUrlAsync(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+        {
+            return null;
+        }
+
+        var fromMarkup = FindSavedFromUrl(html);
+        var context = BrowsingContext.New(Configuration.Default);
+        var document = await context.OpenAsync(req => req.Content(html));
+        return FirstHttpUrl(
+            Attr(document, "link[rel='canonical']", "href"),
+            Attr(document, "link[rel=canonical]", "href"),
+            MetaContent(document, "og:url"),
+            Attr(document, "base", "href"),
+            fromMarkup);
+    }
+
+    private static string? Attr(IDocument document, string selector, string name)
+    {
+        var value = document.QuerySelector(selector)?.GetAttribute(name);
+        return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    }
+
+    private static string? FirstHttpUrl(params string?[] candidates)
+    {
+        foreach (var candidate in candidates)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                continue;
+            }
+
+            var trimmed = candidate.Trim().Trim('"', '\'');
+            if (trimmed.StartsWith("//", StringComparison.Ordinal))
+            {
+                trimmed = "https:" + trimmed;
+            }
+
+            if (Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            {
+                return uri.ToString();
+            }
+        }
+
+        return null;
+    }
+
+    private static string? FindSavedFromUrl(string html)
+    {
+        var match = Regex.Match(
+            html,
+            @"saved from url=\(\d+\)(https?://\S+)",
+            RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value.TrimEnd() : null;
+    }
+
     public static ProductPageMetadata Parse(IDocument document, Uri pageUri)
     {
         if (IsAmazonHost(pageUri.Host))

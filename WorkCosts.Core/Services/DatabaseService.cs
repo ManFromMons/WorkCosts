@@ -10,12 +10,23 @@ public sealed class DatabaseService
     private readonly TaskCompletionSource _ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public DatabaseService()
-    {
-        var folder = Path.Combine(
+        : this(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "WorkCosts");
-        Directory.CreateDirectory(folder);
-        _dbPath = Path.Combine(folder, "workcosts.db");
+            "WorkCosts",
+            "workcosts.db"))
+    {
+    }
+
+    public DatabaseService(string databasePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(databasePath);
+        var folder = Path.GetDirectoryName(Path.GetFullPath(databasePath));
+        if (!string.IsNullOrWhiteSpace(folder))
+        {
+            Directory.CreateDirectory(folder);
+        }
+
+        _dbPath = databasePath;
     }
 
     public string DatabasePath => _dbPath;

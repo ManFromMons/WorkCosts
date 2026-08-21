@@ -17,12 +17,15 @@ public sealed partial class ProductAddEditor : UserControl
     private string? _imageContentType;
     private string _source = string.Empty;
     private bool _readOnly;
+    private bool _requiresProductImage;
     private bool _suppressDirty;
     private Guid _savedCategoryId;
     private string _savedPricePoint = string.Empty;
     private bool _savedIsAllJobs;
     private HashSet<Guid> _savedJobIds = [];
     private ProductExtra _extra = new();
+    private IReadOnlyList<ProductImageCandidate> _loadedImages = [];
+    private string _urlBeforeEdit = string.Empty;
 
     /// <summary>
     /// Return false to skip fetching (for example after loading an existing product).
@@ -31,7 +34,13 @@ public sealed partial class ProductAddEditor : UserControl
 
     public bool IsDirty { get; private set; }
 
+    public bool RequiresProductImage => _requiresProductImage;
+
+    public bool HasProductImage => _imageBlob is { Length: > 0 };
+
     public event EventHandler? DirtyChanged;
+
+    public event EventHandler? ProductImageStateChanged;
 
     public ProductAddEditor()
     {
@@ -100,12 +109,14 @@ public sealed partial class ProductAddEditor : UserControl
     {
         _suppressDirty = true;
         SetReadOnly(false);
+        SetRequiresProductImage(false);
         ClearPageFields();
         ResetAssignments();
         UrlBox.Text = string.Empty;
         SetUrlEditMode(false);
         _suppressDirty = false;
         CaptureAssignmentBaseline();
+        NotifyProductImageStateChanged();
     }
 
     public async Task LoadExistingAsync(Product product, IEnumerable<Guid> selectedJobIds)
@@ -145,9 +156,11 @@ public sealed partial class ProductAddEditor : UserControl
         _imageBlob = product.ImageBlob;
         _imageContentType = product.ImageContentType;
         PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
+        SetRequiresProductImage(false);
         SetReadOnly(true);
         _suppressDirty = false;
         CaptureAssignmentBaseline();
+        NotifyProductImageStateChanged();
     }
 
     public void MarkClean() => CaptureAssignmentBaseline();
@@ -214,6 +227,7 @@ public sealed partial class ProductAddEditor : UserControl
         CcaBox.IsEnabled = !readOnly;
         TechnologyBox.IsEnabled = !readOnly;
         FetchImagesButton.IsEnabled = !readOnly;
+        ChooseImageFileButton.IsEnabled = !readOnly;
         ClearImageButton.IsEnabled = !readOnly;
         UrlDisplayButton.IsEnabled = !readOnly;
         UrlBox.IsReadOnly = readOnly;
@@ -236,10 +250,67 @@ public sealed partial class ProductAddEditor : UserControl
     public async Task BeginWithUrlAsync(string url)
     {
         SetReadOnly(false);
+        SetRequiresProductImage(false);
         UrlBox.Text = url.Trim();
         SetUrlEditMode(false);
         RefreshUrlDisplay();
-        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: false);
+        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: false, throwOnFailure: true);
+        NotifyProductImageStateChanged();
+    }
+
+    /// <summary>Starts the details stage from pasted or file HTML. Never starts Chromium.</summary>
+    public async Task BeginWithHtmlAsync(string url, string html, Action<string?>? overlayStatus = null)
+    {
+        StartupLog.Write($"BeginWithHtmlAsync url={url} htmlChars={html.Length}");
+        SetReadOnly(false);
+        SetRequiresProductImage(true);
+        UrlBox.Text = url.Trim();
+        SetUrlEditMode(false);
+        RefreshUrlDisplay();
+        ClearPageFields();
+        ResetAssignments();
+
+        SetFetchBusy(true);
+        SetFetchStatus("Reading pasted HTML…");
+        overlayStatus?.Invoke("Reading pasted HTML…");
+        try
+        {
+            var page = await _images.LoadFromHtmlAsync(
+                url,
+                html,
+                status: message =>
+                {
+                    SetFetchStatus(message);
+                    overlayStatus?.Invoke(message);
+                });
+            ApplyPageMetadata(page.Metadata);
+            _loadedImages = page.Images;
+
+            var inferredSource = ProductVendorHelper.InferSourceFromUrl(url);
+            if (!string.IsNullOrWhiteSpace(inferredSource))
+            {
+                _source = inferredSource;
+                UpdateVendorDisplay();
+            }
+
+            RefreshUrlDisplay();
+            StartupLog.Write($"BeginWithHtmlAsync parsed images={page.Images.Count}");
+            SetFetchBusy(false);
+            overlayStatus?.Invoke(null);
+            await ApplyLoadedImagesAsync(page.Images);
+        }
+        catch (Exception ex)
+        {
+            StartupLog.Write("BeginWithHtmlAsync failed", ex);
+            SetFetchStatus(ex.Message);
+            throw;
+        }
+        finally
+        {
+            SetFetchBusy(false);
+            overlayStatus?.Invoke(null);
+            NotifyProductImageStateChanged();
+        }
     }
 
     public bool TryRead(out ProductEditorValues values, out string? error)
@@ -269,6 +340,12 @@ public sealed partial class ProductAddEditor : UserControl
         if (!isAll && chosenJobs.Count == 0)
         {
             error = "Select at least one job, or enable 'Available for all jobs'.";
+            return false;
+        }
+
+        if (_requiresProductImage && (_imageBlob is null || _imageBlob.Length == 0))
+        {
+            error = "A product image is required.";
             return false;
         }
 
@@ -324,6 +401,7 @@ public sealed partial class ProductAddEditor : UserControl
         OemBox.Text = string.Empty;
         CostBox.Value = 0;
         ClearExtraFields();
+        _loadedImages = [];
         _imageBlob = null;
         _imageContentType = null;
         PreviewImage.Source = null;
@@ -339,6 +417,21 @@ public sealed partial class ProductAddEditor : UserControl
         SetUrlEditMode(true);
     }
 
+    /// <summary>
+    /// Cancels URL edit without fetching. Returns true when the URL field was in edit mode.
+    /// </summary>
+    public bool TryCancelUrlEdit()
+    {
+        if (UrlEditPanel.Visibility != Visibility.Visible)
+        {
+            return false;
+        }
+
+        UrlBox.Text = _urlBeforeEdit;
+        SetUrlEditMode(false);
+        return true;
+    }
+
     private void UrlBox_TextChanged(object sender, TextChangedEventArgs e) => RefreshUrlDisplay();
 
     private async void UrlAccept_Click(object sender, RoutedEventArgs e)
@@ -347,10 +440,18 @@ public sealed partial class ProductAddEditor : UserControl
         await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: true);
     }
 
-    private async void FetchImages_Click(object sender, RoutedEventArgs e) =>
-        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: true);
+    private async void FetchImages_Click(object sender, RoutedEventArgs e)
+    {
+        if (_loadedImages.Count > 0)
+        {
+            await ChooseFromLoadedImagesAsync();
+            return;
+        }
 
-    private async Task LoadFromUrlAsync(bool resetAssignmentsIfUncached, bool checkExisting)
+        await LoadFromUrlAsync(resetAssignmentsIfUncached: true, checkExisting: true);
+    }
+
+    private async Task LoadFromUrlAsync(bool resetAssignmentsIfUncached, bool checkExisting, bool throwOnFailure = false)
     {
         if (_readOnly)
         {
@@ -388,21 +489,9 @@ public sealed partial class ProductAddEditor : UserControl
                 url,
                 SetFetchStatus);
             ApplyPageMetadata(page.Metadata);
-
-            if (page.Images.Count > 0)
-            {
-                var chosen = page.Images[0];
-                _imageBlob = chosen.Bytes;
-                _imageContentType = chosen.ContentType;
-                PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
-                SetFetchStatus(page.Images.Count == 1
-                    ? null
-                    : $"Loaded {page.Images.Count} images; using the first. Fetch again to pick another.");
-            }
-            else
-            {
-                SetFetchStatus("Page loaded, but no product images were captured.");
-            }
+            _loadedImages = page.Images;
+            SetFetchBusy(false);
+            await ApplyLoadedImagesAsync(page.Images);
 
             var inferredSource = ProductVendorHelper.InferSourceFromUrl(url);
             if (!string.IsNullOrWhiteSpace(inferredSource))
@@ -412,15 +501,80 @@ public sealed partial class ProductAddEditor : UserControl
             }
 
             RefreshUrlDisplay();
+            NotifyProductImageStateChanged();
         }
         catch (Exception ex)
         {
+            StartupLog.Write("LoadFromUrlAsync failed", ex);
             SetFetchStatus(ex.Message);
+            if (throwOnFailure)
+            {
+                throw;
+            }
         }
         finally
         {
             SetFetchBusy(false);
         }
+    }
+
+    private async Task ApplyLoadedImagesAsync(IReadOnlyList<ProductImageCandidate> images)
+    {
+        if (images.Count == 0)
+        {
+            StartupLog.Write("ApplyLoadedImagesAsync: no images captured.");
+            SetFetchStatus("Page loaded, but no product images were captured. Load images from the product URL or choose an image file.");
+            return;
+        }
+
+        var chosen = images[0];
+        if (images.Count > 1 && XamlRoot is not null)
+        {
+            StartupLog.Write($"ApplyLoadedImagesAsync: opening image chooser for {images.Count} images.");
+            try
+            {
+                var picked = await ProductImagePicker.ChooseFromCandidatesAsync(XamlRoot, images);
+                if (picked is not null)
+                {
+                    chosen = picked;
+                }
+            }
+            catch (Exception ex)
+            {
+                StartupLog.Write("ApplyLoadedImagesAsync: image chooser failed; using the first image.", ex);
+                SetFetchStatus("Could not open the image picker. Using the first downloaded image.");
+            }
+        }
+
+        await ApplyChosenImageAsync(chosen);
+        SetFetchStatus(null);
+    }
+
+    private async Task ChooseFromLoadedImagesAsync()
+    {
+        if (_readOnly || _loadedImages.Count == 0)
+        {
+            StartupLog.Write($"ChooseFromLoadedImagesAsync skipped readOnly={_readOnly} count={_loadedImages.Count}");
+            return;
+        }
+
+        StartupLog.Write($"ChooseFromLoadedImagesAsync opening chooser count={_loadedImages.Count}");
+        var picked = await ProductImagePicker.ChooseFromCandidatesAsync(XamlRoot, _loadedImages);
+        if (picked is null)
+        {
+            return;
+        }
+
+        await ApplyChosenImageAsync(picked);
+        SetFetchStatus(null);
+        NotifyProductImageStateChanged();
+    }
+
+    private async Task ApplyChosenImageAsync(ProductImageCandidate chosen)
+    {
+        _imageBlob = chosen.Bytes;
+        _imageContentType = chosen.ContentType;
+        PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
     }
 
     private void ApplyPageMetadata(ProductPageMetadata metadata)
@@ -479,6 +633,8 @@ public sealed partial class ProductAddEditor : UserControl
     private void SetFetchBusy(bool busy)
     {
         FetchImagesButton.IsEnabled = !busy && !_readOnly;
+        ChooseImageFileButton.IsEnabled = !busy && !_readOnly;
+        ClearImageButton.IsEnabled = !busy && !_readOnly;
         FetchImagesButton.Opacity = busy ? 0.4 : 1;
         FetchImagesIcon.Visibility = busy ? Visibility.Collapsed : Visibility.Visible;
         FetchImagesRing.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
@@ -505,6 +661,72 @@ public sealed partial class ProductAddEditor : UserControl
         InputToolTip.Set(VendorBox, "Vendor", VendorBox.Text);
     }
 
+    private async void ChooseImageFile_Click(object sender, RoutedEventArgs e)
+    {
+        if (_readOnly)
+        {
+            return;
+        }
+
+        StartupLog.Write($"ChooseImageFile_Click loadedImages={_loadedImages.Count}");
+        if (_loadedImages.Count > 0)
+        {
+            await ChooseFromLoadedImagesAsync();
+            return;
+        }
+
+        Windows.Storage.StorageFile? file;
+        try
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            BindPickerToAppWindow(picker);
+            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".webp");
+
+            file = await picker.PickSingleFileAsync();
+        }
+        catch (Exception ex)
+        {
+            StartupLog.Write("ChooseImageFile_Click picker failed", ex);
+            SetFetchStatus(ex.Message);
+            return;
+        }
+
+        if (file is null)
+        {
+            StartupLog.Write("ChooseImageFile_Click: no file selected (picker cancelled or did not show).");
+            return;
+        }
+
+        try
+        {
+            var bytes = await File.ReadAllBytesAsync(file.Path);
+            if (bytes.Length == 0)
+            {
+                await DialogHelper.ShowMessageAsync(XamlRoot, "Image file",
+                    "The image file is empty or could not be read.");
+                return;
+            }
+
+            _imageBlob = bytes;
+            _imageContentType = ImageContentType(file.FileType);
+            PreviewImage.Source = await ProductImagePicker.ToBitmapAsync(_imageBlob);
+            SetFetchStatus(null);
+            NotifyProductImageStateChanged();
+        }
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Image file",
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "The image file is empty or could not be read."
+                    : ex.Message);
+        }
+    }
+
     private void ClearImage_Click(object sender, RoutedEventArgs e)
     {
         if (_readOnly)
@@ -515,10 +737,44 @@ public sealed partial class ProductAddEditor : UserControl
         _imageBlob = null;
         _imageContentType = null;
         PreviewImage.Source = null;
+        NotifyProductImageStateChanged();
     }
+
+    private void SetRequiresProductImage(bool required)
+    {
+        _requiresProductImage = required;
+        NotifyProductImageStateChanged();
+    }
+
+    private void NotifyProductImageStateChanged() =>
+        ProductImageStateChanged?.Invoke(this, EventArgs.Empty);
+
+    private static void BindPickerToAppWindow(object picker)
+    {
+        if (App.MainAppWindow is null)
+        {
+            throw new InvalidOperationException("Main window is not available.");
+        }
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainAppWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+    }
+
+    private static string ImageContentType(string fileType) =>
+        fileType.Trim().ToLowerInvariant() switch
+        {
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => "image/jpeg"
+        };
 
     private void SetUrlEditMode(bool editing)
     {
+        if (editing)
+        {
+            _urlBeforeEdit = UrlBox.Text;
+        }
+
         UrlEditPanel.Visibility = editing ? Visibility.Visible : Visibility.Collapsed;
         UrlDisplayButton.Visibility = editing ? Visibility.Collapsed : Visibility.Visible;
         RefreshUrlDisplay();

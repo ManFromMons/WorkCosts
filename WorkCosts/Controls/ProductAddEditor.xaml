@@ -71,6 +71,13 @@
                                         Visibility="Collapsed" />
                                 </Grid>
                                 <Button
+                                    x:Name="ChooseImageFileButton"
+                                    Click="ChooseImageFile_Click"
+                                    Style="{ThemeResource BorderlessIconButtonStyle}"
+                                    ToolTipService.ToolTip="Choose from downloaded images, or an image file">
+                                    <FontIcon FontSize="16" Glyph="&#xE8E5;" />
+                                </Button>
+                                <Button
                                     x:Name="ClearImageButton"
                                     Click="ClearImage_Click"
                                     Style="{ThemeResource BorderlessIconButtonStyle}"

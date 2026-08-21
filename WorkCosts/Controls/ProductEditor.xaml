@@ -48,10 +48,10 @@
                                     <Grid Width="36" Height="36">
                                         <Button
                                             x:Name="FetchImagesButton"
-                                            Click="FetchImages_Click"
+                                            Click="ChooseCachedImages_Click"
                                             Style="{ThemeResource BorderlessIconButtonStyle}"
-                                            ToolTipService.ToolTip="Load images from product URL">
-                                            <FontIcon x:Name="FetchImagesIcon" FontSize="16" Glyph="&#xE8B9;" />
+                                            ToolTipService.ToolTip="Choose from downloaded images">
+                                            <FontIcon x:Name="FetchImagesIcon" FontSize="16" Glyph="&#xE8E5;" />
                                         </Button>
                                         <ProgressRing
                                             x:Name="FetchImagesRing"
