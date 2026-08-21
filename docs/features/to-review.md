@@ -18,6 +18,26 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 ## Entries
 
+
+## unsaved-changes-prompt
+
+- **Feature:** [docs/features/unsaved-changes-prompt.md](unsaved-changes-prompt.md)
+- **Status:** ready-for-review
+- **Last note:** Timed Save / Don't Save / Cancel on dirty Add Product details, job notes / unparsed duration, invalid product fields, nav, and AppWindow.Closing. HWND WM_QUERYENDSESSION uses 10 s. `WorkCosts.Tests` 107 passed.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] `ConfirmUnsavedWithTimeoutAsync` returns `UnsavedPromptChoice` (Save / Discard / Cancel plus `TimedOut`) so a timeout Save that fails validation can discard and finish leaving.
+
+### Verify
+
+- [x] Tests from the feature file passed
+- [ ] Deviations accepted
+
 ## source-onlinecarparts
 
 - **Feature:** [docs/features/source-onlinecarparts.md](source-onlinecarparts.md)
