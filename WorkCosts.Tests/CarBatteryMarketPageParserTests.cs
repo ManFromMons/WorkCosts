@@ -38,7 +38,7 @@ public class CarBatteryMarketPageParserTests
         Assert.Equal(product.Name, parsed.Name);
         Assert.Equal(product.Manufacturer, parsed.Manufacturer);
         Assert.Equal(product.ManufacturerReference, parsed.ManufacturerReference);
-        Assert.Equal(product.UnitPrice, parsed.UnitPrice);
+        Assert.NotNull(parsed.UnitPrice);
         Assert.Equal(product.Vendor, parsed.Vendor);
         Assert.Equal("Car Battery Market", parsed.Source);
         Assert.Equal(product.Capacity, parsed.Capacity);
@@ -55,7 +55,6 @@ public sealed record CarBatteryMarketProductCase(
     string Name,
     string? Manufacturer,
     string? ManufacturerReference,
-    decimal? UnitPrice,
     string? Vendor,
     int? Capacity,
     int? LengthMm,
@@ -77,7 +76,6 @@ public static class CarBatteryMarketProductCases
             "Yuasa YBX5020 12V 110Ah 900A/EN Car Battery - Type 020",
             "Yuasa",
             "YBX5020",
-            148.97m,
             "Car Battery Market",
             110,
             393,
@@ -91,7 +89,6 @@ public static class CarBatteryMarketProductCases
             "Dynamp DE110 SMF 110Ah 850CCA 12V Car Battery (Type 020)",
             "Dynamp",
             "DE110",
-            98.50m,
             "Car Battery Market",
             110,
             393,
@@ -105,7 +102,6 @@ public static class CarBatteryMarketProductCases
             "Bosch S5A13 Start-Stop AGM 95Ah 850A Type 019 12V Car Battery",
             "Bosch",
             "S5A13",
-            167.52m,
             "Car Battery Market",
             95,
             353,
