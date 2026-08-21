@@ -125,6 +125,11 @@ public static class ProductPageMetadataParser
             return ParseCarBatteryMarket(document);
         }
 
+        if (IsTaynaHost(pageUri.Host))
+        {
+            return ParseTayna(document);
+        }
+
         return ParseGeneric(document, pageUri);
     }
 
@@ -140,6 +145,9 @@ public static class ProductPageMetadataParser
 
     public static bool IsCarBatteryMarketHost(string host) =>
         host.Contains("carbatterymarket.", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsTaynaHost(string host) =>
+        host.Contains("tayna.", StringComparison.OrdinalIgnoreCase);
 
     private static ProductPageMetadata ParseAmazon(IDocument document)
     {
@@ -295,6 +303,11 @@ public static class ProductPageMetadataParser
             return "Car Battery Market";
         }
 
+        if (IsTaynaHost(pageUri.Host))
+        {
+            return "Tayna";
+        }
+
         return null;
     }
 
@@ -351,6 +364,117 @@ public static class ProductPageMetadataParser
             extras.HeightMm,
             extras.Cca,
             extras.Technology);
+    }
+
+    private static ProductPageMetadata ParseTayna(IDocument document)
+    {
+        var heading = TaynaHeading(document);
+        var name = string.IsNullOrWhiteSpace(heading) ? null : heading.ToUpperInvariant();
+        var specs = TaynaSpecMap(document);
+        var manufacturer = TaynaManufacturer(document, specs);
+        var mfrRef = TaynaManufacturerReference(specs, heading, manufacturer);
+        var unitPrice = TaynaPrice(document);
+        var extras = TaynaExtras(specs);
+
+        return new ProductPageMetadata(
+            name,
+            manufacturer,
+            mfrRef,
+            unitPrice,
+            Vendor: "Tayna",
+            Ean: TaynaEan(document, specs),
+            Variation: null,
+            OemEquivalent: null,
+            Source: "Tayna",
+            extras.Capacity,
+            extras.LengthMm,
+            extras.WidthMm,
+            extras.HeightMm,
+            extras.Cca,
+            extras.Technology);
+    }
+
+    private static string? TaynaHeading(IDocument document) =>
+        Clean(document.QuerySelector("h1 [itemprop='name']")?.TextContent)
+        ?? Clean(document.QuerySelector("h1")?.TextContent);
+
+    private static string? TaynaManufacturer(IDocument document, IReadOnlyDictionary<string, string> specs) =>
+        MetaContent(document, "product:brand")
+        ?? GetSpec(specs, "Brand");
+
+    private static string? TaynaManufacturerReference(
+        IReadOnlyDictionary<string, string> specs,
+        string? heading,
+        string? manufacturer)
+    {
+        var fromTable = GetSpec(specs, "Product Code");
+        if (!string.IsNullOrWhiteSpace(fromTable))
+        {
+            return fromTable;
+        }
+
+        var tokens = SplitTokens(heading);
+        if (tokens.Count < 2)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(manufacturer)
+            && tokens[0].Equals(manufacturer, StringComparison.OrdinalIgnoreCase))
+        {
+            return tokens[1];
+        }
+
+        return null;
+    }
+
+    private static decimal? TaynaPrice(IDocument document) =>
+        ParsePriceText(Clean(document.QuerySelector(".pricing-holder #prodprice")?.TextContent))
+        ?? ParsePriceText(MetaContent(document, "product:price:amount"))
+        ?? ParsePriceText(MetaContent(document, "twitter:data1"));
+
+    private static string? TaynaEan(IDocument document, IReadOnlyDictionary<string, string> specs) =>
+        NormalizeGtin(
+            Clean(document.QuerySelector("#tech-spec [itemprop='gtin13']")?.TextContent)
+            ?? GetSpec(specs, "Barcode (EAN)")
+            ?? GetSpecContaining(specs, "EAN"));
+
+    private static (int? Capacity, int? LengthMm, int? WidthMm, int? HeightMm, int? Cca, string? Technology)
+        TaynaExtras(IReadOnlyDictionary<string, string> specs)
+    {
+        var capacity = ParseLeadingInt(GetSpec(specs, "Capacity (C20)"));
+        var lengthMm = ParseLeadingInt(GetSpec(specs, "Length"));
+        var widthMm = ParseLeadingInt(GetSpec(specs, "Width"));
+        var heightMm = ParseLeadingInt(GetSpec(specs, "Height inc. terms"))
+            ?? ParseLeadingInt(GetSpecContaining(specs, "Height inc"));
+        var cca = ParseLeadingInt(GetSpec(specs, "CCA (EN)"));
+        var technology = ProductTechnology.Normalize(GetSpec(specs, "Technology"));
+
+        return (capacity, lengthMm, widthMm, heightMm, cca, technology);
+    }
+
+    private static Dictionary<string, string> TaynaSpecMap(IDocument document)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in document.QuerySelectorAll("#tech-spec table tr"))
+        {
+            var cells = row.QuerySelectorAll("td");
+            if (cells.Length < 2)
+            {
+                continue;
+            }
+
+            var label = Clean(cells[0].TextContent)?.TrimEnd(':');
+            var value = Clean(cells[1].TextContent);
+            if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            map[label] = value;
+        }
+
+        return map;
     }
 
     private static string? CarBatteryMarketManufacturer(IDocument document, string? name)

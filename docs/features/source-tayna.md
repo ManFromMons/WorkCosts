@@ -3,8 +3,8 @@
 - **Id:** `docs/features/source-tayna.md`
 - **Seq:** 4
 - **Depends-on:** `product-extra-data`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/5
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/data/schema.md`
 - **Related code:** `ProductPageMetadataParser`, `ProductPageClientValues`, `ProductExtra` / `ExtraYaml` (from `product-extra-data`), `ProductUrl`, `ProductVendorHelper`, `ProductImageService`, `ProductImagePicker`, `ChromiumPageLoader`, `IsUsablePageHtml`
@@ -107,4 +107,5 @@ Parse pitfalls:
 
 1. Do not implement until `product-extra-data` is **Status** `done` (ExtraYaml + editor + client fields exist). Then follow skill `add-product-source`: discover fetch → one fixture per sample → failing tests for Name, UnitPrice, optional fields, **and** battery specs on all three → `IsTaynaHost` / parser / `"Tayna"` source label / Chromium gate if needed.
 2. Record the chosen fetch path in to-review **Deviations** if this host is added to the Chromium list.
-3. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; a second extra-info column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
+3. Discovery (2026-08-21): HttpClient with Chrome identity returned HTTP 200 product HTML for all three sample URLs (~155–157 KB). `IsUsablePageHtml` passes (no challenge in the prefix). **No Chromium host gate.** Generic parse is not enough: `og:title` is title case; the confirmed Names are the CSS-uppercase H1s. Dedicated `IsTaynaHost` / `ParseTayna`. Price is `#prodprice` in `.pricing-holder` (not `#pandpprice`, Star Buy, or Also Add); sample 1 fixture omits the buy box and uses `product:price:amount` **91.73**. ManufacturerReference is **Product Code** when present (`S5 A11`, `S4 013`), else the token after the brand in the H1 (`E60-N30L-B`). Height is **Height inc. terms**. Vendor is the host label `"Tayna"` (first-party shop; no sold-by node). Live sample 1 was In Stock on this date; the fixture still models the specified out-of-stock metadata-price path.
+4. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; a second extra-info column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
