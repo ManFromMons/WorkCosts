@@ -7,8 +7,11 @@
 
 ## What landed
 
-- Add Product URL stage: **Paste HTML** (clipboard) and **Open HTML file**, with live **Add** unchanged.
-- Parse and cache without Chromium; reject unusable/CAPTCHA HTML; require a product image before Add (fetch from URL or choose a file).
+- Add Product URL stage: **Paste HTML** (clipboard), **Open HTML file**, and **Skip**, with live **Add** unchanged.
+- Paste/Open ignore the URL box; product URL comes from the HTML (`FindPageUrlAsync`).
+- Parse and cache without Chromium; reject unusable/CAPTCHA HTML; require a product image before Add on the paste path.
+- Image HTTP is best-effort (12s timeout, logged skips). Several downloaded images open **Select product image** (double-click confirms). Globe/pictures reopen that grid; file picker is the fallback. Product detail top icon is choose-from-cache, not live fetch.
+- Esc cancels URL-edit on the add sheet without discarding the form.
 
 ## Tests
 

@@ -8,7 +8,7 @@ Will I DIY? is three layers. The WinUI app is one shell. GNOME and iPad are othe
 │  WinUI  │  Gir.Core + libadwaita  │  SwiftUI            │
 ├─────────────────────────────────────────────────────────┤
 │  Fetch session (WebView2 / WebKitGTK / WKWebView)       │
-│  Paste HTML (planned)                                   │
+│  Paste HTML (Windows shipped; other shells later)       │
 ├─────────────────────────────────────────────────────────┤
 │  WorkCosts.Parsing   AngleSharp → ProductPageMetadata   │
 │  (Swift ports this using tests as the contract)         │

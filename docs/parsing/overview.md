@@ -26,9 +26,9 @@ There is no closed vendor list. **Source** comes from the URL host (`ProductVend
 
 When generic is good enough, do not add a parser. When a host is wrong in production, add a dedicated path (see [adding-a-source.md](adding-a-source.md)). Each host is its own story `docs/features/source-<host>.md` with **≥3 user-confirmed** sample pages; agent skill `add-product-source`.
 
-## Planned: paste HTML
+## Paste HTML
 
-Users must be able to paste page HTML if live fetch fails (CAPTCHA, login, offline). See [paste-html.md](paste-html.md). Implement on Windows first, then other shells.
+Users can paste page HTML if live fetch fails (CAPTCHA, login, offline). See [paste-html.md](paste-html.md). Shipped on Windows first; other shells later. URL comes from the HTML, not from the URL box.
 
 ## Client fields
 
