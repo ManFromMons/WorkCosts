@@ -34,7 +34,7 @@ When the user names a sequence number (`5`, `Seq 2`, `/feature-queue 5`, `/start
    - otherwise → follow skill `start-implement` on that kebab (loads `implement-feature`).
 5. One Seq per pass unless they named more than one startable number.
 
-Do not start a `draft` or `done` story. Do not skip unmet **Depends-on**. Do not implement on `Planning`.
+Do not start a `draft` or `done` story. Do not skip unmet **Depends-on**. Do not implement on `Planning`. GNOME slices are not Seq numbers; use `/start-port gnome`.
 
 ## Tree meaning
 

@@ -95,6 +95,15 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "next-port-slice",
+      "type": "shell",
+      "command": "powershell -File scripts/Get-NextPortSlice.ps1",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [

@@ -2,6 +2,8 @@
 
 New C# app using **Gir.Core** (GTK4 + libadwaita) that **project-references** `WorkCosts.Core` and `WorkCosts.Parsing`.
 
+**Build order:** [gnome-build-order.md](gnome-build-order.md). Kickoff: `/start-port gnome` (one slice per pass). Do not add this project to `WorkCosts.slnx`.
+
 ## Chrome
 
 - `AdwApplicationWindow` + `AdwNavigationView` / `AdwBreakpointBin`.  

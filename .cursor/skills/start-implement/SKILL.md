@@ -16,6 +16,8 @@ This is the kickoff. Then follow skill `implement-feature` (and `update-to-revie
 
 The file must exist and **Status** must be `ready-for-agent`. Otherwise stop and send them to `plan-feature`.
 
+GNOME/Linux rebuild is `/start-port gnome`, not this skill.
+
 ## Kickoff
 
 1. `git fetch origin`. Read `docs/features/<kebab>.md`, `AGENTS.md`, `docs/layout-grammar.md`, and the **Related screens** named in the spec. Read `git show origin/main:docs/features/to-review.md`.

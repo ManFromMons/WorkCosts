@@ -26,6 +26,8 @@ Eligible:
 
 If the script prints `QUEUE_EMPTY`, stop. There is nothing to code.
 
+Do not use this skill for the GNOME port (`/start-port gnome`).
+
 If it prints a kebab id (for example `paste-html`), that is the job.
 
 To print the full Seq tree instead, follow skill `feature-queue` (`scripts/Get-FeatureQueue.ps1`). To start a specific number, use that skill with `-Seq N`.

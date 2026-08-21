@@ -14,6 +14,8 @@ Entry shape: [to-review-entry.md](to-review-entry.md)
 
 Do not implement until that file exists and **Status** is `ready-for-agent`. Otherwise stop and send the user to skill `plan-feature`.
 
+GNOME/Linux rebuild is skill `start-port` (`/start-port gnome`), not this skill.
+
 ## Gate
 
 1. Identify the feature id from the user (`paste-html` or `docs/features/paste-html.md`).

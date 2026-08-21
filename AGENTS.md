@@ -44,6 +44,18 @@ One story per host: `docs/features/source-<host>.md` (template `.cursor/skills/a
 
 Branch `feature/source-<host>-<Title>` from `origin/main`. Discover HttpClient vs Chromium, one trimmed fixture **per sample**, failing tests for Name and UnitPrice on **all three**, then parser/fetch as skill `add-product-source`. Inbox on `main` via `update-to-review`. No GitHub PR until that heading is **Status** `done`.
 
+## Porting to GNOME (Linux)
+
+Windows WinUI already exists. The Seq board (`/start-implement`, `pickup-next-feature`) adds **Windows** features to that app. It will not build a Linux UI, and its next story may be WinUI-only.
+
+To rebuild **Will I DIY?** as a Gir.Core Flatpak, invoke **`/start-port gnome`**. Playbook: [docs/platforms/gnome-build-order.md](docs/platforms/gnome-build-order.md). One slice per pass. Pickup: `scripts/Get-NextPortSlice.ps1` (reads `origin/main`). The playbook must already be on `main` (`merge-planning` first).
+
+```text
+/start-port gnome
+```
+
+Do not add the Gir.Core project to `WorkCosts.slnx`. On Linux do not build `WorkCosts/WorkCosts.csproj`. Portable tests: `dotnet test WorkCosts.Tests/WorkCosts.Tests.csproj --settings .runsettings`. `/start-port ipad` is not written yet.
+
 ## Implementing a feature
 
 To kick off a new coder chat, invoke skill `start-implement` (named spec, **Seq**, or next in the queue). Use `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. List the board with skill `feature-queue` (`scripts/Get-FeatureQueue.ps1`); start a story with `/feature-queue 5` or `/start-implement 5`. To take the next queued story without a number, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
@@ -69,10 +81,10 @@ Name:
 
 `feature/<feature_code>-<Title>`
 
-- **`<feature_code>`** is the spec id: the kebab name of `docs/features/<feature_code>.md` (`paste-html`, `zip-export-import`).
+- **`<feature_code>`** is the spec id: the kebab name of `docs/features/<feature_code>.md` (`paste-html`, `zip-export-import`), or a GNOME playbook slice id (`gnome-scaffold`).
 - **`<Title>`** is a short human title for the feature. Use hyphens instead of spaces (git-safe). Do not use slashes in the title.
 
-Examples: `feature/paste-html-Paste-HTML`, `feature/source-halfords-Halfords`, `feature/zip-export-import-Zip-export-and-import`.
+Examples: `feature/paste-html-Paste-HTML`, `feature/source-halfords-Halfords`, `feature/zip-export-import-Zip-export-and-import`, `feature/gnome-scaffold-GNOME-scaffold`.
 
 Create the branch from current `origin/main`. Do not implement on `Planning` or commit product WIP on `main`.
 
@@ -107,7 +119,7 @@ That updates `main` locally, then pushes `main` and `Planning`. Planning may be 
 
 GNOME and iPad are **new apps in this repo** (planned: `src/linux`, `src/ios`). They are not extra TFMs on the WinUI csproj.
 
-- **GNOME:** new Gir.Core (GTK4/libadwaita) project that references Core + Parsing. Ship as Flatpak.  
+- **GNOME:** new Gir.Core (GTK4/libadwaita) project under `src/linux/` that references Core + Parsing. Ship as Flatpak. Order: `/start-port gnome`. Do not add it to `WorkCosts.slnx`.  
 - **iPad / Mac Catalyst:** SwiftUI. Swift opens the same SQLite schema (follow EF migrations). Port parsers using `WorkCosts.Tests` fixtures. Mac agents may run `dotnet test WorkCosts.slnx`.
 
 ## Non-negotiables
@@ -120,12 +132,26 @@ GNOME and iPad are **new apps in this repo** (planned: `src/linux`, `src/ios`). 
 - Garage background is required. Theme: Auto / Light / Dark.  
 - Confirmations: platform primary = Yes, Esc / dismiss = No. Never host Chromium/WebKit inside a modal that freezes the UI.
 
-## Commands (Windows / Mac with .NET 9)
+## Commands
+
+Windows (WinUI solution):
 
 ```powershell
 dotnet build WorkCosts.slnx
 dotnet test WorkCosts.slnx --settings .runsettings
 dotnet run --project WorkCosts/WorkCosts.csproj
+```
+
+Linux / Mac (no WinUI) — Core, Parsing, tests:
+
+```bash
+dotnet test WorkCosts.Tests/WorkCosts.Tests.csproj --settings .runsettings
+```
+
+GNOME app (after slice 1 exists):
+
+```bash
+dotnet build src/linux/WillIDIY.Gnome.slnx
 ```
 
 Do not commit secrets, `.pfx`, or local `workcosts.db`. Do not invent git remotes. Close `WillIDIY.exe` before a full rebuild if copy/lock fails.

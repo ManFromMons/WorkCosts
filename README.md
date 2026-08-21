@@ -63,6 +63,22 @@ dotnet run --project WorkCosts/WorkCosts.csproj
 
 ---
 
+## GNOME rebuild (Linux)
+
+The WinUI app does not run on Linux. After the GNOME playbook is on `main` (land Planning with `merge-planning`), clone this repo and invoke **one slice per pass**:
+
+```bash
+curl https://cursor.com/install -fsS | bash
+agent login
+cd /path/to/WorkCosts
+git fetch origin && git checkout main && git pull
+agent -p --force "/start-port gnome"
+```
+
+Playbook: `docs/platforms/gnome-build-order.md`. Do not run `dotnet build WorkCosts.slnx` on Linux. Portable tests: `dotnet test WorkCosts.Tests/WorkCosts.Tests.csproj --settings .runsettings`. Repeat `/start-port gnome` after each slice is squash-merged.
+
+---
+
 ## Packaging a shareable installer (Inno Setup)
 
 Daily development stays **unpackaged** (`WindowsPackageType=None`). The Inno installer wraps that same self-contained publish: recipients run `Setup.exe` with no sideloading and no publisher certificate.

@@ -7,6 +7,8 @@ This branch holds **AGENTS.md**, **`.cursor/rules/`**, and **`docs/`** so anothe
 
 Windows WinUI remains the running reference in this repo.
 
+**GNOME rebuild command** (after this Planning work is on `main`): `/start-port gnome`. Ordered slices: [docs/platforms/gnome-build-order.md](docs/platforms/gnome-build-order.md). One slice per pass. Do not use `/start-implement` for the Linux UI. iPad playbook is not written yet.
+
 ---
 
 ## Locked decisions

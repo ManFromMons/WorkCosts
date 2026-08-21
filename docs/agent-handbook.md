@@ -16,6 +16,7 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | Planning a product change | Skill `plan-feature` | [PLANNING.md](../PLANNING.md) (locked decisions only), then write `docs/features/<kebab>.md` |
 | Adding a supplier host | `/start-add-source` + a URL ([AGENTS.md](../AGENTS.md), [README.md](../README.md)) | Confirm Name/price on **≥3** pages ([confirm-samples.md](../.cursor/skills/add-product-source/confirm-samples.md)); story then [parsing/adding-a-source.md](parsing/adding-a-source.md) |
 | Implementing a ready story | `@start-implement`, Seq via `feature-queue`, or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
+| Rebuilding GNOME on Linux | `/start-port gnome` | [platforms/gnome-build-order.md](platforms/gnome-build-order.md); `scripts/Get-NextPortSlice.ps1` |
 | Seeing the Seq board | Skill `feature-queue` | `scripts/Get-FeatureQueue.ps1` |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
 | Recording questions / review | Skill `update-to-review` | `git show origin/main:docs/features/to-review.md` |
@@ -107,6 +108,7 @@ One file per surface. Change the matching file when you change that UI.
 | :--- | :--- |
 | [platforms/windows.md](platforms/windows.md) | WinUI 3 reference app |
 | [platforms/gnome-flatpak.md](platforms/gnome-flatpak.md) | Gir.Core + libadwaita, Flatpak data dir |
+| [platforms/gnome-build-order.md](platforms/gnome-build-order.md) | GNOME port slices. Kickoff `/start-port gnome`. Not on the Seq board |
 | [platforms/ipados-swiftui.md](platforms/ipados-swiftui.md) | SwiftUI; no .NET runtime in the iPad binary |
 
 ---
@@ -126,6 +128,8 @@ One file per surface. Change the matching file when you change that UI.
 **Work states** (inbox on `main` only): `in-progress`, `blocked`, `resume`, `ready-for-review`. Never put those on the feature file. When development is finished, the coder sets **Status** `ready-for-review`. The human then ticks deviations and sets **Status** `done`.
 
 **Queue:** integer **Seq** (never reuse) + **Depends-on** (kebab ids or `none`). Tree + start-by-Seq: skill `feature-queue` / `scripts/Get-FeatureQueue.ps1` (working tree overlay on `origin/main`). Pickup: lowest Seq that is `ready-for-agent` whose dependencies are `done`. Script: `scripts/Get-NextReadyFeature.ps1` (reads **`origin/main`**, not Planning).
+
+**GNOME port:** slices in [platforms/gnome-build-order.md](platforms/gnome-build-order.md), not `docs/features/gnome-*.md`. Pickup: `scripts/Get-NextPortSlice.ps1`. Invoke `/start-port gnome`. One slice per pass. Same to-review / squash-PR rules as a feature.
 
 ---
 
@@ -147,15 +151,16 @@ All project skills live under `.cursor/skills/<name>/SKILL.md`. Folder name **mu
 | :--- | :--- | :--- |
 | `plan-feature` | Yes | Write `docs/features/<kebab>.md` on **Planning**. For shops, copy the source template. Does not implement. |
 | `start-implement` | **No** (`disable-model-invocation: true`) | Kickoff: named ready story, **Seq**, or next in queue. Then follow `implement-feature`. |
+| `start-port` | **No** | Kickoff: GNOME slice from the playbook (`/start-port gnome`). One slice per pass. Script `Get-NextPortSlice.ps1`. |
 | `feature-queue` | Yes | Print the Seq dependency tree; start a story by number (`/feature-queue 5`). Script `Get-FeatureQueue.ps1`. |
 | `implement-feature` | Yes | Code from a `ready-for-agent` spec. Branch from `origin/main`. Inbox via `update-to-review`. When coding is done, inbox **Status** `ready-for-review`. No PR until that heading is **done**. |
-| `pickup-next-feature` | Yes | Run `Get-NextReadyFeature.ps1`, then `start-implement` on that id. Stop on `QUEUE_EMPTY`. |
+| `pickup-next-feature` | Yes | Run `Get-NextReadyFeature.ps1`, then `start-implement` on that id. Stop on `QUEUE_EMPTY`. Not for GNOME. |
 | `start-add-source` | **No** | URL → interactive confirm of ≥3 pages + story. Ready story id → `add-product-source`. |
 | `add-product-source` | Yes | Discover HttpClient vs Chromium, fixture, failing tests, detector/parser/fetch. Same inbox/PR rules. |
 | `update-to-review` | Yes | Land **only** `docs/features/to-review.md` on `main` via `Update-ToReviewOnMain.ps1`. |
 | `merge-planning` | Yes | Rebase/squash Planning onto main, fast-forward, push both. Preserves to-review on main. |
 
-**Invoke-only** skills (`start-implement`, `start-add-source`) are never applied from ambient chat. You must type `/start-implement` or `/start-add-source` (editor or CLI).
+**Invoke-only** skills (`start-implement`, `start-add-source`, `start-port`) are never applied from ambient chat. You must type `/start-implement`, `/start-add-source`, or `/start-port` (editor or CLI).
 
 Templates next to skills (agents read them when the skill says so):
 
@@ -184,9 +189,13 @@ powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: paste-ht
 powershell -File scripts/Get-NextReadyFeature.ps1
 powershell -File scripts/Get-FeatureQueue.ps1
 powershell -File scripts/Get-FeatureQueue.ps1 -Seq 5
+
+pwsh -File scripts/Get-NextPortSlice.ps1
+pwsh -File scripts/Get-NextPortSlice.ps1 -List
+pwsh -File scripts/Get-NextPortSlice.ps1 -Slice gnome-scaffold
 ```
 
-VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-feature`, `feature-queue`.
+VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-feature`, `feature-queue`, `next-port-slice`.
 
 | Script | Effect |
 | :--- | :--- |
@@ -194,6 +203,7 @@ VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-
 | `Update-ToReviewOnMain.ps1` | Commit **only** `docs/features/to-review.md` on `main`, push `main` (never `--force`), return to the previous branch. |
 | `Get-NextReadyFeature.ps1` | Prints a kebab id or `QUEUE_EMPTY`. Reads `origin/main`. Fetch only. |
 | `Get-FeatureQueue.ps1` | Prints the Seq dependency tree (working tree overlay). `-Seq N` prints `KEBAB` / `STARTABLE`. Fetch only. |
+| `Get-NextPortSlice.ps1` | Prints next GNOME slice id, `PORT_CAUGHT_UP`, `PORT_WAITING_ON_WINDOWS:<kebab>`, or `PLAYBOOK_MISSING`. `-List` / `-Slice`. Reads `origin/main`. |
 
 Build/test (any branch, for product code):
 
@@ -201,6 +211,13 @@ Build/test (any branch, for product code):
 dotnet build WorkCosts.slnx
 dotnet test WorkCosts.slnx --settings .runsettings
 dotnet run --project WorkCosts/WorkCosts.csproj
+```
+
+Linux (no WinUI):
+
+```bash
+dotnet test WorkCosts.Tests/WorkCosts.Tests.csproj --settings .runsettings
+dotnet build src/linux/WillIDIY.Gnome.slnx
 ```
 
 ---
@@ -312,13 +329,14 @@ agent "Read AGENTS.md and summarise the next ready-for-agent story."
 /start-implement paste-html
 /start-implement 5
 /start-add-source source-halfords
+/start-port gnome
 ```
 
 `feature-queue` is auto: “show the work queue” lists the tree; “start Seq 5” or `/feature-queue 5` starts that number if startable.
 
 Auto skills can be named the same way, or described in English (“merge Planning into main”). Naming `/merge-planning` is more reliable.
 
-Stay in **Agent mode** for every skill that edits git or files (`plan-feature`, `implement-feature`, `add-product-source`, `update-to-review`, `merge-planning`, `feature-queue` when starting a Seq).
+Stay in **Agent mode** for every skill that edits git or files (`plan-feature`, `implement-feature`, `add-product-source`, `update-to-review`, `merge-planning`, `feature-queue` when starting a Seq, `start-port`).
 
 ### Print / headless mode (scripts and one-shot jobs)
 
@@ -342,6 +360,10 @@ agent -p --force "/start-implement"
 
 # Named story
 agent -p --force "/start-implement paste-html"
+
+# GNOME next slice (playbook must already be on origin/main)
+agent -p --force "/start-port gnome"
+agent -p --force "/start-port gnome gnome-scaffold"
 
 # Seq tree (read-only) or start that Seq when startable
 agent -p "/feature-queue"
@@ -390,7 +412,7 @@ agent --resume "thread-id"
 | `feature-queue` **list only** | Any branch. Script fetches; does not switch. |
 | `start-add-source` **with a URL** / incomplete story | **`Planning`**. Interactive confirm of ≥3 pages. No feature branch yet. |
 | `merge-planning` | Clean tree; script fetches and switches. Dirty tree → stop. |
-| `start-implement`, `implement-feature`, `pickup-next-feature`, `feature-queue` **start by Seq**, `start-add-source` **on a ready story**, `add-product-source` | Prefer a **clean** repo. The skill branches from `origin/main`. Do not commit product WIP on `Planning` or `main`. `--worktree` avoids touching a dirty Planning tree. |
+| `start-implement`, `implement-feature`, `pickup-next-feature`, `feature-queue` **start by Seq**, `start-add-source` **on a ready story**, `add-product-source`, `start-port` | Prefer a **clean** repo. The skill branches from `origin/main`. Do not commit product WIP on `Planning` or `main`. `--worktree` avoids touching a dirty Planning tree. Playbook for `start-port` must already be on `origin/main`. |
 | `update-to-review` | **Feature branch**, product code already committed; working tree dirty **only** with `docs/features/to-review.md` (copied from main). |
 
 Cloud Agents (`&` or the Cloud Agent UI) use a remote checkout. They still must follow the same branch rules. Do not let a cloud job merge Planning with a merge commit or force-push `main`.
@@ -440,6 +462,14 @@ Discover fetch, one fixture per sample, failing Name+UnitPrice tests for all thr
 Inbox on main via update-to-review. No GitHub PR until that heading is Status done.
 ```
 
+**GNOME next slice** (Linux box; playbook already on `origin/main`)
+
+```text
+/start-port gnome
+```
+
+One slice (scaffold, then shell, …). Re-invoke after that slice’s squash merge. Do not use `/start-implement` here.
+
 ---
 
 ## Do not confuse
@@ -448,6 +478,7 @@ Inbox on main via update-to-review. No GitHub PR until that heading is Status do
 | :--- | :--- |
 | Cursor **Plan mode** (`--mode=plan`) | Skill **`plan-feature`** (writes markdown on Planning) |
 | `/start-implement` | Automatically picking a story — it will, but only **after** you invoke it |
+| `/start-port gnome` | `/start-implement` or `pickup-next-feature` — those are Windows Seq stories |
 | `docs/parsing/paste-html.md` | `docs/features/paste-html.md` (the latter is the source of truth) |
 | `to-review.md` on Planning / a feature branch | The inbox — only `origin/main` counts |
 | `scripts/*.ps1` | Cursor skills — scripts are git helpers the skills run |
