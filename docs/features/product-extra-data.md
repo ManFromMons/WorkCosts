@@ -3,8 +3,8 @@
 - **Id:** `docs/features/product-extra-data.md`
 - **Seq:** 5
 - **Depends-on:** none
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/2
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/data/schema.md`, `docs/parsing/overview.md`
 - **Related code:** `Product`, `WorkCostsDbContext`, `ProductPageMetadata`, `ProductPageClientValues`, `ProductPageClientContractTests`, `ProductEditor`, `ProductAddEditor`, `ProductEditorValues`, `ProductsPage` (`CreateProductFromValues`, save/load)
@@ -100,10 +100,13 @@ Editor ComboBox stores the token, not the page phrase. Unrecognised technology i
 - Decisions from planning: Capacity is int; technology normalised; sample CCA values belong on the source stories, not here.
 - Kickoff: skill `start-implement` on this file (not `start-add-source`).
 - Later branch: `feature/product-extra-data-Product-extra-YAML`.
+- `DatabaseService.RepairProductSchema` also adds `ExtraYaml` (same pattern as `PricePoint`). Accepted in review.
+- `InputToolTip.Bind(ComboBox, …)` for Technology. Accepted in review.
 
 ## Implementation notes for an agent
 
 1. Migration + `Product.ExtraYaml` + `docs/data/schema.md`.
 2. `ProductExtra` YAML helper + tests, then extra fields on `ProductPageMetadata` / `ProductPageClientValues` + contract tests + technology helper in Parsing.
 3. WinUI: `ProductEditor` / `ProductAddEditor` / `ProductEditorValues` / `ProductsPage` load-save. Update `docs/screens/products.md` and client-fields in `docs/parsing/overview.md`.
-4. Do not: host parsers; separate spec columns; ExtraYaml text box in the UI; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
+4. Accepted reuse: ExtraYaml column repair in `DatabaseService.RepairProductSchema`; `InputToolTip.Bind` for ComboBox.
+5. Do not: host parsers; separate spec columns; ExtraYaml text box in the UI; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
