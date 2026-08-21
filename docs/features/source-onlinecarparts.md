@@ -3,8 +3,8 @@
 - **Id:** `docs/features/source-onlinecarparts.md`
 - **Seq:** 6
 - **Depends-on:** `product-extra-data`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/6
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/features/product-extra-data.md`
 - **Related code:** `ProductPageMetadataParser`, `ProductPageClientValues`, `ProductExtra` / `ExtraYaml` (from `product-extra-data`), `ProductUrl`, `ProductVendorHelper`, `ProductImageService`, `ProductImagePicker`, `ChromiumPageLoader`, `IsUsablePageHtml`
