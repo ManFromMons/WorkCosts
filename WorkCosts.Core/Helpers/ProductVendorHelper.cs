@@ -43,6 +43,11 @@ public static class ProductVendorHelper
             return "Euro Car Parts";
         }
 
+        if (Services.ProductPageMetadataParser.IsCarBatteryMarketHost(uri.Host))
+        {
+            return "Car Battery Market";
+        }
+
         return null;
     }
 }
