@@ -3,7 +3,7 @@
 - **Id:** `docs/features/source-carbatterymarket.md`
 - **Seq:** 3
 - **Depends-on:** `product-extra-data`
-- **Status:** ready-for-agent
+- **Status:** done
 - **PR:** none
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/features/product-extra-data.md`
@@ -93,9 +93,9 @@ Parse pitfalls:
 ## Accepted defaults
 
 - Currency GBP. Trimmed snippet fixtures, not full homepages.
-- Source display string `"Car Battery Market"`.
+- Source display string `"Car Battery Market"`. Vendor is that host label (first-party shop; no sold-by node). Accepted on scan.
 - ExtraYaml keys and technology tokens identical to `product-extra-data`.
-- Source tests do not lock a GBP unit price; parser still fills `UnitPrice` from the current `.product--price`.
+- Source tests do not lock a GBP unit price; parser still fills `UnitPrice` from the current `.product--price`. Accepted on scan.
 - Kickoff: skill `start-add-source` or `start-implement` on this file, after `product-extra-data` is **done**.
 - Later branch: `feature/source-carbatterymarket-Car-Battery-Market`.
 
@@ -104,4 +104,5 @@ Parse pitfalls:
 1. Do not implement until `product-extra-data` is **Status** `done`. Then follow skill `add-product-source`: discover fetch → one fixture per sample → failing tests for Name, **presence of** UnitPrice (not a GBP amount), **and** battery specs (normalised technology) on all three → detector / parser / source label / Chromium gate if needed.
 2. Record the chosen fetch path in to-review **Deviations** if this host is added to the Chromium list.
 3. Discovery (2026-08-21): HttpClient with Chrome identity returned HTTP 200 Shopware product HTML for all three sample URLs (~150–240 KB). `IsUsablePageHtml` passes (no challenge in the prefix). **No Chromium host gate.** Generic parse is not enough: no `product:price:amount`; battery specs and manufacturer reference need the properties table / Technical Specifications list. Dedicated `IsCarBatteryMarketHost` / `ParseCarBatteryMarket`. CCA is the spec-table value (sample 1 **950**, not title `900A/EN`). Technology: H1 then Technical Specifications then table, so sample 2 **SMF** (name / list) not table **Lead**; sample 1 table “Standard Wet Battery” → `Wet`. Vendor is the host label `"Car Battery Market"`. ManufacturerReference is Model / MPN, else the token after the brand in the H1. Source tests do not assert a GBP amount.
-4. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; a second ExtraYaml column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
+4. Scan accepted: vendor host label `"Car Battery Market"`; source tests do not lock a GBP amount. `docs/parsing/overview.md` lists Car Battery Market.
+5. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; a second ExtraYaml column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
