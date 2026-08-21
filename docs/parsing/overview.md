@@ -16,7 +16,7 @@ Never create the browser widget inside a blocking dialog. Windows already loads 
 
 ## Source and vendor
 
-There is no closed vendor list. **Source** comes from the URL host (`ProductVendorHelper.InferSourceFromUrl`: Amazon, Autodoc, Euro Car Parts, Car Battery Market, otherwise leave/generic host). **Vendor** is the seller on the page. UI breadcrumb: `Source › Vendor`.
+There is no closed vendor list. **Source** comes from the URL host (`ProductVendorHelper.InferSourceFromUrl`: Amazon, Autodoc, Euro Car Parts, Car Battery Market, Tayna, otherwise leave/generic host). **Vendor** is the seller on the page. UI breadcrumb: `Source › Vendor`.
 
 ## Hosts with dedicated parsers
 
@@ -24,6 +24,7 @@ There is no closed vendor list. **Source** comes from the URL host (`ProductVend
 - **Autodoc** (`autodoc.*`): JSON-LD + listing markup; strip title suffix; seller URL may map to Autodoc.  
 - **Euro Car Parts** (`eurocarparts.*`): product H1 (not the short `og:title`), `pdpPrice` (ignore quantity and frequently-bought add-ons), brand image, ExtraYaml battery specs from the spec list / name. HttpClient fetch.  
 - **Car Battery Market** (`carbatterymarket.*`): product H1 (not the shorter document title), `.product--price.price--default` (ignore RRP, PayPal, warranty add-on, Special buy), brand / MPN, ExtraYaml battery specs from the properties table and Technical Specifications list. HttpClient fetch.  
+- **Tayna** (`tayna.*`): uppercase product H1, `#prodprice` next to ADD TO BASKET (else `product:price:amount` when the buy box has no price), Product Code / H1 part number, EAN from the Technical Specification table, ExtraYaml battery specs including **Height inc. terms**. HttpClient fetch. Ignore Standard Delivery, Star Buy, and Also Add prices.  
 - **Generic**: `og:title`, `h1`, `product:brand` / `og:brand`, generic price meta.
 
 When generic is good enough, do not add a parser. When a host is wrong in production, add a dedicated path (see [adding-a-source.md](adding-a-source.md)). Each host is its own story `docs/features/source-<host>.md` with **≥3 user-confirmed** sample pages; agent skill `add-product-source`.

@@ -48,6 +48,11 @@ public static class ProductVendorHelper
             return "Car Battery Market";
         }
 
+        if (Services.ProductPageMetadataParser.IsTaynaHost(uri.Host))
+        {
+            return "Tayna";
+        }
+
         return null;
     }
 }
