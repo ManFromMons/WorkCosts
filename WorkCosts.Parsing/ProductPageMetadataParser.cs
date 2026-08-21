@@ -120,6 +120,11 @@ public static class ProductPageMetadataParser
             return ParseEuroCarParts(document);
         }
 
+        if (IsCarBatteryMarketHost(pageUri.Host))
+        {
+            return ParseCarBatteryMarket(document);
+        }
+
         return ParseGeneric(document, pageUri);
     }
 
@@ -132,6 +137,9 @@ public static class ProductPageMetadataParser
 
     public static bool IsEuroCarPartsHost(string host) =>
         host.Contains("eurocarparts.", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsCarBatteryMarketHost(string host) =>
+        host.Contains("carbatterymarket.", StringComparison.OrdinalIgnoreCase);
 
     private static ProductPageMetadata ParseAmazon(IDocument document)
     {
@@ -282,6 +290,11 @@ public static class ProductPageMetadataParser
             return "Euro Car Parts";
         }
 
+        if (IsCarBatteryMarketHost(pageUri.Host))
+        {
+            return "Car Battery Market";
+        }
+
         return null;
     }
 
@@ -310,6 +323,171 @@ public static class ProductPageMetadataParser
             extras.HeightMm,
             extras.Cca,
             extras.Technology);
+    }
+
+    private static ProductPageMetadata ParseCarBatteryMarket(IDocument document)
+    {
+        var name = Clean(document.QuerySelector("h1.product--title, h1[itemprop='name']")?.TextContent)
+            ?? StripTitleAfterPipe(MetaContent(document, "og:title"));
+
+        var manufacturer = CarBatteryMarketManufacturer(document, name);
+        var mfrRef = CarBatteryMarketManufacturerReference(document, name, manufacturer);
+        var unitPrice = CarBatteryMarketPrice(document);
+        var extras = CarBatteryMarketExtras(document, name);
+
+        return new ProductPageMetadata(
+            name,
+            manufacturer,
+            mfrRef,
+            unitPrice,
+            Vendor: "Car Battery Market",
+            Ean: null,
+            Variation: null,
+            OemEquivalent: null,
+            Source: "Car Battery Market",
+            extras.Capacity,
+            extras.LengthMm,
+            extras.WidthMm,
+            extras.HeightMm,
+            extras.Cca,
+            extras.Technology);
+    }
+
+    private static string? CarBatteryMarketManufacturer(IDocument document, string? name)
+    {
+        var fromMeta = Clean(document.QuerySelector("meta[itemprop='brand']")?.GetAttribute("content"));
+        if (!string.IsNullOrWhiteSpace(fromMeta))
+        {
+            return fromMeta;
+        }
+
+        var fromTable = GetSpec(CarBatteryMarketSpecMap(document), "Brand");
+        if (!string.IsNullOrWhiteSpace(fromTable))
+        {
+            return fromTable;
+        }
+
+        return FirstToken(name);
+    }
+
+    private static string? CarBatteryMarketManufacturerReference(
+        IDocument document,
+        string? name,
+        string? manufacturer)
+    {
+        var fromList = CarBatteryMarketLabeledValue(document, "Model Code / MPN")
+            ?? CarBatteryMarketLabeledValue(document, "Model");
+        if (!string.IsNullOrWhiteSpace(fromList))
+        {
+            return fromList;
+        }
+
+        var tokens = SplitTokens(name);
+        if (tokens.Count < 2)
+        {
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(manufacturer)
+            && tokens[0].Equals(manufacturer, StringComparison.OrdinalIgnoreCase))
+        {
+            return tokens[1];
+        }
+
+        return tokens.Count > 1 ? tokens[1] : null;
+    }
+
+    private static decimal? CarBatteryMarketPrice(IDocument document)
+    {
+        var meta = document.QuerySelector(".product--price.price--default meta[itemprop='price']");
+        return ParsePriceText(meta?.GetAttribute("content"))
+            ?? ParsePriceText(Clean(document.QuerySelector(".product--price.price--default .price--content.content--default")?.TextContent));
+    }
+
+    private static (int? Capacity, int? LengthMm, int? WidthMm, int? HeightMm, int? Cca, string? Technology)
+        CarBatteryMarketExtras(IDocument document, string? name)
+    {
+        var specs = CarBatteryMarketSpecMap(document);
+
+        var capacity = ParseLeadingInt(GetSpecContaining(specs, "Capacity AH"))
+            ?? ParseLeadingInt(CarBatteryMarketLabeledValue(document, "Capacity (C20)"));
+        var lengthMm = ParseLeadingInt(GetSpecContaining(specs, "Length (mm)"));
+        var widthMm = ParseLeadingInt(GetSpecContaining(specs, "Width (mm)"));
+        var heightMm = ParseLeadingInt(GetSpecContaining(specs, "Height (mm"));
+        var cca = ParseLeadingInt(GetSpec(specs, "CCA"))
+            ?? ParseLeadingInt(CarBatteryMarketLabeledValue(document, "Cold Cranking Amps (CCA)"))
+            ?? ParseLeadingInt(CarBatteryMarketLabeledValue(document, "Cold Cranking Amps (EN)"));
+        var technology = ProductTechnology.Normalize(name)
+            ?? ProductTechnology.Normalize(CarBatteryMarketLabeledValue(document, "Technology"))
+            ?? ProductTechnology.Normalize(GetSpec(specs, "Technology"));
+
+        return (capacity, lengthMm, widthMm, heightMm, cca, technology);
+    }
+
+    private static Dictionary<string, string> CarBatteryMarketSpecMap(IDocument document)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var row in document.QuerySelectorAll("table.product--properties-table tr"))
+        {
+            var label = Clean(row.QuerySelector(".product--properties-label")?.TextContent)?.TrimEnd(':');
+            var value = Clean(row.QuerySelector(".product--properties-value")?.TextContent);
+            if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            map[label] = value;
+        }
+
+        return map;
+    }
+
+    private static string? GetSpecContaining(IReadOnlyDictionary<string, string> specs, string needle)
+    {
+        foreach (var pair in specs)
+        {
+            if (pair.Key.Contains(needle, StringComparison.OrdinalIgnoreCase))
+            {
+                return pair.Value;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? CarBatteryMarketLabeledValue(IDocument document, string label)
+    {
+        foreach (var item in document.QuerySelectorAll("li"))
+        {
+            var heading = Clean(item.QuerySelector("strong")?.TextContent)?.TrimEnd(':');
+            if (string.IsNullOrWhiteSpace(heading)
+                || !heading.Equals(label, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var clone = item.Clone() as IElement;
+            clone?.QuerySelector("strong")?.Remove();
+            return Clean(clone?.TextContent);
+        }
+
+        return null;
+    }
+
+    private static string? FirstToken(string? text)
+    {
+        var tokens = SplitTokens(text);
+        return tokens.Count == 0 ? null : tokens[0];
+    }
+
+    private static List<string> SplitTokens(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return [];
+        }
+
+        return text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).ToList();
     }
 
     private static string? EuroCarPartsManufacturer(IDocument document)
