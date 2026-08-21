@@ -20,4 +20,4 @@ Kickoff only. Planning a URL follows [confirm-samples.md](../add-product-source/
 2. Branch `feature/source-<host>-<Title>` from `origin/main`. Not `Planning`, not `main`.
 3. Discover HttpClient vs Chromium; capture/trim **one fixture per sample URL**; write failing tests for Name and UnitPrice on **all** samples; then integrate detector/parser/fetch as in `add-product-source`.
 4. Commit buildable units. `dotnet test WorkCosts.slnx --settings .runsettings`.
-5. Inbox on `main` via `update-to-review` / `Update-ToReviewOnMain.ps1`. No PR until that heading is **Status** `done`.
+5. Inbox on `main` via `update-to-review` / `Update-ToReviewOnMain.ps1`. When tests pass, set that heading **Status** to `ready-for-review`. No PR until the heading is **Status** `done`.

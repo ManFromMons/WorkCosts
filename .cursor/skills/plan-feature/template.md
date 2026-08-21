@@ -4,7 +4,7 @@
 - **Seq:** &lt;integer, assigned by plan-feature, never reuse&gt;
 - **Depends-on:** none | `kebab-id`, `other-id`
 - **Status:** draft | ready-for-agent | done
-  (`blocked` / `in-progress` / `resume` / `scan` are **not** feature Status; they belong in `docs/features/to-review.md` on **main**. )
+  (`blocked` / `in-progress` / `resume` / `ready-for-review` are **not** feature Status; they belong in `docs/features/to-review.md` on **main**. )
 - **PR:** none | `https://github.com/…/pull/N`
 - **Windows:** required first unless stated
 - **Related screens:** `docs/screens/…`

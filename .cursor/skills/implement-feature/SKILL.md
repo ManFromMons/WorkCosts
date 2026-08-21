@@ -34,7 +34,7 @@ If that path does not exist on `origin/main` yet, the inbox is empty. If the fea
 
 Branch from up-to-date `origin/main` as `feature/<feature_code>-<Title>` (see `AGENTS.md`). Do not implement on `Planning` or `main`. Each commit must be **code that builds** (`dotnet build WorkCosts.slnx`). Include the tests the spec names when you claim a unit is done.
 
-You may **push the feature branch**. Do **not** open a GitHub pull request until the human has approved the work: `origin/main:docs/features/to-review.md` for this feature has no open questions, deviations ticked (or none), **Verify** ticked, and **Status** `done`.
+You may **push the feature branch**. When development is finished (tests named in the spec pass, no open questions), set the inbox heading **Status** to `ready-for-review` via skill `update-to-review`. Do **not** open a GitHub pull request until the human has approved the work: `origin/main:docs/features/to-review.md` for this feature has no open questions, deviations ticked (or none), **Verify** ticked, and **Status** `done`.
 
 - Do not mix inbox edits into code commits.
 - Do not `git add docs/features/to-review.md` on this branch.
@@ -53,12 +53,12 @@ Follow skill `update-to-review`. Exact steps:
    ```
 
    If git prints `fatal: path … does not exist`, copy the how-to plus an empty `## Entries` from this skill’s sibling [to-review-entry.md](to-review-entry.md) into that path first.
-4. Upsert this feature’s heading from [to-review-entry.md](to-review-entry.md). Set **Status** (`in-progress`, `blocked`, `scan`, …). Add questions and deviations there. Chat is not the inbox.
+4. Upsert this feature’s heading from [to-review-entry.md](to-review-entry.md). Set **Status** (`in-progress`, `blocked`, `ready-for-review`, …). Add questions and deviations there. Chat is not the inbox.
 5. `git status --porcelain` must show **only** `docs/features/to-review.md` (or `?? docs/features/` if the file is new). If anything else is dirty, stop.
 6. Run:
 
    ```powershell
-   powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: <kebab> <in-progress|blocked|scan>"
+   powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: <kebab> <in-progress|blocked|ready-for-review>"
    ```
 
    The script fast-forwards `main`, commits **only** that file, pushes `main` (never `--force`), and checks out the feature branch again. It will not leave the inbox committed on this branch.
@@ -91,8 +91,8 @@ Resume when the user says resume / continue, or the inbox on `main` has **Status
    ```
 
    Skip the solution test run only if the spec says UI-only and names no test cases.
-6. If tests pass and no open questions: set inbox **Status** to `scan`. Tick **Verify** → tests passed. Leave deviation boxes for the human. Land with the script. **Still no PR.**
-7. Wait until the human accepts the scan (`Status` `done` on `origin/main` to-review, deviations ticked). Then:
+6. If tests pass and no open questions: development is done. Set inbox **Status** to `ready-for-review`. Tick **Verify** → tests passed. Leave deviation boxes for the human. Land with the script. **Still no PR.**
+7. Wait until the human accepts the review (`Status` `done` on `origin/main` to-review, deviations ticked). Then:
    - Set the feature file **Status** to `done` on the feature branch.
    - Open a **squash PR to `main`**. Do not merge it.
    - Set **PR** in the story header. Add `docs/features/<kebab>-delivery.md` from [delivery-template.md](delivery-template.md). Commit and push those docs on the feature branch.
@@ -101,7 +101,7 @@ One named spec per pass, unless the user named more than one ready-for-agent fil
 
 ## Feature file Status
 
-`draft | ready-for-agent | done` only. `blocked` / `in-progress` / `resume` / `scan` belong in `docs/features/to-review.md` on `main`, not on the spec.
+`draft | ready-for-agent | done` only. `blocked` / `in-progress` / `resume` / `ready-for-review` belong in `docs/features/to-review.md` on `main`, not on the spec.
 
 When folding answers, do not invent extra spec sections. Update **Implementation notes** (and **Accepted defaults** / the conflicting section) only.
 
@@ -109,7 +109,7 @@ When folding answers, do not invent extra spec sections. Update **Implementation
 
 - Implement during planning, or plan during implementation (no new feature file from this skill).
 - Host questions or status only in chat, or commit the inbox off `main`.
-- Open a PR before the to-review scan is **Status** `done`.
+- Open a PR before the to-review heading is **Status** `done`.
 - Merge Planning to main, squash-merge the feature PR, pack MSIX, or drive-by refactor unrelated files.
-- Force-push `main`, or mark the feature **Status** `done` without a human scan.
+- Force-push `main`, or mark the feature **Status** `done` without a human review.
 - Duplicate existing helpers; do not invent a DI container unless the spec requires it.

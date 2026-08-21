@@ -11,7 +11,7 @@ Planning produces a **feature**, not a chat summary. The source of truth is one 
 
 If the user wants a **new supplier website**, do not fold it into a mega-queue file. Follow `.cursor/skills/add-product-source/confirm-samples.md`: propose Name and GBP price from the page, **wait for the user to confirm or correct**, and collect **at least three** product URLs on that host (confirm each page before the next). Then copy `.cursor/skills/add-product-source/template.md` to `docs/features/source-<host>.md`. The kebab `<host>` is the host family (`halfords`, `eurocarparts`). Leave **Status** `draft` until all three samples are confirmed. Implementation is skill `add-product-source` / invoke `start-add-source` on the story id, not this skill. Do not treat an unconfirmed scrape as Expected Name or UnitPrice.
 
-Assign **Seq** as one higher than the current max Seq on `origin/main` and on this branch (`docs/features/*.md`, not `*-delivery.md`). Never reuse a Seq. Set **Depends-on** to `none` or kebab ids that must be **Status** `done` before pickup. Leave **PR** as `none` until the coder opens a GitHub PR.
+Assign **Seq** as one higher than the current max Seq on `origin/main` and on this branch (`docs/features/*.md`, not `*-delivery.md`). Never reuse a Seq. Run `powershell -File scripts/Get-FeatureQueue.ps1` if you need the tree. Set **Depends-on** to `none` or kebab ids that must be **Status** `done` before pickup. Leave **PR** as `none` until the coder opens a GitHub PR.
 
 ## Workflow
 

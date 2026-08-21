@@ -9,7 +9,7 @@ Each host is an **independent** story: `docs/features/source-<host>.md` from [te
 
 Do not scrape behind a login. Do not commit cookies or secrets. Do not put WebView2 in a blocking dialog.
 
-Then follow `implement-feature` / `update-to-review` (inbox on `main`, **no PR until scan is `done`**). Branch `feature/source-<host>-<Title>` from `origin/main`.
+Then follow `implement-feature` / `update-to-review` (inbox on `main`, **no PR until that heading is `done`**). Branch `feature/source-<host>-<Title>` from `origin/main`.
 
 ## Gate
 
@@ -44,7 +44,7 @@ If generic parse already returns Name and price for **all** samples, **do not** 
 4. **Source string** in `ProductVendorHelper.InferSourceFromUrl` (human host name, e.g. `"Halfords"`). Vendor = seller on the page.
 5. **Fetch allowlist** in `ProductImagePicker` / `ProductImageService` if discovery required Chromium or special image rules.
 6. `IsUsablePageHtml` / challenge detection if this host serves interstitials.
-7. Re-run tests. Land to-review `scan` via `Update-ToReviewOnMain.ps1`. No PR until **Status** `done` on that inbox heading.
+7. Re-run tests. When they pass, land to-review **Status** `ready-for-review` via `Update-ToReviewOnMain.ps1`. No PR until **Status** `done` on that inbox heading.
 
 ## Do not
 

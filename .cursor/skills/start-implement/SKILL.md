@@ -1,6 +1,6 @@
 ---
 name: start-implement
-description: Kickoff prompt for a coder agent. Invoke to start implementing a named ready-for-agent feature, or the next queued story if none is named.
+description: Kickoff prompt for a coder agent. Invoke to start implementing a named ready-for-agent feature, a Seq number, or the next queued story if none is named.
 disable-model-invocation: true
 ---
 
@@ -10,6 +10,7 @@ This is the kickoff. Then follow skill `implement-feature` (and `update-to-revie
 
 ## Which feature
 
+- If the user named a **Seq** integer (`5`, `Seq 2`), follow skill `feature-queue` start-by-Seq (script `-Seq N`). Stop if it is not startable.
 - If the user named a spec (`paste-html` or `docs/features/paste-html.md`), that is the job.
 - If they did not, follow skill `pickup-next-feature`. Stop if it prints `QUEUE_EMPTY`.
 
@@ -26,7 +27,7 @@ The file must exist and **Status** must be `ready-for-agent`. Otherwise stop and
    dotnet test WorkCosts.slnx --settings .runsettings
    ```
 
-5. Questions, blocks, deviations, and `in-progress` / `scan` go in `docs/features/to-review.md` on **main** via skill `update-to-review`. Never `git add` that file on the feature branch. Exact land:
+5. Questions, blocks, deviations, and `in-progress` / `ready-for-review` go in `docs/features/to-review.md` on **main** via skill `update-to-review`. Never `git add` that file on the feature branch. When coding and the spec’s tests are done, set that heading **Status** to `ready-for-review`. Exact land:
 
    ```powershell
    git fetch origin

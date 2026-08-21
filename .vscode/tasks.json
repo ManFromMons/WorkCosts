@@ -86,6 +86,15 @@
         "cwd": "${workspaceFolder}"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "feature-queue",
+      "type": "shell",
+      "command": "powershell -File scripts/Get-FeatureQueue.ps1",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
     }
   ],
   "inputs": [

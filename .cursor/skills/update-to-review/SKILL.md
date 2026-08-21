@@ -1,13 +1,13 @@
 ---
 name: update-to-review
-description: Land docs/features/to-review.md on main only. Use when the coder must record questions, deviations, blocked/resume/scan status, or when the user asks to update the to-review inbox.
+description: Land docs/features/to-review.md on main only. Use when the coder must record questions, deviations, blocked/resume/ready-for-review status, or when the user asks to update the to-review inbox.
 ---
 
 # Update to-review on main
 
 The living inbox is **`docs/features/to-review.md` on `main`**. Scan it there. Do not commit that file on `Planning` or a feature branch.
 
-Do not open a feature PR until this inbox shows the human has accepted the scan (**Status** `done`, questions resolved, deviations ticked).
+Do not open a feature PR until this inbox shows the human has accepted the review (**Status** `done`, questions resolved, deviations ticked). When development is finished, the coder sets **Status** to `ready-for-review` (not `done`).
 
 ## Read the inbox
 
@@ -41,7 +41,7 @@ Do not treat the working-tree copy (or chat) as the source of truth.
 
    ```powershell
    powershell -File scripts/Update-ToReviewOnMain.ps1
-   powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: paste-html scan"
+   powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: paste-html ready-for-review"
    ```
 
 6. The script: fetches, fast-forwards local `main` to `origin/main`, commits **only** `docs/features/to-review.md`, pushes `main` (never `--force`), checks out the branch you were on, and drops the worktree copy so you cannot commit it off `main`.

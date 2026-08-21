@@ -1,7 +1,7 @@
 ## &lt;kebab-case-name&gt;
 
 - **Feature:** [docs/features/&lt;kebab-case-name&gt;.md](&lt;kebab-case-name&gt;.md)
-- **Status:** in-progress | blocked | resume | scan | done
+- **Status:** in-progress | blocked | resume | ready-for-review | done
 - **Last note:** …
 
 ### Questions

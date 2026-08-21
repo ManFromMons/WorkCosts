@@ -28,8 +28,10 @@ If the script prints `QUEUE_EMPTY`, stop. There is nothing to code.
 
 If it prints a kebab id (for example `paste-html`), that is the job.
 
+To print the full Seq tree instead, follow skill `feature-queue` (`scripts/Get-FeatureQueue.ps1`). To start a specific number, use that skill with `-Seq N`.
+
 ## Implement
 
-Follow skill `start-implement` for that id (it loads `implement-feature`). Branch `feature/<feature_code>-<Title>` from `origin/main` as in `AGENTS.md`.
+Follow skill `start-implement` for that id (it loads `implement-feature`). Branch `feature/<feature_code>-<Title>` from `origin/main` as in `AGENTS.md`. When development is finished, that skill sets the inbox heading **Status** to `ready-for-review`.
 
 One job per pass unless the user named more than one.

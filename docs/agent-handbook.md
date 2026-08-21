@@ -15,9 +15,10 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | A coder agent | [AGENTS.md](../AGENTS.md) | The screen/parsing/data file for the surface you touch; the feature file under `docs/features/` |
 | Planning a product change | Skill `plan-feature` | [PLANNING.md](../PLANNING.md) (locked decisions only), then write `docs/features/<kebab>.md` |
 | Adding a supplier host | `/start-add-source` + a URL ([AGENTS.md](../AGENTS.md), [README.md](../README.md)) | Confirm Name/price on **≥3** pages ([confirm-samples.md](../.cursor/skills/add-product-source/confirm-samples.md)); story then [parsing/adding-a-source.md](parsing/adding-a-source.md) |
-| Implementing a ready story | `@start-implement` or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
+| Implementing a ready story | `@start-implement`, Seq via `feature-queue`, or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
+| Seeing the Seq board | Skill `feature-queue` | `scripts/Get-FeatureQueue.ps1` |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
-| Recording questions / scan | Skill `update-to-review` | `git show origin/main:docs/features/to-review.md` |
+| Recording questions / review | Skill `update-to-review` | `git show origin/main:docs/features/to-review.md` |
 
 **Two long-lived branches**
 
@@ -122,9 +123,9 @@ One file per surface. Change the matching file when you change that UI.
 
 **Feature file Status** (on the story): `draft` → `ready-for-agent` → `done`.
 
-**Work states** (inbox on `main` only): `in-progress`, `blocked`, `resume`, `scan`. Never put those on the feature file.
+**Work states** (inbox on `main` only): `in-progress`, `blocked`, `resume`, `ready-for-review`. Never put those on the feature file. When development is finished, the coder sets **Status** `ready-for-review`. The human then ticks deviations and sets **Status** `done`.
 
-**Queue:** integer **Seq** (never reuse) + **Depends-on** (kebab ids or `none`). Pickup: lowest Seq that is `ready-for-agent` whose dependencies are `done`. Script: `scripts/Get-NextReadyFeature.ps1` (reads **`origin/main`**, not Planning).
+**Queue:** integer **Seq** (never reuse) + **Depends-on** (kebab ids or `none`). Tree + start-by-Seq: skill `feature-queue` / `scripts/Get-FeatureQueue.ps1` (working tree overlay on `origin/main`). Pickup: lowest Seq that is `ready-for-agent` whose dependencies are `done`. Script: `scripts/Get-NextReadyFeature.ps1` (reads **`origin/main`**, not Planning).
 
 ---
 
@@ -145,8 +146,9 @@ All project skills live under `.cursor/skills/<name>/SKILL.md`. Folder name **mu
 | Skill | Auto? | What it does |
 | :--- | :--- | :--- |
 | `plan-feature` | Yes | Write `docs/features/<kebab>.md` on **Planning**. For shops, copy the source template. Does not implement. |
-| `start-implement` | **No** (`disable-model-invocation: true`) | Kickoff: named ready story, or next in queue. Then follow `implement-feature`. |
-| `implement-feature` | Yes | Code from a `ready-for-agent` spec. Branch from `origin/main`. Inbox via `update-to-review`. No PR until scan **done**. |
+| `start-implement` | **No** (`disable-model-invocation: true`) | Kickoff: named ready story, **Seq**, or next in queue. Then follow `implement-feature`. |
+| `feature-queue` | Yes | Print the Seq dependency tree; start a story by number (`/feature-queue 5`). Script `Get-FeatureQueue.ps1`. |
+| `implement-feature` | Yes | Code from a `ready-for-agent` spec. Branch from `origin/main`. Inbox via `update-to-review`. When coding is done, inbox **Status** `ready-for-review`. No PR until that heading is **done**. |
 | `pickup-next-feature` | Yes | Run `Get-NextReadyFeature.ps1`, then `start-implement` on that id. Stop on `QUEUE_EMPTY`. |
 | `start-add-source` | **No** | URL → interactive confirm of ≥3 pages + story. Ready story id → `add-product-source`. |
 | `add-product-source` | Yes | Discover HttpClient vs Chromium, fixture, failing tests, detector/parser/fetch. Same inbox/PR rules. |
@@ -177,18 +179,21 @@ powershell -File scripts/Merge-PlanningToMain.ps1
 powershell -File scripts/Merge-PlanningToMain.ps1 -Message "Add paste-HTML feature spec."
 
 powershell -File scripts/Update-ToReviewOnMain.ps1
-powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: paste-html scan"
+powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: paste-html ready-for-review"
 
 powershell -File scripts/Get-NextReadyFeature.ps1
+powershell -File scripts/Get-FeatureQueue.ps1
+powershell -File scripts/Get-FeatureQueue.ps1 -Seq 5
 ```
 
-VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-feature`.
+VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-feature`, `feature-queue`.
 
 | Script | Effect |
 | :--- | :--- |
 | `Merge-PlanningToMain.ps1` | Fetch; FF local `main`; rebase Planning; squash if needed; FF-merge into `main`; restore to-review from main; push `main`; push Planning `--force-with-lease`. |
 | `Update-ToReviewOnMain.ps1` | Commit **only** `docs/features/to-review.md` on `main`, push `main` (never `--force`), return to the previous branch. |
 | `Get-NextReadyFeature.ps1` | Prints a kebab id or `QUEUE_EMPTY`. Reads `origin/main`. Fetch only. |
+| `Get-FeatureQueue.ps1` | Prints the Seq dependency tree (working tree overlay). `-Seq N` prints `KEBAB` / `STARTABLE`. Fetch only. |
 
 Build/test (any branch, for product code):
 
@@ -211,8 +216,8 @@ merge-planning  ─────────────────────�
 
 feature/foo-Title  (from origin/main)
   start-implement / implement-feature
-  update-to-review  ─────────────────►   to-review.md (in-progress / blocked / scan)
-  human ticks scan → Status done
+  update-to-review  ─────────────────►   to-review.md (in-progress / blocked / ready-for-review)
+  human accepts review → Status done
   open squash PR  ───────────────────►   GitHub PR (human squash-merges)
   foo.md Status done + foo-delivery.md
 ```
@@ -305,12 +310,15 @@ agent "Read AGENTS.md and summarise the next ready-for-agent story."
 
 ```text
 /start-implement paste-html
+/start-implement 5
 /start-add-source source-halfords
 ```
 
+`feature-queue` is auto: “show the work queue” lists the tree; “start Seq 5” or `/feature-queue 5` starts that number if startable.
+
 Auto skills can be named the same way, or described in English (“merge Planning into main”). Naming `/merge-planning` is more reliable.
 
-Stay in **Agent mode** for every skill that edits git or files (`plan-feature`, `implement-feature`, `add-product-source`, `update-to-review`, `merge-planning`).
+Stay in **Agent mode** for every skill that edits git or files (`plan-feature`, `implement-feature`, `add-product-source`, `update-to-review`, `merge-planning`, `feature-queue` when starting a Seq).
 
 ### Print / headless mode (scripts and one-shot jobs)
 
@@ -335,6 +343,11 @@ agent -p --force "/start-implement"
 # Named story
 agent -p --force "/start-implement paste-html"
 
+# Seq tree (read-only) or start that Seq when startable
+agent -p "/feature-queue"
+agent -p --force "/feature-queue 5"
+agent -p --force "/start-implement 5"
+
 # New supplier host (story already ready-for-agent)
 agent -p --force "/start-add-source source-halfords"
 
@@ -342,7 +355,7 @@ agent -p --force "/start-add-source source-halfords"
 agent "/start-add-source https://www.example.com/p/123"
 
 # Inbox on main (coder already committed product code; only to-review.md dirty)
-agent -p --force "/update-to-review Land scan for paste-html after tests passed."
+agent -p --force "/update-to-review Land ready-for-review for paste-html after tests passed."
 
 # Land Planning
 agent -p --force "/merge-planning Message: Add agent handbook and source-host playbook."
@@ -374,9 +387,10 @@ agent --resume "thread-id"
 | Skill | Git checkout before you run `agent` |
 | :--- | :--- |
 | `plan-feature` | **`Planning`**, pulled. |
+| `feature-queue` **list only** | Any branch. Script fetches; does not switch. |
 | `start-add-source` **with a URL** / incomplete story | **`Planning`**. Interactive confirm of ≥3 pages. No feature branch yet. |
 | `merge-planning` | Clean tree; script fetches and switches. Dirty tree → stop. |
-| `start-implement`, `implement-feature`, `pickup-next-feature`, `start-add-source` **on a ready story**, `add-product-source` | Prefer a **clean** repo. The skill branches from `origin/main`. Do not commit product WIP on `Planning` or `main`. `--worktree` avoids touching a dirty Planning tree. |
+| `start-implement`, `implement-feature`, `pickup-next-feature`, `feature-queue` **start by Seq**, `start-add-source` **on a ready story**, `add-product-source` | Prefer a **clean** repo. The skill branches from `origin/main`. Do not commit product WIP on `Planning` or `main`. `--worktree` avoids touching a dirty Planning tree. |
 | `update-to-review` | **Feature branch**, product code already committed; working tree dirty **only** with `docs/features/to-review.md` (copied from main). |
 
 Cloud Agents (`&` or the Cloud Agent UI) use a remote checkout. They still must follow the same branch rules. Do not let a cloud job merge Planning with a merge commit or force-push `main`.
@@ -409,6 +423,14 @@ Do not pre-fill Expected Name/price in the prompt and skip confirmation. Headles
 /start-implement
 Follow implement-feature. Use the next ready-for-agent story if I did not name one.
 ```
+
+**Implement Seq N** (must be startable on `origin/main`)
+
+```text
+/feature-queue 5
+```
+
+or `/start-implement 5`. The agent resolves Seq → kebab, then `start-implement` / `start-add-source`. If the story is Planning-only, land with `merge-planning` first.
 
 **Implement a source** (story already `ready-for-agent` with three confirmed samples)
 

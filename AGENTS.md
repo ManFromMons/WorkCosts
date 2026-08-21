@@ -46,7 +46,7 @@ Branch `feature/source-<host>-<Title>` from `origin/main`. Discover HttpClient v
 
 ## Implementing a feature
 
-To kick off a new coder chat, invoke skill `start-implement` (named spec, or next in the queue). Use `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. To take the next queued story without that kickoff, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
+To kick off a new coder chat, invoke skill `start-implement` (named spec, **Seq**, or next in the queue). Use `.cursor/skills/implement-feature/` only when `docs/features/<name>.md` exists and **Status** is `ready-for-agent`. List the board with skill `feature-queue` (`scripts/Get-FeatureQueue.ps1`); start a story with `/feature-queue 5` or `/start-implement 5`. To take the next queued story without a number, use skill `pickup-next-feature` (`scripts/Get-NextReadyFeature.ps1`). Branch from up-to-date `main` using the name below. Commit **buildable code only** on that branch.
 
 The review inbox is **`docs/features/to-review.md` on `main`**. Read it with `git show origin/main:docs/features/to-review.md`. Land every inbox edit with skill `update-to-review` and:
 
@@ -76,11 +76,11 @@ Examples: `feature/paste-html-Paste-HTML`, `feature/source-halfords-Halfords`, `
 
 Create the branch from current `origin/main`. Do not implement on `Planning` or commit product WIP on `main`.
 
-Stories are queued by **Seq** (integer, never reused) and **Depends-on** (kebab ids, or `none`). Skill `pickup-next-feature` takes the lowest Seq that is `ready-for-agent` whose dependencies are `done`.
+Stories are queued by **Seq** (integer, never reused) and **Depends-on** (kebab ids, or `none`). Skill `feature-queue` prints the dependency tree and can start by Seq. Skill `pickup-next-feature` takes the lowest Seq that is `ready-for-agent` whose dependencies are `done`.
 
 ### Landing agent work
 
-All **implementation** lands on `main` as a **squash pull request** opened **after** the to-review scan is accepted (**Status** `done`). Open the PR against `main` (GitHub). The human then squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks. Do not open the PR while questions or deviations are still unchecked.
+All **implementation** lands on `main` as a **squash pull request** opened **after** the to-review heading is accepted (**Status** `done`). While the coder is finished, that heading is **Status** `ready-for-review` — not `done`. Open the PR against `main` (GitHub). The human then squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks. Do not open the PR while questions or deviations are still unchecked.
 
 Do not use merge commits onto `main`. After a squash merge, delete the feature branch.
 
