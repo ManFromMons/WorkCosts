@@ -18,6 +18,26 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 ## Entries
 
+## source-eurocarparts
+
+- **Feature:** [docs/features/source-eurocarparts.md](source-eurocarparts.md)
+- **Status:** ready-for-review
+- **Last note:** HttpClient fetch (no Chromium gate). Dedicated parser + three fixtures. `WorkCosts.Tests` 89 passed.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] Manufacturer is the first token of `brandImage` alt so “Eicher Premium” matches confirmed **Eicher**.
+- [ ] Vendor is the host label `"Euro Car Parts"` (first-party shop; no sold-by node).
+
+### Verify
+
+- [x] Tests from the feature file passed
+- [ ] Deviations accepted
+
 ## paste-html
 
 - **Feature:** [docs/features/paste-html.md](paste-html.md)
