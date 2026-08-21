@@ -30,13 +30,13 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Manufacturer is the first token of `brandImage` alt so “Eicher Premium” matches confirmed **Eicher**.
-- [ ] Vendor is the host label `"Euro Car Parts"` (first-party shop; no sold-by node).
+- [x] Manufacturer is the first token of `brandImage` alt so “Eicher Premium” matches confirmed **Eicher**.
+- [x] Vendor is the host label `"Euro Car Parts"` (first-party shop; no sold-by node).
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
 ## paste-html
 
