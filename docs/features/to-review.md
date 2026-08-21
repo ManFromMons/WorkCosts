@@ -21,8 +21,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## source-tayna
 
 - **Feature:** [docs/features/source-tayna.md](source-tayna.md)
-- **Status:** ready-for-review
-- **Last note:** HttpClient fetch (no Chromium gate). Dedicated `IsTaynaHost` / `ParseTayna` for uppercase H1, `#prodprice` or metadata-price fallback, Product Code / H1 part number, EAN, and ExtraYaml battery specs. `WorkCosts.Tests` 97 passed.
+- **Status:** done
+- **Last note:** Scan accepted. Feature file Status is `done`. Opening squash PR.
 
 ### Questions
 
@@ -30,12 +30,12 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Vendor is the host label `"Tayna"` (first-party shop; no sold-by node).
+- [x] Vendor is the host label `"Tayna"` (first-party shop; no sold-by node).
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
 ## source-carbatterymarket
 
