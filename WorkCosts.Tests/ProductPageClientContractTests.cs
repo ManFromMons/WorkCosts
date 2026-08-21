@@ -47,6 +47,7 @@ public class ProductPageClientContractTests
         Assert.Equal(190, client.HeightMm);
         Assert.Equal(950, client.Cca);
         Assert.Equal("Wet", client.Technology);
+        Assert.Equal("Front Axle", client.ExtraUnknown!["axle"]);
     }
 
     [Fact]
@@ -71,6 +72,7 @@ public class ProductPageClientContractTests
         Assert.Null(client.HeightMm);
         Assert.Null(client.Cca);
         Assert.Null(client.Technology);
+        Assert.Null(client.ExtraUnknown);
     }
 
     [Theory]
@@ -86,7 +88,16 @@ public class ProductPageClientContractTests
         var client = ProductPageClientValues.From(parsed);
         var actual = typeof(ProductPageClientValues).GetProperty(field)!.GetValue(client);
 
-        Assert.Equal(expected, actual);
+        if (actual is IReadOnlyDictionary<string, string> actualMap
+            && expected is IReadOnlyDictionary<string, string> expectedMap)
+        {
+            Assert.Equal(expectedMap, actualMap);
+        }
+        else
+        {
+            Assert.Equal(expected, actual);
+        }
+
         AssertAllOtherFieldsNull(client, field);
     }
 
@@ -137,6 +148,7 @@ public class ProductPageClientContractTests
             { nameof(ProductPageClientValues.HeightMm), Only(heightMm: 190), 190 },
             { nameof(ProductPageClientValues.Cca), Only(cca: 640), 640 },
             { nameof(ProductPageClientValues.Technology), Only(technology: "AGM"), "AGM" },
+            { nameof(ProductPageClientValues.ExtraUnknown), Only(extraUnknown: ExtraUnknownSample), ExtraUnknownSample },
         };
 
     [Fact]
@@ -174,7 +186,11 @@ public class ProductPageClientContractTests
             175,
             190,
             950,
-            "Wet");
+            "Wet",
+            ExtraUnknownSample);
+
+    private static readonly IReadOnlyDictionary<string, string> ExtraUnknownSample =
+        new Dictionary<string, string>(StringComparer.Ordinal) { ["axle"] = "Front Axle" };
 
     private static ProductPageMetadata Only(
         string? name = null,
@@ -191,9 +207,10 @@ public class ProductPageClientContractTests
         int? widthMm = null,
         int? heightMm = null,
         int? cca = null,
-        string? technology = null) =>
+        string? technology = null,
+        IReadOnlyDictionary<string, string>? extraUnknown = null) =>
         new(name, manufacturer, mfrRef, price, vendor, ean, variation, oem, source,
-            capacity, lengthMm, widthMm, heightMm, cca, technology);
+            capacity, lengthMm, widthMm, heightMm, cca, technology, extraUnknown);
 
     private static void AssertAllOtherFieldsNull(ProductPageClientValues client, string except)
     {

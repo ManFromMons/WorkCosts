@@ -30,7 +30,8 @@ public sealed record ProductPageClientValues(
     int? WidthMm = null,
     int? HeightMm = null,
     int? Cca = null,
-    string? Technology = null)
+    string? Technology = null,
+    IReadOnlyDictionary<string, string>? ExtraUnknown = null)
 {
     public static ProductPageClientValues From(ProductPageMetadata metadata)
     {
@@ -50,7 +51,8 @@ public sealed record ProductPageClientValues(
             NonNegative(metadata.WidthMm),
             NonNegative(metadata.HeightMm),
             NonNegative(metadata.Cca),
-            BlankToNull(metadata.Technology));
+            BlankToNull(metadata.Technology),
+            ExtraUnknownFrom(metadata.ExtraUnknown));
     }
 
     private static string? BlankToNull(string? value) =>
@@ -58,4 +60,26 @@ public sealed record ProductPageClientValues(
 
     private static int? NonNegative(int? value) =>
         value is int n && n >= 0 ? n : null;
+
+    private static IReadOnlyDictionary<string, string>? ExtraUnknownFrom(
+        IReadOnlyDictionary<string, string>? map)
+    {
+        if (map is null || map.Count == 0)
+        {
+            return null;
+        }
+
+        var cleaned = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var (key, value) in map)
+        {
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            cleaned[key.Trim()] = value.Trim();
+        }
+
+        return cleaned.Count == 0 ? null : cleaned;
+    }
 }

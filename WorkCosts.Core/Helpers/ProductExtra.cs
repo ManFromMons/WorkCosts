@@ -164,6 +164,36 @@ public sealed class ProductExtra : IEquatable<ProductExtra>
             UnknownKeys = UnknownKeys
         };
 
+    public ProductExtra MergeUnknown(IReadOnlyDictionary<string, string>? extra)
+    {
+        if (extra is null || extra.Count == 0)
+        {
+            return this;
+        }
+
+        var map = new Dictionary<string, object?>(UnknownKeys, StringComparer.Ordinal);
+        foreach (var (key, value) in extra)
+        {
+            if (string.IsNullOrWhiteSpace(key) || string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            map[key.Trim()] = value.Trim();
+        }
+
+        return new ProductExtra
+        {
+            Capacity = Capacity,
+            LengthMm = LengthMm,
+            WidthMm = WidthMm,
+            HeightMm = HeightMm,
+            Cca = Cca,
+            Technology = Technology,
+            UnknownKeys = map
+        };
+    }
+
     public bool Equals(ProductExtra? other)
     {
         if (other is null)
