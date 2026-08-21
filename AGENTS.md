@@ -18,7 +18,31 @@ Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour r
 
 Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent. Specs are written on **`Planning`**, then landed with `merge-planning` (not a GitHub feature PR).
 
-New supplier websites: one story per host (`docs/features/source-<host>.md`). Starting from a URL is **interactive**: the agent proposes Name and GBP price from the page, you confirm or correct, and it collects **at least three** product URLs. Those confirmed values are the test contract. Then invoke `/start-add-source source-<host>` to implement (discover fetch, fixtures, tests, parser). See [docs/parsing/adding-a-source.md](docs/parsing/adding-a-source.md) and `.cursor/skills/add-product-source/confirm-samples.md`.
+## Adding a supplier website
+
+One story per host: `docs/features/source-<host>.md` (template `.cursor/skills/add-product-source/template.md`). Not a closed vendor enum. Protocol: `.cursor/skills/add-product-source/confirm-samples.md`. Playbook: [docs/parsing/adding-a-source.md](docs/parsing/adding-a-source.md). Human summary: [README.md](README.md) (Add a supplier website).
+
+`/start-add-source` is **invoke-only**. Type it in chat or interactive CLI.
+
+**Plan** (stay on **`Planning`**, no feature branch):
+
+```text
+/start-add-source https://www.example.com/product/…
+```
+
+1. Open or fetch the page. **Propose** Name and GBP price (optional fields only if obvious).
+2. **Wait.** The user confirms or pastes what they see. That answer is the contract. Do not write Expected Name or UnitPrice from an unconfirmed scrape.
+3. Ask for more product URLs on the **same host** until **three** pages are confirmed. Confirm **one page at a time**. Skip login walls, CAPTCHAs they cannot pass, and non-product URLs; ask for a replacement.
+4. Write the story with three sample rows. **Status** `ready-for-agent` only then. **Stop.** Do not implement in this pass unless they explicitly say to after the story is ready.
+5. Use a conversation (`agent` or editor). Do not invent Name/price in `agent -p`.
+
+**Implement** (story already `ready-for-agent` with three confirmed samples):
+
+```text
+/start-add-source source-<host>
+```
+
+Branch `feature/source-<host>-<Title>` from `origin/main`. Discover HttpClient vs Chromium, one trimmed fixture **per sample**, failing tests for Name and UnitPrice on **all three**, then parser/fetch as skill `add-product-source`. Inbox on `main` via `update-to-review`. No GitHub PR until that heading is **Status** `done`.
 
 ## Implementing a feature
 
@@ -48,7 +72,7 @@ Name:
 - **`<feature_code>`** is the spec id: the kebab name of `docs/features/<feature_code>.md` (`paste-html`, `zip-export-import`).
 - **`<Title>`** is a short human title for the feature. Use hyphens instead of spaces (git-safe). Do not use slashes in the title.
 
-Examples: `feature/paste-html-Paste-HTML`, `feature/zip-export-import-Zip-export-and-import`.
+Examples: `feature/paste-html-Paste-HTML`, `feature/source-halfords-Halfords`, `feature/zip-export-import-Zip-export-and-import`.
 
 Create the branch from current `origin/main`. Do not implement on `Planning` or commit product WIP on `main`.
 

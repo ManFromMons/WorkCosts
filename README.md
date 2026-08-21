@@ -8,7 +8,7 @@
 
 - **Jobs & Work Management**: Plan and track DIY jobs, log hours spent, and calculate total project costs.
 - **Parts & Product Catalog**: Organize parts by category, track OEM and alternative part numbers, record manufacturer variations, and maintain vendor price points (Amazon, Autodoc, etc.).
-- **Web Parser & Metadata Scraping**: Import product details, pricing, and images directly from supported supplier pages (Amazon, Autodoc).
+- **Web Parser & Metadata Scraping**: Import product details, pricing, and images from supplier pages (Amazon, Autodoc today; more hosts via the add-source skill below).
 - **Modern Fluent UI**: WinUI 3 with light/dark theme support and Mica material styling.
 - **Offline First**: Local SQLite storage backed by Entity Framework Core with automatic migration handling.
 
@@ -123,4 +123,23 @@ This project is open-source. See repository license for details.
 
 ## Agent specs
 
-Rebuild and layout rules for GNOME and iPad live on the `Planning` branch: start at [AGENTS.md](AGENTS.md). Catalogue of docs and skills, including how to run them from the Cursor CLI (`agent`): [docs/agent-handbook.md](docs/agent-handbook.md).
+Rebuild and layout rules for GNOME and iPad: [AGENTS.md](AGENTS.md). File-by-file map, skills, and Cursor CLI (`agent`): [docs/agent-handbook.md](docs/agent-handbook.md).
+
+### Add a supplier website
+
+Each shop is its own story (`docs/features/source-<host>.md`). **Your** Name and GBP price from the page are the test contract — not an unconfirmed scrape. **At least three** product pages per host.
+
+In Cursor chat or an **interactive** `agent` session (not a one-shot `agent -p`):
+
+```text
+/start-add-source https://www.example.com/product/…
+```
+
+1. The agent opens or fetches the page and proposes Name and unit price.
+2. You confirm or paste what you see.
+3. It asks for more product URLs on the **same host** until three pages are confirmed (one page at a time).
+4. It writes the story on the **`Planning`** branch and **stops**. No parser work yet.
+5. Land specs: skill `merge-planning` / `scripts/Merge-PlanningToMain.ps1`.
+6. Implement: `/start-add-source source-<host>` (creates `feature/source-<host>-…` from `main`). Fixtures and tests cover all three pages.
+
+Full protocol: `.cursor/skills/add-product-source/confirm-samples.md`. Playbook: [docs/parsing/adding-a-source.md](docs/parsing/adding-a-source.md).

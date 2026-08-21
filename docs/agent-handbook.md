@@ -2,7 +2,7 @@
 
 This is the map of **Will I DIY?** agent docs, skills, and scripts. Product behaviour still lives in the files listed here — this page does not replace them.
 
-Use it when you need to know **which file to open**, **which skill to invoke**, or **how to run that skill from the Cursor CLI**.
+Use it when you need to know **which file to open**, **which skill to invoke**, or **how to run that skill from the Cursor CLI**. Humans adding a shop can start at [README.md](../README.md) (Add a supplier website) or the section [Planning a supplier source](#planning-a-supplier-source-interactive) below.
 
 Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) and [cursor.com/docs/skills](https://cursor.com/docs/skills).
 
@@ -14,7 +14,7 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | :--- | :--- | :--- |
 | A coder agent | [AGENTS.md](../AGENTS.md) | The screen/parsing/data file for the surface you touch; the feature file under `docs/features/` |
 | Planning a product change | Skill `plan-feature` | [PLANNING.md](../PLANNING.md) (locked decisions only), then write `docs/features/<kebab>.md` |
-| Adding a supplier host | `/start-add-source` + a URL: confirm Name/price on **≥3** pages, then `source-<host>.md`. Implement only when that story is `ready-for-agent`. | [parsing/adding-a-source.md](parsing/adding-a-source.md) |
+| Adding a supplier host | `/start-add-source` + a URL ([AGENTS.md](../AGENTS.md), [README.md](../README.md)) | Confirm Name/price on **≥3** pages ([confirm-samples.md](../.cursor/skills/add-product-source/confirm-samples.md)); story then [parsing/adding-a-source.md](parsing/adding-a-source.md) |
 | Implementing a ready story | `@start-implement` or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
 | Recording questions / scan | Skill `update-to-review` | `git show origin/main:docs/features/to-review.md` |
@@ -50,9 +50,9 @@ Always-on Cursor rules (injected without asking): `.cursor/rules/product.mdc`, `
 
 | File | What it is | Do not |
 | :--- | :--- | :--- |
-| [AGENTS.md](../AGENTS.md) | Short operating manual for agents. Points here for the full map. | Invent a second product. Implement on `Planning`. |
+| [AGENTS.md](../AGENTS.md) | Short operating manual for agents. Points here for the full map. **Adding a supplier website** is a dedicated section there. | Invent a second product. Implement on `Planning`. |
 | [PLANNING.md](../PLANNING.md) | Locked product decisions for Windows / GNOME / iPad rebuilds. Historical questions stay here. | Put a new feature’s source of truth only here. |
-| [README.md](../README.md) | Human getting-started: build, test, Inno, MSIX. | Treat as the agent spec. |
+| [README.md](../README.md) | Human getting-started: build, test, Inno, MSIX, and **how to start `/start-add-source`**. | Treat as the full agent spec (that is still `AGENTS.md`). |
 
 ---
 
@@ -223,20 +223,29 @@ Do **not** open the GitHub PR while to-review for that feature is still question
 
 ## Planning a supplier source (interactive)
 
-Full protocol: `.cursor/skills/add-product-source/confirm-samples.md`.
+Full protocol: `.cursor/skills/add-product-source/confirm-samples.md`. Also: [AGENTS.md](../AGENTS.md) (Adding a supplier website), [README.md](../README.md), [parsing/adding-a-source.md](parsing/adding-a-source.md).
 
-Starting with a **URL** (editor or interactive CLI) is a conversation, not a one-shot scrape.
+`/start-add-source` is invoke-only. Starting with a **URL** is a conversation, not a one-shot scrape.
 
-1. You paste one product URL (`/start-add-source https://…` or `plan-feature` for a shop).
-2. The agent opens or fetches the page and **proposes** Name and GBP price (optional fields only if obvious).
-3. You **confirm or correct** from what you see on the page. Your answer is the contract; an unconfirmed scrape is not.
-4. The agent asks for **more product URLs on the same host** until **three** pages are confirmed. It confirms **one page at a time**.
-5. It writes `docs/features/source-<host>.md` on **Planning** with those three rows, **Status** `ready-for-agent`.
-6. It **stops**. No feature branch and no parser work until you invoke `/start-add-source source-<host>` (after `merge-planning` if you want the story on `main` first).
+**What you type**
+
+```text
+/start-add-source https://www.example.com/product/…
+```
+
+On **`Planning`**. Interactive `agent` or Cursor chat. Do not use `agent -p` for this step.
+
+**What happens**
+
+1. The agent opens or fetches the page and **proposes** Name and GBP price (optional fields only if obvious).
+2. You **confirm or correct** from what you see on the page. Your answer is the contract; an unconfirmed scrape is not.
+3. It asks for **more product URLs on the same host** until **three** pages are confirmed. **One page at a time.**
+4. It writes `docs/features/source-<host>.md` on **Planning** with those three rows, **Status** `ready-for-agent`.
+5. It **stops**. No feature branch and no parser until you invoke `/start-add-source source-<host>` (after `merge-planning` if you want the story on `main` first).
+
+Implementation then: one trimmed HTML fixture **per sample**, xUnit Name + UnitPrice for **all three**, HttpClient first then Chromium if blocked. Branch `feature/source-<host>-<Title>` from `origin/main`.
 
 Need a login, a CAPTCHA you cannot pass, or a listing page: skip that URL and give another product page.
-
-Use an **interactive** session (`agent` or Cursor chat). `agent -p` must not invent Expected Name or UnitPrice.
 
 ---
 
