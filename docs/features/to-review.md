@@ -18,6 +18,27 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 ## Entries
 
+## source-onlinecarparts
+
+- **Feature:** [docs/features/source-onlinecarparts.md](source-onlinecarparts.md)
+- **Status:** ready-for-review
+- **Last note:** HttpClient fetch (no Chromium gate). Dedicated `IsOnlineCarPartsHost` / `ParseOnlineCarParts`. ExtraUnknown merges into ProductExtra YAML. `WorkCosts.Tests` 103 passed.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] Vendor is the host label `"Online Car Parts"` (JSON-LD seller is the shop URL).
+- [ ] Sample 1 live `.product__new-price` on 2026-08-21 was **£49.96**; fixtures lock the confirmed **£50.24**.
+- [ ] Added `ProductPageMetadata.ExtraUnknown` / client merge into `ProductExtra.UnknownKeys` (no editor boxes).
+
+### Verify
+
+- [x] Tests from the feature file passed
+- [ ] Deviations accepted
+
 ## source-tayna
 
 - **Feature:** [docs/features/source-tayna.md](source-tayna.md)
