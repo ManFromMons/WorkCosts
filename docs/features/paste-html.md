@@ -76,7 +76,7 @@
 
 ## Open questions
 
-(none)
+- **Problem #1 (test, PR #1):** Paste HTML engages validation of the URL input field and does not continue.
 
 ## Accepted defaults
 
