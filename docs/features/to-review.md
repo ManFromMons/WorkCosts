@@ -49,10 +49,10 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Also added `ExtraYaml` in `DatabaseService.RepairProductSchema` (same pattern as `PricePoint`) so existing unpackaged databases get the column if migration history is incomplete.
-- [ ] Added `InputToolTip.Bind(ComboBox, …)` so Technology matches the other extra-spec tooltips.
+- [x] Also added `ExtraYaml` in `DatabaseService.RepairProductSchema` (same pattern as `PricePoint`) so existing unpackaged databases get the column if migration history is incomplete.
+- [x] Added `InputToolTip.Bind(ComboBox, …)` so Technology matches the other extra-spec tooltips.
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
