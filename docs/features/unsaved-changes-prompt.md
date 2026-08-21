@@ -107,4 +107,5 @@ _(none)_
 4. Gate Jobs selection change on dirty notes (revert selection if Cancel).
 5. Await product `PersistDetailAsync` on leave; prompt only when `TryRead` fails.
 6. Update `docs/screens/dialogs.md` and the products sheet Esc line (dirty → prompt; URL stage unchanged).
-7. Do not: WebView2 in this dialog; ContentDialog width/height layout loop; Categories chip prompt; stop auto-persist; `git add docs/features/to-review.md` on Planning; open a PR before to-review **Status** `done`; implement GNOME/iPad.
+7. `ConfirmUnsavedWithTimeoutAsync` returns `UnsavedPromptChoice` (the spec’s Save / Discard / Cancel plus `TimedOut`) so a timeout Save that fails validation can discard and finish leaving.
+8. Do not: WebView2 in this dialog; ContentDialog width/height layout loop; Categories chip prompt; stop auto-persist; `git add docs/features/to-review.md` on Planning; open a PR before to-review **Status** `done`; implement GNOME/iPad.

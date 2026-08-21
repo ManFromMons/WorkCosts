@@ -1,3 +1,4 @@
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -66,6 +67,73 @@ public static class DialogHelper
             XamlRoot = xamlRoot
         };
         return await ShowAsync(dialog, xamlRoot) == ContentDialogResult.Primary;
+    }
+
+    /// <summary>
+    /// Save / Don't Save / Cancel. Enter is Save, Esc is Cancel. At timeout, Hide as Save.
+    /// Body is a TextBlock so Enter does not insert a newline.
+    /// </summary>
+    public static async Task<UnsavedPromptChoice> ConfirmUnsavedWithTimeoutAsync(XamlRoot xamlRoot, TimeSpan timeout)
+    {
+        var remainingSeconds = Math.Max(1, (int)Math.Ceiling(timeout.TotalSeconds));
+        var dialog = new ContentDialog
+        {
+            Title = "Unsaved changes",
+            Content = new TextBlock
+            {
+                Text = "Save your changes before closing?",
+                TextWrapping = TextWrapping.WrapWholeWords
+            },
+            PrimaryButtonText = $"Save ({remainingSeconds})",
+            SecondaryButtonText = "Don't Save",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = xamlRoot
+        };
+
+        var timedOut = false;
+        var elapsed = TimeSpan.Zero;
+        DispatcherQueueTimer? timer = null;
+        dialog.Opened += (_, _) =>
+        {
+            timer = dialog.DispatcherQueue.CreateTimer();
+            timer.Interval = TimeSpan.FromSeconds(1);
+            timer.Tick += (_, _) =>
+            {
+                elapsed += TimeSpan.FromSeconds(1);
+                if (UnsavedPrompt.IsTimedOutSave(elapsed, timeout))
+                {
+                    timer.Stop();
+                    timedOut = true;
+                    dialog.Hide();
+                    return;
+                }
+
+                var left = Math.Max(1, (int)Math.Ceiling((timeout - elapsed).TotalSeconds));
+                dialog.PrimaryButtonText = $"Save ({left})";
+            };
+            timer.Start();
+        };
+
+        try
+        {
+            var result = await ShowAsync(dialog, xamlRoot);
+            if (timedOut)
+            {
+                return new UnsavedPromptChoice(UnsavedPromptResult.Save, TimedOut: true);
+            }
+
+            return result switch
+            {
+                ContentDialogResult.Primary => new UnsavedPromptChoice(UnsavedPromptResult.Save, TimedOut: false),
+                ContentDialogResult.Secondary => new UnsavedPromptChoice(UnsavedPromptResult.Discard, TimedOut: false),
+                _ => new UnsavedPromptChoice(UnsavedPromptResult.Cancel, TimedOut: false)
+            };
+        }
+        finally
+        {
+            timer?.Stop();
+        }
     }
 
     /// <summary>

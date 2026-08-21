@@ -15,6 +15,9 @@ public sealed partial class MainWindow : Window
     public Frame ContentFrame => NavFrame;
 
     private bool _suppressThemeToggle;
+    private bool _allowClose;
+    private bool _closeInProgress;
+    private OsSessionEndListener? _sessionEnd;
 
     public MainWindow()
     {
@@ -50,7 +53,9 @@ public sealed partial class MainWindow : Window
         NavFrame.NavigationFailed += NavFrame_NavigationFailed;
         AppTitleBar.Loaded += (_, _) => ApplyTitleBarTitleFont();
         AppThemeService.Instance.ThemeChanged += OnThemeChanged;
+        AppWindow.Closing += AppWindow_Closing;
         Closed += MainWindow_Closed;
+        _sessionEnd = new OsSessionEndListener(this);
         ApplyCaptionButtonColors();
         SyncTitleBarThemeToggle();
         StartupLog.Write("MainWindow ctor finished.");
@@ -58,7 +63,59 @@ public sealed partial class MainWindow : Window
 
     private void MainWindow_Closed(object sender, WindowEventArgs args)
     {
+        AppWindow.Closing -= AppWindow_Closing;
         AppThemeService.Instance.ThemeChanged -= OnThemeChanged;
+        _sessionEnd?.Dispose();
+        _sessionEnd = null;
+    }
+
+    private async void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_allowClose)
+        {
+            return;
+        }
+
+        args.Cancel = true;
+        if (_closeInProgress)
+        {
+            return;
+        }
+
+        _closeInProgress = true;
+        try
+        {
+            var timeout = _sessionEnd?.IsSessionEnding == true
+                ? UnsavedPrompt.ShutdownTimeout
+                : UnsavedPrompt.UserLeaveTimeout;
+            if (await TryLeaveCurrentPageAsync(timeout, waitForOpenDialog: true))
+            {
+                _allowClose = true;
+                Close();
+            }
+        }
+        finally
+        {
+            _closeInProgress = false;
+        }
+    }
+
+    private async Task<bool> TryLeaveCurrentPageAsync(TimeSpan timeout, bool waitForOpenDialog)
+    {
+        if (NavFrame.Content is not IUnsavedChangesSource source)
+        {
+            if (waitForOpenDialog)
+            {
+                while (DialogHelper.HasOpenDialog)
+                {
+                    await Task.Delay(50);
+                }
+            }
+
+            return true;
+        }
+
+        return await UnsavedChangesLeave.TryLeaveAsync(source, Content.XamlRoot, timeout, waitForOpenDialog);
     }
 
     private void OnThemeChanged(object? sender, EventArgs e)
@@ -167,7 +224,7 @@ public sealed partial class MainWindow : Window
             NavView.SelectedItem = home;
         }
 
-        NavigateTo(typeof(HomePage), clearBackStack: true);
+        _ = NavigateTo(typeof(HomePage), clearBackStack: true);
     }
 
     private void NavView_Loaded(object sender, RoutedEventArgs e)
@@ -200,12 +257,19 @@ public sealed partial class MainWindow : Window
         NavView.IsPaneOpen = !NavView.IsPaneOpen;
     }
 
-    private void TitleBar_BackRequested(TitleBar sender, object args)
+    private async void TitleBar_BackRequested(TitleBar sender, object args)
     {
-        if (NavFrame.CanGoBack)
+        if (!NavFrame.CanGoBack)
         {
-            NavFrame.GoBack();
+            return;
         }
+
+        if (!await TryLeaveCurrentPageAsync(UnsavedPrompt.UserLeaveTimeout, waitForOpenDialog: false))
+        {
+            return;
+        }
+
+        NavFrame.GoBack();
     }
 
     private void NavFrame_Navigated(object sender, NavigationEventArgs e)
@@ -223,22 +287,22 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    private async void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
         if (args.IsSettingsInvoked)
         {
-            NavigateTo(typeof(SettingsPage), clearBackStack: true);
+            await NavigateTo(typeof(SettingsPage), clearBackStack: true);
             return;
         }
 
         // Parent "Stuff" has no Tag — expand/collapse only.
         if (args.InvokedItemContainer is NavigationViewItem { Tag: string tag })
         {
-            NavigateToTag(tag);
+            await NavigateToTag(tag);
         }
     }
 
-    private void NavigateToTag(string tag)
+    private Task NavigateToTag(string tag)
     {
         var pageType = tag switch
         {
@@ -252,14 +316,22 @@ public sealed partial class MainWindow : Window
 
         if (pageType is not null)
         {
-            NavigateTo(pageType, clearBackStack: true);
+            return NavigateTo(pageType, clearBackStack: true);
         }
+
+        return Task.CompletedTask;
     }
 
-    private async void NavigateTo(Type pageType, bool clearBackStack)
+    private async Task NavigateTo(Type pageType, bool clearBackStack)
     {
         if (NavFrame.Content?.GetType() == pageType)
         {
+            return;
+        }
+
+        if (!await TryLeaveCurrentPageAsync(UnsavedPrompt.UserLeaveTimeout, waitForOpenDialog: false))
+        {
+            RestoreNavSelection();
             return;
         }
 
@@ -273,6 +345,7 @@ public sealed partial class MainWindow : Window
                     Content.XamlRoot,
                     "Navigation failed",
                     $"Navigate returned false for {pageType.FullName}.");
+                RestoreNavSelection();
                 return;
             }
         }
@@ -291,12 +364,56 @@ public sealed partial class MainWindow : Window
                 Debug.WriteLine($"Navigate error dialog failed: {dialogEx}");
             }
 
+            RestoreNavSelection();
             return;
         }
 
         if (clearBackStack)
         {
             NavFrame.BackStack.Clear();
+        }
+    }
+
+    private void RestoreNavSelection()
+    {
+        if (NavFrame.Content is SettingsPage)
+        {
+            NavView.SelectedItem = NavView.SettingsItem;
+            return;
+        }
+
+        var tag = NavFrame.Content switch
+        {
+            HomePage => "home",
+            WorkPage => "work",
+            CategoriesPage => "categories",
+            MasterDetailPage => "jobs",
+            ProductsPage => "products",
+            WorkJobDetailPage => "home",
+            _ => null
+        };
+
+        if (tag is null)
+        {
+            return;
+        }
+
+        foreach (var item in NavView.MenuItems.OfType<NavigationViewItem>())
+        {
+            if (item.Tag as string == tag)
+            {
+                NavView.SelectedItem = item;
+                return;
+            }
+
+            foreach (var child in item.MenuItems.OfType<NavigationViewItem>())
+            {
+                if (child.Tag as string == tag)
+                {
+                    NavView.SelectedItem = child;
+                    return;
+                }
+            }
         }
     }
 }
