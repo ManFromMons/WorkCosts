@@ -24,7 +24,7 @@ There is no closed vendor list. **Source** comes from the URL host (`ProductVend
 - **Autodoc** (`autodoc.*`): JSON-LD + listing markup; strip title suffix; seller URL may map to Autodoc.  
 - **Generic**: `og:title`, `h1`, `product:brand` / `og:brand`, generic price meta.
 
-When generic is good enough, do not add a parser. When a host is wrong in production, add a dedicated path (see [adding-a-source.md](adding-a-source.md)). Each host is its own story `docs/features/source-<host>.md`; agent skill `add-product-source`.
+When generic is good enough, do not add a parser. When a host is wrong in production, add a dedicated path (see [adding-a-source.md](adding-a-source.md)). Each host is its own story `docs/features/source-<host>.md` with **≥3 user-confirmed** sample pages; agent skill `add-product-source`.
 
 ## Planned: paste HTML
 

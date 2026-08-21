@@ -18,7 +18,7 @@ Do not invent a second product. Windows WinUI in `WorkCosts/` is the behaviour r
 
 Use the project skill `.cursor/skills/plan-feature/`. The source of truth is `docs/features/<name>.md` (template in that skill). Do not implement until that file is ready for an unsupervised agent. Specs are written on **`Planning`**, then landed with `merge-planning` (not a GitHub feature PR).
 
-New supplier websites: one story per host (`docs/features/source-<host>.md`) with a **product URL**, **expected Name**, and **expected UnitPrice (GBP)**. Invoke `@start-add-source` or skill `add-product-source` (discover fetch, fixtures, tests, then parser). See [docs/parsing/adding-a-source.md](docs/parsing/adding-a-source.md).
+New supplier websites: one story per host (`docs/features/source-<host>.md`). Starting from a URL is **interactive**: the agent proposes Name and GBP price from the page, you confirm or correct, and it collects **at least three** product URLs. Those confirmed values are the test contract. Then invoke `/start-add-source source-<host>` to implement (discover fetch, fixtures, tests, parser). See [docs/parsing/adding-a-source.md](docs/parsing/adding-a-source.md) and `.cursor/skills/add-product-source/confirm-samples.md`.
 
 ## Implementing a feature
 

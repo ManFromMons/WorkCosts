@@ -14,7 +14,7 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | :--- | :--- | :--- |
 | A coder agent | [AGENTS.md](../AGENTS.md) | The screen/parsing/data file for the surface you touch; the feature file under `docs/features/` |
 | Planning a product change | Skill `plan-feature` | [PLANNING.md](../PLANNING.md) (locked decisions only), then write `docs/features/<kebab>.md` |
-| Adding a supplier host | Skill `plan-feature` → `source-<host>.md`, then `@start-add-source` | [parsing/adding-a-source.md](parsing/adding-a-source.md) |
+| Adding a supplier host | `/start-add-source` + a URL: confirm Name/price on **≥3** pages, then `source-<host>.md`. Implement only when that story is `ready-for-agent`. | [parsing/adding-a-source.md](parsing/adding-a-source.md) |
 | Implementing a ready story | `@start-implement` or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
 | Recording questions / scan | Skill `update-to-review` | `git show origin/main:docs/features/to-review.md` |
@@ -79,7 +79,7 @@ Always-on Cursor rules (injected without asking): `.cursor/rules/product.mdc`, `
 | File | Role |
 | :--- | :--- |
 | [parsing/overview.md](parsing/overview.md) | HTML → `ProductPageMetadata`. Amazon / Autodoc / generic. Source from URL host. |
-| [parsing/adding-a-source.md](parsing/adding-a-source.md) | Playbook pointer: one `source-<host>` story, discover fetch, fixture, tests, detector. |
+| [parsing/adding-a-source.md](parsing/adding-a-source.md) | Playbook: ≥3 confirmed product pages, then discover fetch, fixtures, tests, detector. |
 | [parsing/browser-session.md](parsing/browser-session.md) | `IBrowserPageSession` / WebView2 off-screen. Never inside a blocking dialog. |
 | [parsing/paste-html.md](parsing/paste-html.md) | Background for paste-HTML. Source of truth is the feature file. |
 
@@ -115,7 +115,7 @@ One file per surface. Change the matching file when you change that UI.
 | Path | Role |
 | :--- | :--- |
 | `docs/features/<kebab>.md` | **Source of truth** for one story. Template: `.cursor/skills/plan-feature/template.md`. |
-| `docs/features/source-<host>.md` | One supplier website. Template: `.cursor/skills/add-product-source/template.md`. Needs URL + expected Name + GBP price. |
+| `docs/features/source-<host>.md` | One supplier website. Template: `.cursor/skills/add-product-source/template.md`. Needs **≥3** URLs, each with user-confirmed Name and GBP price. |
 | `docs/features/<kebab>-delivery.md` | Short “what landed” after a PR exists. Template: `.cursor/skills/implement-feature/delivery-template.md`. Not a diary. |
 | `docs/features/to-review.md` | Human inbox. **Canonical copy is on `main` only.** Read with `git show origin/main:docs/features/to-review.md`. |
 | `docs/features/paste-html.md` | First product story (Seq 1). Paste / open HTML on Add Product. |
@@ -148,7 +148,7 @@ All project skills live under `.cursor/skills/<name>/SKILL.md`. Folder name **mu
 | `start-implement` | **No** (`disable-model-invocation: true`) | Kickoff: named ready story, or next in queue. Then follow `implement-feature`. |
 | `implement-feature` | Yes | Code from a `ready-for-agent` spec. Branch from `origin/main`. Inbox via `update-to-review`. No PR until scan **done**. |
 | `pickup-next-feature` | Yes | Run `Get-NextReadyFeature.ps1`, then `start-implement` on that id. Stop on `QUEUE_EMPTY`. |
-| `start-add-source` | **No** | Kickoff for a `source-<host>` story (or plan from a URL first). Then `add-product-source`. |
+| `start-add-source` | **No** | URL → interactive confirm of ≥3 pages + story. Ready story id → `add-product-source`. |
 | `add-product-source` | Yes | Discover HttpClient vs Chromium, fixture, failing tests, detector/parser/fetch. Same inbox/PR rules. |
 | `update-to-review` | Yes | Land **only** `docs/features/to-review.md` on `main` via `Update-ToReviewOnMain.ps1`. |
 | `merge-planning` | Yes | Rebase/squash Planning onto main, fast-forward, push both. Preserves to-review on main. |
@@ -162,6 +162,7 @@ Templates next to skills (agents read them when the skill says so):
 | `.cursor/skills/plan-feature/template.md` | New product stories |
 | `.cursor/skills/plan-feature/examples.md` | Shape only |
 | `.cursor/skills/add-product-source/template.md` | `source-<host>.md` |
+| `.cursor/skills/add-product-source/confirm-samples.md` | Interactive planning: confirm Name/price; ≥3 pages |
 | `.cursor/skills/implement-feature/to-review-entry.md` | Inbox heading |
 | `.cursor/skills/implement-feature/delivery-template.md` | `*-delivery.md` |
 
@@ -217,6 +218,25 @@ feature/foo-Title  (from origin/main)
 ```
 
 Do **not** open the GitHub PR while to-review for that feature is still questions or unchecked deviations.
+
+---
+
+## Planning a supplier source (interactive)
+
+Full protocol: `.cursor/skills/add-product-source/confirm-samples.md`.
+
+Starting with a **URL** (editor or interactive CLI) is a conversation, not a one-shot scrape.
+
+1. You paste one product URL (`/start-add-source https://…` or `plan-feature` for a shop).
+2. The agent opens or fetches the page and **proposes** Name and GBP price (optional fields only if obvious).
+3. You **confirm or correct** from what you see on the page. Your answer is the contract; an unconfirmed scrape is not.
+4. The agent asks for **more product URLs on the same host** until **three** pages are confirmed. It confirms **one page at a time**.
+5. It writes `docs/features/source-<host>.md` on **Planning** with those three rows, **Status** `ready-for-agent`.
+6. It **stops**. No feature branch and no parser work until you invoke `/start-add-source source-<host>` (after `merge-planning` if you want the story on `main` first).
+
+Need a login, a CAPTCHA you cannot pass, or a listing page: skip that URL and give another product page.
+
+Use an **interactive** session (`agent` or Cursor chat). `agent -p` must not invent Expected Name or UnitPrice.
 
 ---
 
@@ -309,8 +329,8 @@ agent -p --force "/start-implement paste-html"
 # New supplier host (story already ready-for-agent)
 agent -p --force "/start-add-source source-halfords"
 
-# URL only — skill should plan, not invent a parser yet
-agent -p --force "/start-add-source https://www.example.com/p/123 Expected Name: Example Bolt. Expected UnitPrice: 4.99"
+# URL only — interactive planning (do not use -p; needs a conversation)
+agent "/start-add-source https://www.example.com/p/123"
 
 # Inbox on main (coder already committed product code; only to-review.md dirty)
 agent -p --force "/update-to-review Land scan for paste-html after tests passed."
@@ -345,8 +365,9 @@ agent --resume "thread-id"
 | Skill | Git checkout before you run `agent` |
 | :--- | :--- |
 | `plan-feature` | **`Planning`**, pulled. |
+| `start-add-source` **with a URL** / incomplete story | **`Planning`**. Interactive confirm of ≥3 pages. No feature branch yet. |
 | `merge-planning` | Clean tree; script fetches and switches. Dirty tree → stop. |
-| `start-implement`, `implement-feature`, `pickup-next-feature`, `start-add-source`, `add-product-source` | Prefer a **clean** repo. The skill branches from `origin/main`. Do not commit product WIP on `Planning` or `main`. `--worktree` avoids touching a dirty Planning tree. |
+| `start-implement`, `implement-feature`, `pickup-next-feature`, `start-add-source` **on a ready story**, `add-product-source` | Prefer a **clean** repo. The skill branches from `origin/main`. Do not commit product WIP on `Planning` or `main`. `--worktree` avoids touching a dirty Planning tree. |
 | `update-to-review` | **Feature branch**, product code already committed; working tree dirty **only** with `docs/features/to-review.md` (copied from main). |
 
 Cloud Agents (`&` or the Cloud Agent UI) use a remote checkout. They still must follow the same branch rules. Do not let a cloud job merge Planning with a merge commit or force-push `main`.
@@ -363,17 +384,15 @@ If a brand-new skill folder does not appear in an **already running** CLI sessio
 
 ### Worked prompts (copy and adapt)
 
-**Plan a host (on Planning)**
+**Plan a host (on Planning — conversation, not a one-shot)**
 
 ```text
-/plan-feature
-Create docs/features/source-halfords.md from the add-product-source template.
-Sample product URL: https://www.halfords.com/…
-Expected Name: …
-Expected UnitPrice: … (GBP)
-Assign the next Seq. Leave Status draft if Name or price is missing; ready-for-agent if all three are filled.
-Do not implement.
+/start-add-source https://www.halfords.com/…
 ```
+
+The agent opens or fetches the page, proposes Name and GBP price, and waits. You confirm or paste what you see. It then asks for more product URLs until **three** pages are confirmed. Only then it writes `docs/features/source-<host>.md` as `ready-for-agent`. It does **not** implement until you say so (`/start-add-source source-halfords`).
+
+Do not pre-fill Expected Name/price in the prompt and skip confirmation. Headless `agent -p` must not invent those fields.
 
 **Implement next story**
 
@@ -382,11 +401,11 @@ Do not implement.
 Follow implement-feature. Use the next ready-for-agent story if I did not name one.
 ```
 
-**Add a source**
+**Implement a source** (story already `ready-for-agent` with three confirmed samples)
 
 ```text
 /start-add-source source-halfords
-Discover fetch, check in a trimmed fixture, write failing Name+UnitPrice tests, then integrate.
+Discover fetch, one fixture per sample, failing Name+UnitPrice tests for all three, then integrate.
 Inbox on main via update-to-review. No GitHub PR until that heading is Status done.
 ```
 
@@ -402,6 +421,7 @@ Inbox on main via update-to-review. No GitHub PR until that heading is Status do
 | `to-review.md` on Planning / a feature branch | The inbox — only `origin/main` counts |
 | `scripts/*.ps1` | Cursor skills — scripts are git helpers the skills run |
 | A GitHub **feature PR** | `merge-planning` — specs do not go through a feature PR |
+| Agent scrape of a shop page | User-confirmed Name/price on the story — confirmation is the contract |
 
 ---
 
