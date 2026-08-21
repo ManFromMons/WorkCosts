@@ -37,3 +37,22 @@ _(none)_
 - [x] Tests from the feature file passed
 - [x] Deviations accepted
 
+## product-extra-data
+
+- **Feature:** [docs/features/product-extra-data.md](product-extra-data.md)
+- **Status:** ready-for-review
+- **Last note:** Implementation finished on `feature/product-extra-data-Product-extra-YAML`. WorkCosts.Tests 71 passed. No PR until this heading is Status `done`.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] Also added `ExtraYaml` in `DatabaseService.RepairProductSchema` (same pattern as `PricePoint`) so existing unpackaged databases get the column if migration history is incomplete.
+- [ ] Added `InputToolTip.Bind(ComboBox, …)` so Technology matches the other extra-spec tooltips.
+
+### Verify
+
+- [x] Tests from the feature file passed
+- [ ] Deviations accepted
