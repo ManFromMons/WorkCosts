@@ -32,4 +32,4 @@ Users must be able to paste page HTML if live fetch fails (CAPTCHA, login, offli
 
 ## Client fields
 
-`Name`, `Manufacturer`, `ManufacturerReference`, `UnitPrice`, `Vendor`, `Ean`, `Variation`, `OemEquivalent`, `Source`. Tests: `ProductPageClientContractTests`.
+`Name`, `Manufacturer`, `ManufacturerReference`, `UnitPrice`, `Vendor`, `Ean`, `Variation`, `OemEquivalent`, `Source`, `Capacity`, `LengthMm`, `WidthMm`, `HeightMm`, `Cca`, `Technology`. Null extra fields do not overwrite editor controls. Tests: `ProductPageClientContractTests`.

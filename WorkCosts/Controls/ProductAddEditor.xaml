@@ -171,6 +171,58 @@
                     x:Name="OemBox"
                     PlaceholderText="OEM equivalent"
                     TextWrapping="Wrap" />
+                <Grid ColumnSpacing="8" RowSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <NumberBox
+                        x:Name="CapacityBox"
+                        PlaceholderText="Capacity (Ah)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact" />
+                    <NumberBox
+                        x:Name="CcaBox"
+                        Grid.Column="1"
+                        PlaceholderText="CCA"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact" />
+                    <ComboBox
+                        x:Name="TechnologyBox"
+                        Grid.Column="2"
+                        HorizontalAlignment="Stretch"
+                        PlaceholderText="Technology" />
+                    <NumberBox
+                        x:Name="LengthBox"
+                        Grid.Row="1"
+                        PlaceholderText="Length (mm)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact" />
+                    <NumberBox
+                        x:Name="WidthBox"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        PlaceholderText="Width (mm)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact" />
+                    <NumberBox
+                        x:Name="HeightBox"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        PlaceholderText="Height (mm)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact" />
+                </Grid>
             </StackPanel>
         </ScrollViewer>
 

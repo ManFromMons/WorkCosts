@@ -201,6 +201,64 @@
                     PlaceholderText="OEM equivalent"
                     TextWrapping="Wrap"
                     TextChanged="Field_Changed" />
+                <Grid ColumnSpacing="8" RowSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="50" />
+                        <ColumnDefinition Width="*" MinWidth="50" />
+                        <ColumnDefinition Width="*" MinWidth="50" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <NumberBox
+                        x:Name="CapacityBox"
+                        PlaceholderText="Capacity (Ah)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="ExtraNumber_ValueChanged" />
+                    <NumberBox
+                        x:Name="CcaBox"
+                        Grid.Column="1"
+                        PlaceholderText="CCA"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="ExtraNumber_ValueChanged" />
+                    <ComboBox
+                        x:Name="TechnologyBox"
+                        Grid.Column="2"
+                        HorizontalAlignment="Stretch"
+                        PlaceholderText="Technology"
+                        SelectionChanged="TechnologyBox_SelectionChanged" />
+                    <NumberBox
+                        x:Name="LengthBox"
+                        Grid.Row="1"
+                        PlaceholderText="Length (mm)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="ExtraNumber_ValueChanged" />
+                    <NumberBox
+                        x:Name="WidthBox"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        PlaceholderText="Width (mm)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="ExtraNumber_ValueChanged" />
+                    <NumberBox
+                        x:Name="HeightBox"
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        PlaceholderText="Height (mm)"
+                        Minimum="0"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Compact"
+                        ValueChanged="ExtraNumber_ValueChanged" />
+                </Grid>
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />

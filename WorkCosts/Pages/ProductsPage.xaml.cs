@@ -752,6 +752,7 @@ public sealed partial class ProductsPage : Page
         entity.Ean = values.Ean;
         entity.Variation = values.Variation;
         entity.OemEquivalent = values.OemEquivalent;
+        entity.ExtraYaml = values.ExtraYaml;
         entity.PricePoint = values.PricePoint;
         entity.Url = string.IsNullOrWhiteSpace(values.Url) ? string.Empty : ProductUrl.Normalize(values.Url);
         entity.UnitCost = values.UnitCost;
@@ -1398,6 +1399,7 @@ public sealed partial class ProductsPage : Page
         Ean = values.Ean,
         Variation = values.Variation,
         OemEquivalent = values.OemEquivalent,
+        ExtraYaml = values.ExtraYaml,
         PricePoint = values.PricePoint,
         Url = string.IsNullOrWhiteSpace(values.Url) ? string.Empty : ProductUrl.Normalize(values.Url),
         UnitCost = values.UnitCost,
@@ -1455,6 +1457,7 @@ public sealed partial class ProductsPage : Page
         private string _ean;
         private string _variation;
         private string _oemEquivalent;
+        private string _extraYaml;
         private string _pricePoint;
         private string _url;
         private decimal _unitCost;
@@ -1476,6 +1479,7 @@ public sealed partial class ProductsPage : Page
             _ean = product.Ean;
             _variation = product.Variation;
             _oemEquivalent = product.OemEquivalent;
+            _extraYaml = product.ExtraYaml ?? string.Empty;
             _pricePoint = product.PricePoint;
             _url = product.Url;
             _unitCost = product.UnitCost;
@@ -1557,6 +1561,7 @@ public sealed partial class ProductsPage : Page
             Ean = _ean,
             Variation = _variation,
             OemEquivalent = _oemEquivalent,
+            ExtraYaml = _extraYaml,
             PricePoint = _pricePoint,
             Url = _url,
             UnitCost = _unitCost,
@@ -1576,6 +1581,7 @@ public sealed partial class ProductsPage : Page
             _ean = values.Ean;
             _variation = values.Variation;
             _oemEquivalent = values.OemEquivalent;
+            _extraYaml = values.ExtraYaml;
             _pricePoint = values.PricePoint;
             _url = values.Url;
             _unitCost = values.UnitCost;

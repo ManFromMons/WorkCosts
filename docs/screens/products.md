@@ -18,7 +18,7 @@ Selecting jobs in the strip filters the list. Mirror Categories page semantics w
 
 ## Detail editor
 
-`ProductEditor`: image 118px square; fetch-from-URL and clear; open-in-browser. Fields from the page (name, manufacturer, refs, EAN, variation, OEM, URL, source/vendor, unit cost) and app fields (category, price point, is-all-jobs, job assignments, equivalents). Save/delete on the editor.
+`ProductEditor`: image 118px square; fetch-from-URL and clear; open-in-browser. Fields from the page (name, manufacturer, refs, EAN, variation, OEM, extra specs — Capacity Ah, L/W/H mm, CCA, Technology — URL, source/vendor, unit cost) and app fields (category, price point, is-all-jobs, job assignments, equivalents). Extra specs are always visible (empty when none). Save/delete on the editor.
 
 Delete: confirm Yes/No, then `ProductCommands.DeleteAsync`.
 
