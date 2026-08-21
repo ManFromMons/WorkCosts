@@ -41,6 +41,12 @@ public class ProductPageClientContractTests
         Assert.Equal("10L", client.Variation);
         Assert.Equal("OEM X", client.OemEquivalent);
         Assert.Equal("Amazon", client.Source);
+        Assert.Equal(110, client.Capacity);
+        Assert.Equal(393, client.LengthMm);
+        Assert.Equal(175, client.WidthMm);
+        Assert.Equal(190, client.HeightMm);
+        Assert.Equal(950, client.Cca);
+        Assert.Equal("Wet", client.Technology);
     }
 
     [Fact]
@@ -59,6 +65,12 @@ public class ProductPageClientContractTests
         Assert.Null(client.Ean);
         Assert.Null(client.Variation);
         Assert.Null(client.OemEquivalent);
+        Assert.Null(client.Capacity);
+        Assert.Null(client.LengthMm);
+        Assert.Null(client.WidthMm);
+        Assert.Null(client.HeightMm);
+        Assert.Null(client.Cca);
+        Assert.Null(client.Technology);
     }
 
     [Theory]
@@ -89,7 +101,9 @@ public class ProductPageClientContractTests
             " ",
             "",
             null,
-            "  OEM  ");
+            "  OEM  ",
+            Capacity: -4,
+            Technology: "  ");
 
         var client = ProductPageClientValues.From(metadata);
 
@@ -101,6 +115,8 @@ public class ProductPageClientContractTests
         Assert.Null(client.Ean);
         Assert.Null(client.Variation);
         Assert.Equal("OEM", client.OemEquivalent);
+        Assert.Null(client.Capacity);
+        Assert.Null(client.Technology);
     }
 
     public static TheoryData<string, ProductPageMetadata, object?> SingleFieldCases() =>
@@ -115,6 +131,12 @@ public class ProductPageClientContractTests
             { nameof(ProductPageClientValues.Variation), Only(variation: "6L"), "6L" },
             { nameof(ProductPageClientValues.OemEquivalent), Only(oem: "Only OEM"), "Only OEM" },
             { nameof(ProductPageClientValues.Source), Only(source: "Only Source"), "Only Source" },
+            { nameof(ProductPageClientValues.Capacity), Only(capacity: 70), 70 },
+            { nameof(ProductPageClientValues.LengthMm), Only(lengthMm: 278), 278 },
+            { nameof(ProductPageClientValues.WidthMm), Only(widthMm: 175), 175 },
+            { nameof(ProductPageClientValues.HeightMm), Only(heightMm: 190), 190 },
+            { nameof(ProductPageClientValues.Cca), Only(cca: 640), 640 },
+            { nameof(ProductPageClientValues.Technology), Only(technology: "AGM"), "AGM" },
         };
 
     [Fact]
@@ -146,7 +168,13 @@ public class ProductPageClientContractTests
             "5012345678900",
             "10L",
             "OEM X",
-            "Amazon");
+            "Amazon",
+            110,
+            393,
+            175,
+            190,
+            950,
+            "Wet");
 
     private static ProductPageMetadata Only(
         string? name = null,
@@ -157,8 +185,15 @@ public class ProductPageClientContractTests
         string? ean = null,
         string? variation = null,
         string? oem = null,
-        string? source = null) =>
-        new(name, manufacturer, mfrRef, price, vendor, ean, variation, oem, source);
+        string? source = null,
+        int? capacity = null,
+        int? lengthMm = null,
+        int? widthMm = null,
+        int? heightMm = null,
+        int? cca = null,
+        string? technology = null) =>
+        new(name, manufacturer, mfrRef, price, vendor, ean, variation, oem, source,
+            capacity, lengthMm, widthMm, heightMm, cca, technology);
 
     private static void AssertAllOtherFieldsNull(ProductPageClientValues client, string except)
     {

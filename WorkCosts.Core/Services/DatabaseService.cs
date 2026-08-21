@@ -170,6 +170,20 @@ public sealed class DatabaseService
                 "INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) VALUES ('20260819000100_AddWebCacheLookup', '9.0.8');")
                 .ConfigureAwait(false);
         }
+
+        if (!await ColumnExistsAsync(connection, "Products", "ExtraYaml").ConfigureAwait(false))
+        {
+            await ExecuteAsync(connection,
+                "ALTER TABLE Products ADD COLUMN ExtraYaml TEXT NOT NULL DEFAULT '';").ConfigureAwait(false);
+        }
+
+        if (!await MigrationHistoryContainsAsync(connection, "20260821120000_AddProductExtraYaml")
+            .ConfigureAwait(false))
+        {
+            await ExecuteAsync(connection,
+                "INSERT INTO __EFMigrationsHistory (MigrationId, ProductVersion) VALUES ('20260821120000_AddProductExtraYaml', '9.0.8');")
+                .ConfigureAwait(false);
+        }
     }
 
     private static async Task<bool> ColumnExistsAsync(SqliteConnection connection, string table, string column)

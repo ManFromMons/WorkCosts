@@ -33,6 +33,7 @@ GUIDs are the primary keys (string/blob in SQLite). Money is `decimal(18,2)` dis
 | Vendor | Seller as scraped/edited |
 | Source | Marketplace/host family (Amazon, Autodoc, or derived from URL host) |
 | Manufacturer, ManufacturerReference, Ean, Variation, OemEquivalent | Identity fields |
+| ExtraYaml | Optional extra specs as camelCase YAML (max 8000). Empty string when none. First known keys: capacity (Ah), lengthMm / widthMm / heightMm, cca, technology |
 | Url | Max 2000; Amazon URLs normalize to `/dp/{ASIN}` |
 | PricePoint | One of Low, Medium-low, Medium-high, OEM, OEM+, High |
 | ImageBlob / ImageContentType | **Legacy**. New writes store files; keep columns until a migration drops them |

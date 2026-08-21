@@ -24,7 +24,13 @@ public sealed record ProductPageClientValues(
     string? Ean,
     string? Variation,
     string? OemEquivalent,
-    string? Source)
+    string? Source,
+    int? Capacity = null,
+    int? LengthMm = null,
+    int? WidthMm = null,
+    int? HeightMm = null,
+    int? Cca = null,
+    string? Technology = null)
 {
     public static ProductPageClientValues From(ProductPageMetadata metadata)
     {
@@ -38,9 +44,18 @@ public sealed record ProductPageClientValues(
             BlankToNull(metadata.Ean),
             BlankToNull(metadata.Variation),
             BlankToNull(metadata.OemEquivalent),
-            BlankToNull(metadata.Source));
+            BlankToNull(metadata.Source),
+            NonNegative(metadata.Capacity),
+            NonNegative(metadata.LengthMm),
+            NonNegative(metadata.WidthMm),
+            NonNegative(metadata.HeightMm),
+            NonNegative(metadata.Cca),
+            BlankToNull(metadata.Technology));
     }
 
     private static string? BlankToNull(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static int? NonNegative(int? value) =>
+        value is int n && n >= 0 ? n : null;
 }

@@ -48,6 +48,7 @@ public class WorkCostsDbContext : DbContext
             e.Property(x => x.Ean).HasMaxLength(32);
             e.Property(x => x.Variation).HasMaxLength(200);
             e.Property(x => x.OemEquivalent).HasMaxLength(500);
+            e.Property(x => x.ExtraYaml).HasMaxLength(8000);
             e.Property(x => x.PricePoint).HasMaxLength(20);
             e.Property(x => x.ImageContentType).HasMaxLength(100);
             e.Property(x => x.UnitCost).HasPrecision(18, 2);

@@ -17,7 +17,13 @@ public sealed record ProductPageMetadata(
     string? Ean = null,
     string? Variation = null,
     string? OemEquivalent = null,
-    string? Source = null)
+    string? Source = null,
+    int? Capacity = null,
+    int? LengthMm = null,
+    int? WidthMm = null,
+    int? HeightMm = null,
+    int? Cca = null,
+    string? Technology = null)
 {
     public static ProductPageMetadata Empty { get; } = new(null, null, null, null);
 }
