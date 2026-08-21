@@ -18,6 +18,26 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 ## Entries
 
+## source-carbatterymarket
+
+- **Feature:** [docs/features/source-carbatterymarket.md](source-carbatterymarket.md)
+- **Status:** ready-for-review
+- **Last note:** HttpClient fetch (no Chromium). Dedicated parser + three fixtures. Tests passed. Ready for scan.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] Sample 2 fixture uses the confirmed unit price **£98.50**; live HttpClient HTML on 2026-08-21 showed **£103.30** (RRP £109.09).
+- [ ] Vendor is the host label `"Car Battery Market"` (first-party shop; no sold-by node).
+
+### Verify
+
+- [x] Tests from the feature file passed
+- [ ] Deviations accepted
+
 ## source-eurocarparts
 
 - **Feature:** [docs/features/source-eurocarparts.md](source-eurocarparts.md)
