@@ -3,7 +3,7 @@
 - **Id:** `docs/features/source-tayna.md`
 - **Seq:** 4
 - **Depends-on:** `product-extra-data`
-- **Status:** ready-for-agent
+- **Status:** done
 - **PR:** none
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/data/schema.md`
