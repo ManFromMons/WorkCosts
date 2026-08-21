@@ -53,6 +53,11 @@ public static class ProductVendorHelper
             return "Tayna";
         }
 
+        if (Services.ProductPageMetadataParser.IsOnlineCarPartsHost(uri.Host))
+        {
+            return "Online Car Parts";
+        }
+
         return null;
     }
 }

@@ -69,6 +69,18 @@ public class ProductExtraTests
     }
 
     [Fact]
+    public void MergeUnknown_adds_keys_without_dropping_existing()
+    {
+        var extra = ProductExtra.Parse("foo: bar\n");
+        extra = extra.MergeUnknown(new Dictionary<string, string> { ["axle"] = "Front Axle" });
+
+        Assert.Equal("bar", Convert.ToString(extra.UnknownKeys["foo"]));
+        Assert.Equal("Front Axle", Convert.ToString(extra.UnknownKeys["axle"]));
+        Assert.Contains("axle: Front Axle", extra.ToYaml(), StringComparison.Ordinal);
+        Assert.Contains("foo: bar", extra.ToYaml(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Invalid_yaml_returns_empty_extra_without_throwing()
     {
         var extra = ProductExtra.Parse(":\n  - [");

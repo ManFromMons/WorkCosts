@@ -23,7 +23,8 @@ public sealed record ProductPageMetadata(
     int? WidthMm = null,
     int? HeightMm = null,
     int? Cca = null,
-    string? Technology = null)
+    string? Technology = null,
+    IReadOnlyDictionary<string, string>? ExtraUnknown = null)
 {
     public static ProductPageMetadata Empty { get; } = new(null, null, null, null);
 }
@@ -130,6 +131,11 @@ public static class ProductPageMetadataParser
             return ParseTayna(document);
         }
 
+        if (IsOnlineCarPartsHost(pageUri.Host))
+        {
+            return ParseOnlineCarParts(document);
+        }
+
         return ParseGeneric(document, pageUri);
     }
 
@@ -148,6 +154,9 @@ public static class ProductPageMetadataParser
 
     public static bool IsTaynaHost(string host) =>
         host.Contains("tayna.", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsOnlineCarPartsHost(string host) =>
+        host.Contains("onlinecarparts.", StringComparison.OrdinalIgnoreCase);
 
     private static ProductPageMetadata ParseAmazon(IDocument document)
     {
@@ -306,6 +315,11 @@ public static class ProductPageMetadataParser
         if (IsTaynaHost(pageUri.Host))
         {
             return "Tayna";
+        }
+
+        if (IsOnlineCarPartsHost(pageUri.Host))
+        {
+            return "Online Car Parts";
         }
 
         return null;
@@ -475,6 +489,154 @@ public static class ProductPageMetadataParser
         }
 
         return map;
+    }
+
+    private static ProductPageMetadata ParseOnlineCarParts(IDocument document)
+    {
+        var json = ReadOnlineCarPartsJsonLd(document);
+        var name = Clean(document.QuerySelector("h1.product__title-link")?.TextContent)
+            ?? Clean(document.QuerySelector("h1")?.TextContent);
+        var specs = OnlineCarPartsSpecMap(document);
+        var extras = OnlineCarPartsUnknown(name, specs);
+
+        return new ProductPageMetadata(
+            name,
+            OnlineCarPartsArtkl(document, "Manufacturer") ?? json?.Brand,
+            OnlineCarPartsArtkl(document, "Article number") ?? json?.Mpn,
+            ParsePriceText(Clean(document.QuerySelector(".product[data-product-item] .product__new-price")?.TextContent))
+                ?? json?.Price,
+            Vendor: "Online Car Parts",
+            Ean: NormalizeGtin(json?.Gtin),
+            Variation: null,
+            OemEquivalent: null,
+            Source: "Online Car Parts",
+            ExtraUnknown: extras);
+    }
+
+    private static string? OnlineCarPartsArtkl(IDocument document, string label)
+    {
+        var text = Clean(document.QuerySelector(".product[data-product-item] .product__artkl")?.TextContent);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(text, Regex.Escape(label) + @":\s*(\S+)");
+        return match.Success ? Clean(match.Groups[1].Value) : null;
+    }
+
+    private static Dictionary<string, string> OnlineCarPartsSpecMap(IDocument document)
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var table = document.QuerySelector(".product[data-product-item] .product__description .product__table");
+        if (table is null)
+        {
+            return map;
+        }
+
+        foreach (var row in table.QuerySelectorAll("tr"))
+        {
+            var cells = row.QuerySelectorAll("td");
+            if (cells.Length < 2)
+            {
+                continue;
+            }
+
+            var label = Clean(cells[0].TextContent)?.TrimEnd(':');
+            var value = Clean(cells[1].TextContent);
+            if (string.IsNullOrWhiteSpace(label) || string.IsNullOrWhiteSpace(value))
+            {
+                continue;
+            }
+
+            map[label] = value;
+        }
+
+        return map;
+    }
+
+    private static IReadOnlyDictionary<string, string>? OnlineCarPartsUnknown(
+        string? name,
+        IReadOnlyDictionary<string, string> specs)
+    {
+        var map = new Dictionary<string, string>(StringComparer.Ordinal);
+        AddUnknown(map, "axle", GetSpec(specs, "Fitting Position"));
+        AddUnknown(map, "type", GetSpec(specs, "Brake Disc Type"));
+        AddUnknown(map, "material", GetSpec(specs, "Material"));
+        AddUnknown(map, "size", OnlineCarPartsSize(name, specs));
+        return map.Count == 0 ? null : map;
+    }
+
+    private static string? OnlineCarPartsSize(string? name, IReadOnlyDictionary<string, string> specs)
+    {
+        if (!string.IsNullOrWhiteSpace(name))
+        {
+            var fromHeading = Regex.Match(name, @"\d+,\d+x\d+(?:[.,]\d+)?\s*mm", RegexOptions.IgnoreCase);
+            if (fromHeading.Success)
+            {
+                return fromHeading.Value.Replace(" ", string.Empty, StringComparison.Ordinal);
+            }
+        }
+
+        var length = GetSpec(specs, "Length [mm]") ?? GetSpecContaining(specs, "Length [mm]");
+        var mm = ParseLeadingInt(length);
+        return mm is null ? null : $"{mm} mm";
+    }
+
+    private static void AddUnknown(Dictionary<string, string> map, string key, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            map[key] = value.Trim();
+        }
+    }
+
+    private sealed record OnlineCarPartsJson(string? Brand, string? Mpn, string? Gtin, decimal? Price);
+
+    private static OnlineCarPartsJson? ReadOnlineCarPartsJsonLd(IDocument document)
+    {
+        foreach (var script in document.QuerySelectorAll("script[type='application/ld+json']"))
+        {
+            var text = script.TextContent;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                continue;
+            }
+
+            try
+            {
+                using var json = JsonDocument.Parse(text);
+                if (!JsonTypeIs(json.RootElement, "Product"))
+                {
+                    continue;
+                }
+
+                var root = json.RootElement;
+                string? brand = null;
+                if (root.TryGetProperty("brand", out var brandEl))
+                {
+                    brand = JsonString(brandEl, "name") ?? Clean(brandEl.ValueKind == JsonValueKind.String ? brandEl.GetString() : null);
+                }
+
+                decimal? price = null;
+                if (root.TryGetProperty("offers", out var offers))
+                {
+                    price = JsonDecimal(offers, "price");
+                }
+
+                return new OnlineCarPartsJson(
+                    brand,
+                    JsonString(root, "mpn") ?? JsonString(root, "sku"),
+                    JsonString(root, "gtin13") ?? JsonString(root, "gtin"),
+                    price);
+            }
+            catch (JsonException)
+            {
+                // Skip malformed JSON-LD blocks.
+            }
+        }
+
+        return null;
     }
 
     private static string? CarBatteryMarketManufacturer(IDocument document, string? name)

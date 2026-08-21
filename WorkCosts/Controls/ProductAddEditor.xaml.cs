@@ -864,6 +864,11 @@ public sealed partial class ProductAddEditor : UserControl
         {
             TechnologyBox.SelectedItem = values.Technology;
         }
+
+        if (values.ExtraUnknown is { Count: > 0 } extraUnknown)
+        {
+            _extra = _extra.MergeUnknown(extraUnknown);
+        }
     }
 
     private static void FillTechnologyBox(ComboBox box)

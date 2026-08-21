@@ -3,8 +3,8 @@
 - **Id:** `docs/features/source-onlinecarparts.md`
 - **Seq:** 6
 - **Depends-on:** `product-extra-data`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/6
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`, `docs/features/product-extra-data.md`
 - **Related code:** `ProductPageMetadataParser`, `ProductPageClientValues`, `ProductExtra` / `ExtraYaml` (from `product-extra-data`), `ProductUrl`, `ProductVendorHelper`, `ProductImageService`, `ProductImagePicker`, `ChromiumPageLoader`, `IsUsablePageHtml`
@@ -113,4 +113,5 @@ Parse pitfalls (must not fail the sample asserts):
 2. If `product-extra-data` left no path for a parser to inject unknown YAML keys, add the small ExtraUnknown map on metadata/client and merge on apply. Do not add WinUI fields.
 3. Record the chosen fetch path in to-review **Deviations** if you add this host to the Chromium list.
 4. After land, `docs/parsing/overview.md` can list Online Car Parts next to Amazon/Autodoc if a dedicated parser was required.
-5. Do not: widen `IsAutodocHost`; login scrape; commit cookies; WebView2 in a ContentDialog; editor boxes for axle/size/material/type; a second ExtraYaml column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
+5. Discovery (2026-08-21): HttpClient with Chrome identity returned HTTP 200 product HTML for all three sample URLs (~157–184 KB). `IsUsablePageHtml` passes (no challenge in the prefix). **No Chromium host gate.** Generic parse is not enough: JSON-LD `name` omits the H1 subtitle; ExtraYaml unknown keys and article-number / EAN need the product block. Dedicated `IsOnlineCarPartsHost` / `ParseOnlineCarParts`. `IsAutodocHost` stays false. Vendor is the host label `"Online Car Parts"` (JSON-LD seller is the shop URL). Sample 1 live `.product__new-price` on this date was **£49.96**; fixtures lock the confirmed **£50.24**. Size on sample 1 is the H1 fragment `347,8x30mm` (not Diameter + thickness). `ProductPageMetadata.ExtraUnknown` merges into `ProductExtra.UnknownKeys` on apply.
+6. Do not: widen `IsAutodocHost`; login scrape; commit cookies; WebView2 in a ContentDialog; editor boxes for axle/size/material/type; a second ExtraYaml column; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
