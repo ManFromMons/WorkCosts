@@ -136,6 +136,11 @@ public static class ProductPageMetadataParser
             return ParseOnlineCarParts(document);
         }
 
+        if (IsDemonTweeksHost(pageUri.Host))
+        {
+            return ParseDemonTweeks(document);
+        }
+
         return ParseGeneric(document, pageUri);
     }
 
@@ -157,6 +162,28 @@ public static class ProductPageMetadataParser
 
     public static bool IsOnlineCarPartsHost(string host) =>
         host.Contains("onlinecarparts.", StringComparison.OrdinalIgnoreCase);
+
+    public static bool IsDemonTweeksHost(string host) =>
+        host.Contains("demon-tweeks.", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>HttpClient is blocked (Cloudflare/CAPTCHA); load via Chromium like Autodoc.</summary>
+    public static bool RequiresChromiumFetch(string host) =>
+        IsAutodocHost(host) || IsDemonTweeksHost(host);
+
+    public static string ChromiumFetchSiteName(string host)
+    {
+        if (IsAutodocHost(host))
+        {
+            return "Autodoc";
+        }
+
+        if (IsDemonTweeksHost(host))
+        {
+            return "Demon Tweeks";
+        }
+
+        return "The site";
+    }
 
     private static ProductPageMetadata ParseAmazon(IDocument document)
     {
@@ -320,6 +347,11 @@ public static class ProductPageMetadataParser
         if (IsOnlineCarPartsHost(pageUri.Host))
         {
             return "Online Car Parts";
+        }
+
+        if (IsDemonTweeksHost(pageUri.Host))
+        {
+            return "Demon Tweeks";
         }
 
         return null;
@@ -511,6 +543,104 @@ public static class ProductPageMetadataParser
             OemEquivalent: null,
             Source: "Online Car Parts",
             ExtraUnknown: extras);
+    }
+
+    private static ProductPageMetadata ParseDemonTweeks(IDocument document)
+    {
+        var name = Clean(document.QuerySelector("h1 .base")?.TextContent)
+            ?? Clean(document.QuerySelector("h1")?.TextContent);
+
+        var manufacturer = DemonTweeksTableValue(document, "Brand")
+            ?? MetaContent(document, "product:brand")
+            ?? MetaContent(document, "og:brand");
+
+        return new ProductPageMetadata(
+            name,
+            manufacturer,
+            DemonTweeksManufacturerReference(document),
+            DemonTweeksPrice(document),
+            Vendor: "Demon Tweeks",
+            Source: "Demon Tweeks");
+    }
+
+    private static string? DemonTweeksManufacturerReference(IDocument document)
+    {
+        var labelled = DemonTweeksTableValue(document, "MPN")
+            ?? DemonTweeksTableValue(document, "Mfr Part");
+        if (string.IsNullOrWhiteSpace(labelled)
+            || labelled.Contains(',')
+            || labelled.Contains(' '))
+        {
+            return null;
+        }
+
+        return labelled;
+    }
+
+    private static decimal? DemonTweeksPrice(IDocument document)
+    {
+        foreach (var selector in new[] { ".now-price", ".special-price" })
+        {
+            var price = DemonTweeksIncVatAmount(document.QuerySelector(selector)?.TextContent);
+            if (price is not null)
+            {
+                return price;
+            }
+        }
+
+        foreach (var node in document.QuerySelectorAll(".product-info-price p, .price-box p, .product-info-price span"))
+        {
+            if (node.Closest(".old-price, .was-price, .ex-vat") is not null)
+            {
+                continue;
+            }
+
+            var price = DemonTweeksIncVatAmount(node.TextContent);
+            if (price is not null)
+            {
+                return price;
+            }
+        }
+
+        return null;
+    }
+
+    private static decimal? DemonTweeksIncVatAmount(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return null;
+        }
+
+        var match = Regex.Match(
+            text,
+            @"£\s*([\d,]+(?:\.\d{1,2})?)\s*INC VAT",
+            RegexOptions.IgnoreCase);
+        return match.Success ? ParsePriceText(match.Groups[1].Value) : null;
+    }
+
+    private static string? DemonTweeksTableValue(IDocument document, string header)
+    {
+        foreach (var row in document.QuerySelectorAll("tr"))
+        {
+            var label = Clean(row.QuerySelector("th")?.TextContent)
+                ?? Clean(row.QuerySelector("td:first-child")?.TextContent);
+            if (string.IsNullOrWhiteSpace(label)
+                || !label.Equals(header, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            var valueCell = row.QuerySelector("td");
+            if (valueCell is not null && ReferenceEquals(row.QuerySelector("th"), null))
+            {
+                valueCell = row.QuerySelector("td:last-child");
+            }
+
+            return Clean(valueCell?.TextContent);
+        }
+
+        return null;
     }
 
     private static string? OnlineCarPartsArtkl(IDocument document, string label)

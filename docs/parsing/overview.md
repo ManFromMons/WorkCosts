@@ -8,7 +8,7 @@ Canonical C#: `WorkCosts.Parsing/ProductPageMetadataParser.cs`. Swift **mirrors*
 
 | Step | Windows | GNOME | iPad |
 | :--- | :--- | :--- | :--- |
-| Download | HttpClient when it works; **WebView2** for Autodoc (and any host that blocks) | WebKitGTK / webview | **WKWebView** |
+| Download | HttpClient when it works; **WebView2** for Autodoc, Demon Tweeks, and any host that blocks | WebKitGTK / webview | **WKWebView** |
 | Parse | AngleSharp | AngleSharp (same library) | Swift HTML parser equivalent |
 | Cache | Files + SQLite index | Same idea | Same idea |
 
@@ -16,7 +16,7 @@ Never create the browser widget inside a blocking dialog. Windows already loads 
 
 ## Source and vendor
 
-There is no closed vendor list. **Source** comes from the URL host (`ProductVendorHelper.InferSourceFromUrl`: Amazon, Autodoc, Euro Car Parts, Car Battery Market, Tayna, Online Car Parts, otherwise leave/generic host). **Vendor** is the seller on the page. UI breadcrumb: `Source › Vendor`.
+There is no closed vendor list. **Source** comes from the URL host (`ProductVendorHelper.InferSourceFromUrl`: Amazon, Autodoc, Euro Car Parts, Car Battery Market, Tayna, Online Car Parts, Demon Tweeks, otherwise leave/generic host). **Vendor** is the seller on the page. UI breadcrumb: `Source › Vendor`.
 
 ## Hosts with dedicated parsers
 
@@ -26,6 +26,7 @@ There is no closed vendor list. **Source** comes from the URL host (`ProductVend
 - **Car Battery Market** (`carbatterymarket.*`): product H1 (not the shorter document title), `.product--price.price--default` (ignore RRP, PayPal, warranty add-on, Special buy), brand / MPN, ExtraYaml battery specs from the properties table and Technical Specifications list. HttpClient fetch.  
 - **Tayna** (`tayna.*`): uppercase product H1, `#prodprice` next to ADD TO BASKET (else `product:price:amount` when the buy box has no price), Product Code / H1 part number, EAN from the Technical Specification table, ExtraYaml battery specs including **Height inc. terms**. HttpClient fetch. Ignore Standard Delivery, Star Buy, and Also Add prices.  
 - **Online Car Parts** (`onlinecarparts.*`): full product H1 including subtitle (not the short JSON-LD / document title), `.product__new-price` / JSON-LD `offers.price` for this product (not similar cards, shipping, or quantity × price), article number / manufacturer, EAN (`gtin13`). ExtraYaml unknown keys `axle` / `size` / `material` / `type` when present. Not Autodoc. HttpClient fetch.  
+- **Demon Tweeks** (`demon-tweeks.*`): product H1 (not “Buy … | Demon Tweeks”), **INC VAT** now-price (ignore WAS, EX VAT, finance, and JSON-LD ex-VAT). Brand / single MPN from the attributes table; do not use `MPN(s)` lists or the listing id. Vendor is the host label. **Chromium fetch** (HttpClient is Cloudflare 403).  
 - **Generic**: `og:title`, `h1`, `product:brand` / `og:brand`, generic price meta.
 
 When generic is good enough, do not add a parser. When a host is wrong in production, add a dedicated path (see [adding-a-source.md](adding-a-source.md)). Each host is its own story `docs/features/source-<host>.md` with **≥3 user-confirmed** sample pages; agent skill `add-product-source`.

@@ -25,15 +25,16 @@ public static class ProductImagePicker
         var service = new ProductImageService();
         IBrowserPageSession? browser = null;
         if (Uri.TryCreate(pageUrl, UriKind.Absolute, out var pageUri)
-            && ProductPageMetadataParser.IsAutodocHost(pageUri.Host))
+            && ProductPageMetadataParser.RequiresChromiumFetch(pageUri.Host))
         {
+            var site = ProductPageMetadataParser.ChromiumFetchSiteName(pageUri.Host);
             if (await service.CanServeFromCacheAsync(pageUrl))
             {
-                status?.Invoke("Using cached Autodoc page and images…");
+                status?.Invoke($"Using cached {site} page and images…");
             }
             else
             {
-                status?.Invoke("Opening Autodoc in Chromium…");
+                status?.Invoke($"Opening {site} in Chromium…");
                 browser = await ChromiumPageLoader.CreateAsync(xamlRoot);
             }
         }

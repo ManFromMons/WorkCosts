@@ -58,6 +58,11 @@ public static class ProductVendorHelper
             return "Online Car Parts";
         }
 
+        if (Services.ProductPageMetadataParser.IsDemonTweeksHost(uri.Host))
+        {
+            return "Demon Tweeks";
+        }
+
         return null;
     }
 }
