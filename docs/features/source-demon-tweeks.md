@@ -3,7 +3,7 @@
 - **Id:** `docs/features/source-demon-tweeks.md`
 - **Seq:** 8
 - **Depends-on:** none
-- **Status:** ready-for-agent
+- **Status:** done
 - **PR:** none
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`
