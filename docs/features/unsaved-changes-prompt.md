@@ -4,7 +4,7 @@
 - **Seq:** 7
 - **Depends-on:** none
 - **Status:** done
-- **PR:** none
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/8
 - **Windows:** required first
 - **Related screens:** `docs/screens/dialogs.md`, `docs/screens/products.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
 - **Related code:** `DialogHelper`, `MainWindow` (`Closed` only today; `NavigateTo`, `TitleBar_BackRequested`), `AppWindow`, `ProductsPage` (`TryDiscardAddOverlayAsync`, `AddOverlay`, `PersistDetailAsync`, `SaveNewProductAsync`, `SaveViewExistingAsync`), `ProductAddEditor` (`IsDirty`, `TryRead`), `ProductEditor` (`TryRead`, `ValuesChanged`), `MasterDetailPage` (`IsDirty`, `Save_Click`, `PersistCoreFieldsAsync`, `JobsList_SelectionChanged`)
