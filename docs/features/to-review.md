@@ -44,8 +44,8 @@ _(none)_
 ## unsaved-changes-prompt
 
 - **Feature:** [docs/features/unsaved-changes-prompt.md](unsaved-changes-prompt.md)
-- **Status:** ready-for-review
-- **Last note:** Timed Save / Don't Save / Cancel on dirty Add Product details, job notes / unparsed duration, invalid product fields, nav, and AppWindow.Closing. HWND WM_QUERYENDSESSION uses 10 s. `WorkCosts.Tests` 107 passed.
+- **Status:** done
+- **Last note:** Scan accepted. Feature file Status is `done`. Opening squash PR.
 
 ### Questions
 
@@ -53,12 +53,12 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] `ConfirmUnsavedWithTimeoutAsync` returns `UnsavedPromptChoice` (Save / Discard / Cancel plus `TimedOut`) so a timeout Save that fails validation can discard and finish leaving.
+- [x] `ConfirmUnsavedWithTimeoutAsync` returns `UnsavedPromptChoice` (Save / Discard / Cancel plus `TimedOut`) so a timeout Save that fails validation can discard and finish leaving.
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
 ## source-onlinecarparts
 
