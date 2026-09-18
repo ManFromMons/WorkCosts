@@ -22,8 +22,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## source-demon-tweeks
 
 - **Feature:** [docs/features/source-demon-tweeks.md](source-demon-tweeks.md)
-- **Status:** in-progress
-- **Last note:** Started. HttpClient is Cloudflare 403; Chromium host gate as specified.
+- **Status:** ready-for-review
+- **Last note:** Dedicated `ParseDemonTweeks` (H1 + INC VAT now-price; Brand / single MPN). Chromium fetch via `RequiresChromiumFetch`. `WorkCosts.Tests` 107 passed.
 
 ### Questions
 
@@ -31,12 +31,15 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Add `demon-tweeks.com` to the Chromium fetch gate (`ProductImagePicker.FetchPageAsync` / `ChromiumPageLoader`), same pattern as Autodoc.
+- [ ] Add `demon-tweeks.com` to the Chromium fetch gate (`RequiresChromiumFetch` = Autodoc **or** Demon Tweeks) in `ProductImagePicker.FetchPageAsync` / `ProductImageService.LoadPageAsync` / `ChromiumPageLoader`.
+- [ ] Vendor is the host label `"Demon Tweeks"` (first-party shop; no sold-by node).
+- [ ] Fixtures are trimmed Magento-style snippets (Cloudflare blocked live HttpClient capture); they lock the confirmed Name / INC VAT prices.
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
+
 
 ## unsaved-changes-prompt
 
