@@ -4,7 +4,7 @@
 - **Seq:** 8
 - **Depends-on:** none
 - **Status:** done
-- **PR:** none
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/7
 - **Windows:** required first
 - **Related screens:** `docs/screens/products.md`, `docs/parsing/adding-a-source.md`, `docs/parsing/overview.md`, `docs/parsing/browser-session.md`
 - **Related code:** `ProductPageMetadataParser`, `ProductPageClientValues`, `ProductUrl`, `ProductVendorHelper`, `ProductImageService`, `ProductImagePicker`, `ChromiumPageLoader`, `IsUsablePageHtml`
