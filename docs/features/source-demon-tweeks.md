@@ -96,7 +96,7 @@ Parse pitfalls (must not fail the sample asserts):
 ## Implementation notes for an agent
 
 1. Follow skill `add-product-source` (discover fetch → one fixture per sample → failing tests → integrate). When tests pass, set to-review **Status** `ready-for-review` (not `done`).
-2. Discovery (2026-09-18): HttpClient with Chrome identity returned **HTTP 403** and `Cf-Mitigated: challenge` for sample 1 (and Cloudflare interstitial on later fetches). **Add this host to the Chromium list** the same way Autodoc is gated in `ProductImagePicker.FetchPageAsync` / `ChromiumPageLoader`. Record that in to-review **Deviations**. Paste HTML remains the user fallback.
+2. Discovery (2026-09-18): HttpClient with Chrome identity returned **HTTP 403** and `Cf-Mitigated: challenge`. **Chromium host gate** via `RequiresChromiumFetch` (`IsAutodocHost` **or** `IsDemonTweeksHost`) in `ProductImagePicker.FetchPageAsync` / `ProductImageService.LoadPageAsync` / `ChromiumPageLoader`. Paste HTML remains the user fallback. Dedicated `IsDemonTweeksHost` / `ParseDemonTweeks`: H1 name, `.now-price` INC VAT (not WAS / EX VAT / JSON-LD), Brand table, single `MPN` (not `MPN(s)` / listing id). Vendor is the host label `"Demon Tweeks"`.
 3. Dedicated parser only if generic `ParseGeneric` fails Name/price on any sample. Prefer JSON-LD and obvious DOM; GBP `decimal` is the INC VAT figure.
 4. After land, `docs/parsing/overview.md` can list Demon Tweeks if a dedicated parser was required.
 5. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; `git add` to-review on this branch; open a PR before to-review **Status** `done`.

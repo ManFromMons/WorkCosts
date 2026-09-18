@@ -144,6 +144,11 @@ public sealed class ChromiumPageLoader : IBrowserPageSession, IAsyncDisposable
             origins.Add("https://media.autodoc.de/");
         }
 
+        if (ProductPageMetadataParser.IsDemonTweeksHost(pageUri.Host))
+        {
+            origins.Add("https://www.demon-tweeks.com/");
+        }
+
         foreach (var origin in origins)
         {
             cancellationToken.ThrowIfCancellationRequested();

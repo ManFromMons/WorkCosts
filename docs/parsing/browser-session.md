@@ -12,5 +12,5 @@ Rules:
 - Create the view on the UI thread; wait for load with a timeout.  
 - Prefer cache (`WebCacheStore.CanServeFromCacheAsync`) before spinning a browser.  
 - After success, write HTML + images to the cache and index rows.  
-- Surface status text in the add-product sheet (“Opening Autodoc in Chromium…”).  
+- Surface status text in the add-product sheet (“Opening Autodoc in Chromium…”, “Opening Demon Tweeks in Chromium…”).  
 - Cloudflare/CAPTCHA: fail clearly and offer **paste HTML**.

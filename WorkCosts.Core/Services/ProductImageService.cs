@@ -229,7 +229,7 @@ public sealed class ProductImageService
         var diskImages = await _cache.TryReadImagesAsync(cacheKey, cancellationToken);
         var diskHtml = await _cache.TryReadHtmlAsync(pageUri, cacheKey, cancellationToken);
         string html;
-        if (browser is not null && ProductPageMetadataParser.IsAutodocHost(pageUri.Host))
+        if (browser is not null && ProductPageMetadataParser.RequiresChromiumFetch(pageUri.Host))
         {
             if (!string.IsNullOrWhiteSpace(diskHtml)
                 && IsUsablePageHtml(diskHtml, pageUri)
@@ -246,7 +246,12 @@ public sealed class ProductImageService
                 if (!IsUsablePageHtml(html, pageUri))
                 {
                     throw new InvalidOperationException(
-                        FormatUnusablePageMessage("Autodoc", loaded.HttpStatusCode, loaded.CfMitigated, html, inChromium: true));
+                        FormatUnusablePageMessage(
+                            ProductPageMetadataParser.ChromiumFetchSiteName(pageUri.Host),
+                            loaded.HttpStatusCode,
+                            loaded.CfMitigated,
+                            html,
+                            inChromium: true));
                 }
 
                 await browser.CopyCookiesToAsync(Cookies, pageUri, cancellationToken);
@@ -419,7 +424,7 @@ public sealed class ProductImageService
         {
             throw new InvalidOperationException(
                 FormatUnusablePageMessage(
-                    ProductPageMetadataParser.IsAutodocHost(pageUri.Host) ? "Autodoc" : "The site",
+                    ProductPageMetadataParser.ChromiumFetchSiteName(pageUri.Host),
                     status,
                     cfMitigated,
                     html,
@@ -470,7 +475,7 @@ public sealed class ProductImageService
 
     public static string FormatUnusablePageMessage(Uri pageUri, string html) =>
         FormatUnusablePageMessage(
-            ProductPageMetadataParser.IsAutodocHost(pageUri.Host) ? "Autodoc" : "The site",
+            ProductPageMetadataParser.ChromiumFetchSiteName(pageUri.Host),
             httpStatus: 0,
             cfMitigated: null,
             html,
