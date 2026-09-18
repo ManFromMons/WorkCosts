@@ -21,7 +21,7 @@ using WorkCosts.Services;
 
 namespace WorkCosts.Pages;
 
-public sealed partial class ProductsPage : Page
+public sealed partial class ProductsPage : Page, IUnsavedChangesSource
 {
     public ObservableCollection<CategoryFilterItem> CategoryFilters { get; } = new();
     public ObservableCollection<PricePointFilterItem> PricePointFilters { get; } = new();
@@ -39,6 +39,7 @@ public sealed partial class ProductsPage : Page
     private bool _suppressDetailEvents;
     private Guid? _selectedId;
     private int _persistVersion;
+    private Task _persistTask = Task.CompletedTask;
     private bool _addOverlayOpen;
     private Guid? _overwriteProductId;
     private Guid? _viewProductId;
@@ -577,6 +578,18 @@ public sealed partial class ProductsPage : Page
 
         if (sender is ListView list && list.SelectedItem is ProductRow row)
         {
+            var previous = SelectedItem;
+            if (previous is not null && previous.Id != row.Id)
+            {
+                RestoreProductSelection(previous);
+                if (!await UnsavedChangesLeave.TryLeaveAsync(this, XamlRoot, UnsavedPrompt.UserLeaveTimeout))
+                {
+                    return;
+                }
+
+                RestoreProductSelection(row);
+            }
+
             if (ReferenceEquals(list, FilterProductList))
                 AllProductList.SelectedItem = null;
             else if (ReferenceEquals(list, AllProductList))
@@ -592,6 +605,14 @@ public sealed partial class ProductsPage : Page
             if (!HasActiveAssignmentFilters())
                 ShowEmptyRightPanel();
         }
+    }
+
+    private void RestoreProductSelection(ProductRow row)
+    {
+        _suppressSelection = true;
+        FilterProductList.SelectedItem = _filterProducts.Contains(row) ? row : null;
+        AllProductList.SelectedItem = _allProducts.Contains(row) ? row : null;
+        _suppressSelection = false;
     }
 
     private void ShowEmptyRightPanel()
@@ -642,7 +663,7 @@ public sealed partial class ProductsPage : Page
             return;
         }
 
-        _ = PersistDetailAsync();
+        _persistTask = PersistDetailAsync();
     }
 
     private async Task PersistDetailAsync()
@@ -1039,34 +1060,106 @@ public sealed partial class ProductsPage : Page
     private async void AddViewSave_Click(object sender, RoutedEventArgs e) =>
         await SaveViewExistingAsync();
 
-    private async Task SaveViewExistingAsync()
+    private async Task<bool> SaveViewExistingAsync(bool closeAfter = false)
     {
         if (_viewProductId is not Guid existingId)
         {
-            return;
+            return true;
         }
 
         if (!AddEditor.TryRead(out var values, out var error))
         {
             await DialogHelper.ShowMessageAsync(XamlRoot, "Validation", error ?? "Invalid product.");
-            return;
+            return false;
         }
 
-        await using var db = App.Database.CreateContext();
-        var entity = await db.Products
-            .Include(p => p.ProductJobs)
-            .FirstOrDefaultAsync(p => p.Id == existingId);
-        if (entity is null)
+        try
         {
-            await DialogHelper.ShowMessageAsync(XamlRoot, "Missing product",
-                "That product is no longer in the library.");
-            return;
+            await using var db = App.Database.CreateContext();
+            var entity = await db.Products
+                .Include(p => p.ProductJobs)
+                .FirstOrDefaultAsync(p => p.Id == existingId);
+            if (entity is null)
+            {
+                await DialogHelper.ShowMessageAsync(XamlRoot, "Missing product",
+                    "That product is no longer in the library.");
+                return false;
+            }
+
+            ApplyValues(entity, values, db);
+            await db.SaveChangesAsync();
+            AddEditor.MarkClean();
+            await LoadAsync(_selectedId);
+            if (closeAfter)
+            {
+                await CloseAddOverlayAsync();
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Save failed", ex.Message);
+            return false;
+        }
+    }
+
+    private bool IsAddSheetDirty()
+    {
+        if (!_addOverlayOpen || _existingChoice is not null)
+        {
+            return false;
         }
 
-        ApplyValues(entity, values, db);
-        await db.SaveChangesAsync();
-        AddEditor.MarkClean();
-        await LoadAsync(_selectedId);
+        if (AddDetailsStage.Visibility != Visibility.Visible)
+        {
+            return false;
+        }
+
+        return !_addViewExisting || AddEditor.IsDirty;
+    }
+
+    private bool IsDetailInvalid() =>
+        SelectedItem is not null && !DetailEditor.TryRead(out _, out _);
+
+    public bool HasUnsavedChanges => IsAddSheetDirty() || IsDetailInvalid();
+
+    public Task FlushPendingAsync() => _persistTask;
+
+    public async Task<bool> SaveUnsavedAsync()
+    {
+        if (IsAddSheetDirty())
+        {
+            var saved = _addViewExisting
+                ? await SaveViewExistingAsync(closeAfter: true)
+                : await SaveNewProductAsync(closeAfter: true);
+            if (!saved)
+            {
+                return false;
+            }
+        }
+
+        if (IsDetailInvalid())
+        {
+            DetailEditor.TryRead(out _, out var error);
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Validation", error ?? "Invalid product.");
+            return false;
+        }
+
+        return true;
+    }
+
+    public async Task DiscardUnsavedAsync()
+    {
+        if (IsAddSheetDirty())
+        {
+            await CloseAddOverlayAsync();
+        }
+
+        if (IsDetailInvalid() && SelectedItem is ProductRow row)
+        {
+            await ShowDetailAsync(row);
+        }
     }
 
     private async Task TryDiscardAddOverlayAsync()
@@ -1082,7 +1175,7 @@ public sealed partial class ProductsPage : Page
             return;
         }
 
-        if (_addViewExisting || AddDetailsStage.Visibility != Visibility.Visible)
+        if (!IsAddSheetDirty())
         {
             await CloseAddOverlayAsync();
             return;
@@ -1093,26 +1186,35 @@ public sealed partial class ProductsPage : Page
             return;
         }
 
-        bool discard;
+        UnsavedPromptChoice choice;
         try
         {
-            discard = await DialogHelper.ConfirmAsync(
-                XamlRoot,
-                "Discard changes?",
-                "Close Add product and discard what you have entered?",
-                "Yes",
-                "No");
+            choice = await DialogHelper.ConfirmUnsavedWithTimeoutAsync(XamlRoot, UnsavedPrompt.UserLeaveTimeout);
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"Discard confirm failed: {ex}");
+            Debug.WriteLine($"Unsaved confirm failed: {ex}");
             await CloseAddOverlayAsync();
             return;
         }
 
-        if (discard)
+        switch (choice.Result)
         {
-            await CloseAddOverlayAsync();
+            case UnsavedPromptResult.Discard:
+                await CloseAddOverlayAsync();
+                return;
+            case UnsavedPromptResult.Save:
+                var saved = _addViewExisting
+                    ? await SaveViewExistingAsync(closeAfter: true)
+                    : await SaveNewProductAsync(closeAfter: true);
+                if (!saved && choice.TimedOut)
+                {
+                    await CloseAddOverlayAsync();
+                }
+
+                return;
+            default:
+                return;
         }
     }
 
@@ -1541,12 +1643,12 @@ public sealed partial class ProductsPage : Page
     private async void AddSaveAndClose_Click(object sender, RoutedEventArgs e) =>
         await SaveNewProductAsync(closeAfter: true);
 
-    private async Task SaveNewProductAsync(bool closeAfter)
+    private async Task<bool> SaveNewProductAsync(bool closeAfter)
     {
         if (!AddEditor.TryRead(out var values, out var error))
         {
             await DialogHelper.ShowMessageAsync(XamlRoot, "Validation", error ?? "Invalid product.");
-            return;
+            return false;
         }
 
         var duplicate = await FindProductByUrlAsync(values.Url);
@@ -1563,20 +1665,37 @@ public sealed partial class ProductsPage : Page
                 "Cancel");
             if (!overwrite)
             {
-                return;
+                return false;
             }
 
             _overwriteProductId = duplicate.Value.Product.Id;
         }
 
-        await using var db = App.Database.CreateContext();
-        Product product;
-        if (_overwriteProductId is Guid existingId)
+        try
         {
-            var entity = await db.Products
-                .Include(p => p.ProductJobs)
-                .FirstOrDefaultAsync(p => p.Id == existingId);
-            if (entity is null)
+            await using var db = App.Database.CreateContext();
+            Product product;
+            if (_overwriteProductId is Guid existingId)
+            {
+                var entity = await db.Products
+                    .Include(p => p.ProductJobs)
+                    .FirstOrDefaultAsync(p => p.Id == existingId);
+                if (entity is null)
+                {
+                    product = CreateProductFromValues(values);
+                    db.Products.Add(product);
+                    foreach (var jobId in values.JobIds)
+                    {
+                        db.ProductJobs.Add(new ProductJob { ProductId = product.Id, JobId = jobId });
+                    }
+                }
+                else
+                {
+                    ApplyValues(entity, values, db);
+                    product = entity;
+                }
+            }
+            else
             {
                 product = CreateProductFromValues(values);
                 db.Products.Add(product);
@@ -1585,37 +1704,30 @@ public sealed partial class ProductsPage : Page
                     db.ProductJobs.Add(new ProductJob { ProductId = product.Id, JobId = jobId });
                 }
             }
+
+            await db.SaveChangesAsync();
+
+            if (closeAfter)
+            {
+                await CloseAddOverlayAsync();
+                await LoadAsync(product.Id);
+            }
             else
             {
-                ApplyValues(entity, values, db);
-                product = entity;
+                await LoadAsync(_selectedId);
+                ResetAddInteraction();
+                AddEditor.LoadEmpty();
+                AddUrlBox.Text = string.Empty;
+                ShowAddUrlStage();
+                AddUrlBox.Focus(FocusState.Programmatic);
             }
-        }
-        else
-        {
-            product = CreateProductFromValues(values);
-            db.Products.Add(product);
-            foreach (var jobId in values.JobIds)
-            {
-                db.ProductJobs.Add(new ProductJob { ProductId = product.Id, JobId = jobId });
-            }
-        }
 
-        await db.SaveChangesAsync();
-
-        if (closeAfter)
-        {
-            await CloseAddOverlayAsync();
-            await LoadAsync(product.Id);
+            return true;
         }
-        else
+        catch (Exception ex)
         {
-            await LoadAsync(_selectedId);
-            ResetAddInteraction();
-            AddEditor.LoadEmpty();
-            AddUrlBox.Text = string.Empty;
-            ShowAddUrlStage();
-            AddUrlBox.Focus(FocusState.Programmatic);
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Save failed", ex.Message);
+            return false;
         }
     }
 

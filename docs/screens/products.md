@@ -28,6 +28,6 @@ Delete: confirm Yes/No, then `ProductCommands.DeleteAsync`.
 2. Status text while fetching. After paste (or when several images are cached), show **Select product image**; double-click confirms. One image is applied without a grid.  
 3. If URL already exists: **in-sheet banner** Overwrite / Keep existing (read-only) / Cancel — not a second modal.  
 4. **Paste HTML** / **Open HTML file** / **Skip** ([docs/features/paste-html.md](../features/paste-html.md)). Paste ignores the URL box; URL comes from the HTML.  
-5. Esc: if the details URL field is in edit mode, cancel that edit only (restore previous URL). Otherwise close the sheet. Do not steal Enter from confirmations.
+5. Esc: if the details URL field is in edit mode, cancel that edit only (restore previous URL). URL stage closes with no prompt. Dirty details (new product, or view-existing with changes) prompt **Unsaved changes** (Save / Don't Save / Cancel). Do not steal Enter from confirmations.
 
 Top-right Products **Add** while the sheet is open **continues** from the current URL (does not wipe the form).

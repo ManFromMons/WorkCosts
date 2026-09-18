@@ -11,7 +11,7 @@ using WorkCosts.Models;
 
 namespace WorkCosts.Pages;
 
-public sealed partial class MasterDetailPage : Page
+public sealed partial class MasterDetailPage : Page, IUnsavedChangesSource
 {
     private readonly ObservableCollection<JobListItem> _jobs = [];
     public ObservableCollection<JobProductRow> JobProductRows { get; } = new();
@@ -20,6 +20,7 @@ public sealed partial class MasterDetailPage : Page
     private bool _suppressFieldEvents;
     private bool _suppressProductEvents;
     private int _persistVersion;
+    private Task _persistTask = Task.CompletedTask;
 
     public MasterDetailPage()
     {
@@ -108,14 +109,29 @@ public sealed partial class MasterDetailPage : Page
     private JobListItem? SelectedItem =>
         _selectedId is Guid id ? _jobs.FirstOrDefault(j => j.Id == id) : null;
 
-    private void JobsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void JobsList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_suppressSelection)
         {
             return;
         }
 
-        if (JobsList.SelectedItem is JobListItem item)
+        var incoming = JobsList.SelectedItem as JobListItem;
+        var previousId = _selectedId;
+        if (previousId is Guid currentId && incoming?.Id != currentId)
+        {
+            RestoreJobSelection(currentId);
+            if (!await UnsavedChangesLeave.TryLeaveAsync(this, XamlRoot, UnsavedPrompt.UserLeaveTimeout))
+            {
+                return;
+            }
+
+            _suppressSelection = true;
+            JobsList.SelectedItem = incoming;
+            _suppressSelection = false;
+        }
+
+        if (incoming is JobListItem item)
         {
             ShowDetail(item);
         }
@@ -123,6 +139,13 @@ public sealed partial class MasterDetailPage : Page
         {
             ShowEmptyDetail();
         }
+    }
+
+    private void RestoreJobSelection(Guid jobId)
+    {
+        _suppressSelection = true;
+        JobsList.SelectedItem = _jobs.FirstOrDefault(j => j.Id == jobId);
+        _suppressSelection = false;
     }
 
     private void ShowEmptyDetail()
@@ -267,7 +290,7 @@ public sealed partial class MasterDetailPage : Page
         }
 
         item.Name = name;
-        _ = PersistCoreFieldsAsync(item);
+        QueuePersist(item);
         UpdateSaveButtonState();
     }
 
@@ -290,7 +313,7 @@ public sealed partial class MasterDetailPage : Page
         }
 
         item.GaragePrice = price;
-        _ = PersistCoreFieldsAsync(item);
+        QueuePersist(item);
         UpdateSaveButtonState();
     }
 
@@ -331,7 +354,7 @@ public sealed partial class MasterDetailPage : Page
         }
 
         item.DurationMinutes = minutes;
-        _ = PersistCoreFieldsAsync(item);
+        QueuePersist(item);
         UpdateSaveButtonState();
     }
 
@@ -370,6 +393,24 @@ public sealed partial class MasterDetailPage : Page
         }
 
         return (NotesEditor.Text ?? string.Empty) != item.NotesMarkdown;
+    }
+
+    private void QueuePersist(JobListItem item) => _persistTask = PersistCoreFieldsAsync(item);
+
+    public bool HasUnsavedChanges => IsDirty();
+
+    public Task FlushPendingAsync() => _persistTask;
+
+    public Task<bool> SaveUnsavedAsync() => PersistSelectedJobAsync();
+
+    public Task DiscardUnsavedAsync()
+    {
+        if (SelectedItem is JobListItem item)
+        {
+            ShowDetail(item);
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task PersistCoreFieldsAsync(JobListItem item)
@@ -421,53 +462,65 @@ public sealed partial class MasterDetailPage : Page
         await LoadAsync(job.Id);
     }
 
-    private async void Save_Click(object sender, RoutedEventArgs e)
+    private async void Save_Click(object sender, RoutedEventArgs e) =>
+        await PersistSelectedJobAsync();
+
+    private async Task<bool> PersistSelectedJobAsync()
     {
         if (_selectedId is not Guid id || SelectedItem is not JobListItem item)
         {
-            return;
+            return true;
         }
 
         var name = NameBox.Text.Trim();
         if (string.IsNullOrWhiteSpace(name))
         {
             await DialogHelper.ShowMessageAsync(XamlRoot, "Validation", "Name is required.");
-            return;
+            return false;
         }
 
         if (!DurationHelper.TryParse(DurationBox.Text, out var minutes))
         {
             await DialogHelper.ShowMessageAsync(XamlRoot, "Validation", "Duration must be hh:mm (minutes 0–59).");
-            return;
+            return false;
         }
 
         if (double.IsNaN(PriceBox.Value) || PriceBox.Value < 0)
         {
             await DialogHelper.ShowMessageAsync(XamlRoot, "Validation", "Garage price must be zero or greater.");
-            return;
+            return false;
         }
 
-        await using var db = App.Database.CreateContext();
-        var entity = await db.Jobs.FindAsync(id);
-        if (entity is null)
+        try
         {
-            await DialogHelper.ShowMessageAsync(XamlRoot, "Not found", "This job no longer exists.");
-            await LoadAsync();
-            return;
+            await using var db = App.Database.CreateContext();
+            var entity = await db.Jobs.FindAsync(id);
+            if (entity is null)
+            {
+                await DialogHelper.ShowMessageAsync(XamlRoot, "Not found", "This job no longer exists.");
+                await LoadAsync();
+                return false;
+            }
+
+            entity.Name = name;
+            entity.GaragePrice = (decimal)PriceBox.Value;
+            entity.DurationMinutes = minutes;
+            entity.NotesMarkdown = NotesEditor.Text ?? string.Empty;
+            await db.SaveChangesAsync();
+
+            item.Name = name;
+            item.GaragePrice = entity.GaragePrice;
+            item.DurationMinutes = minutes;
+            item.NotesMarkdown = entity.NotesMarkdown;
+            UpdateDetailTitle(name);
+            UpdateSaveButtonState();
+            return true;
         }
-
-        entity.Name = name;
-        entity.GaragePrice = (decimal)PriceBox.Value;
-        entity.DurationMinutes = minutes;
-        entity.NotesMarkdown = NotesEditor.Text ?? string.Empty;
-        await db.SaveChangesAsync();
-
-        item.Name = name;
-        item.GaragePrice = entity.GaragePrice;
-        item.DurationMinutes = minutes;
-        item.NotesMarkdown = entity.NotesMarkdown;
-        UpdateDetailTitle(name);
-        UpdateSaveButtonState();
+        catch (Exception ex)
+        {
+            await DialogHelper.ShowMessageAsync(XamlRoot, "Save failed", ex.Message);
+            return false;
+        }
     }
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
