@@ -19,6 +19,25 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## Entries
 
 
+## source-demon-tweeks
+
+- **Feature:** [docs/features/source-demon-tweeks.md](source-demon-tweeks.md)
+- **Status:** in-progress
+- **Last note:** Started. HttpClient is Cloudflare 403; Chromium host gate as specified.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] Add `demon-tweeks.com` to the Chromium fetch gate (`ProductImagePicker.FetchPageAsync` / `ChromiumPageLoader`), same pattern as Autodoc.
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
 ## unsaved-changes-prompt
 
 - **Feature:** [docs/features/unsaved-changes-prompt.md](unsaved-changes-prompt.md)
