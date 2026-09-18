@@ -3,7 +3,7 @@
 - **Id:** `docs/features/unsaved-changes-prompt.md`
 - **Seq:** 7
 - **Depends-on:** none
-- **Status:** ready-for-agent
+- **Status:** done
 - **PR:** none
 - **Windows:** required first
 - **Related screens:** `docs/screens/dialogs.md`, `docs/screens/products.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
