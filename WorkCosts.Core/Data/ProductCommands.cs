@@ -27,6 +27,9 @@ public static class ProductCommands
         await db.ProductJobs
             .Where(link => link.ProductId == productId)
             .ExecuteDeleteAsync(cancellationToken);
+        await db.GarageJobRequiredProducts
+            .Where(link => link.ProductId == productId)
+            .ExecuteDeleteAsync(cancellationToken);
         await db.ProductEquivalents
             .Where(link => link.ProductId == productId || link.EquivalentProductId == productId)
             .ExecuteDeleteAsync(cancellationToken);

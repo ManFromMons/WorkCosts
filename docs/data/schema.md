@@ -68,7 +68,51 @@ Composite key `(ProductId, EquivalentProductId)`. Check: not self. Cascade. Trea
 | UnitCostSnapshot | GBP at add time |
 | Unique | `(WorkJobId, ProductId)` |
 
-Deleting a product (`ProductCommands.DeleteAsync`) removes its work-job lines, job links, and equivalent rows, then the product.
+Deleting a product (`ProductCommands.DeleteAsync`) removes its work-job lines, job links, garage-job required-product links, and equivalent rows, then the product.
+
+### GarageJobs
+
+Planning templates (see [garage-job.md](garage-job.md)). No seed rows on first launch.
+
+| Column | Notes |
+| :--- | :--- |
+| Id | Guid PK |
+| Name | Required, max 200 |
+| TargetKind | `Car` or `Engine` |
+| TargetLabel | Max 200 |
+| Description | Plain text, max 8000 |
+| DurationMinutes | Work effort; 0 = unspecified |
+| IconRelativePath | Under data root, e.g. `icons/garage-jobs/{id}.png`; empty = default icon in UI |
+| IconContentType | e.g. `image/png`; empty when no custom icon |
+| RepeatCombine | `WhicheverFirst` or `AllMustBeMet` |
+
+### GarageJobRepeatConditions
+
+| Column | Notes |
+| :--- | :--- |
+| Id | Guid PK |
+| GarageJobId | FK → GarageJobs, cascade |
+| Kind | `TimePeriod` or `Distance` |
+| Amount | Integer &gt; 0 |
+| Unit | Time: days/weeks/months/years; distance: miles/kilometres |
+| SortOrder | Display order |
+
+### GarageJobRequiredProducts
+
+Composite PK `(GarageJobId, ProductId)`. Cascade from garage job; restrict delete on product.
+
+| Column | Notes |
+| :--- | :--- |
+| Quantity | short, minimum 1 |
+| SortOrder | int |
+
+### GarageJobReferencedJobs
+
+Composite PK `(GarageJobId, JobId)`. Links to existing **`Job`** sub-work templates (ordered). Cascade from garage job; cascade when **`Job`** template deleted.
+
+| Column | Notes |
+| :--- | :--- |
+| SortOrder | int |
 
 ### CachedWebPages / CachedWebImages
 

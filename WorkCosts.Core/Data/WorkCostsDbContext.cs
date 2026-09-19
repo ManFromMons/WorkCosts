@@ -18,6 +18,10 @@ public class WorkCostsDbContext : DbContext
     public DbSet<WorkJobItem> WorkJobItems => Set<WorkJobItem>();
     public DbSet<CachedWebPage> CachedWebPages => Set<CachedWebPage>();
     public DbSet<CachedWebImage> CachedWebImages => Set<CachedWebImage>();
+    public DbSet<GarageJob> GarageJobs => Set<GarageJob>();
+    public DbSet<GarageJobRepeatCondition> GarageJobRepeatConditions => Set<GarageJobRepeatCondition>();
+    public DbSet<GarageJobRequiredProduct> GarageJobRequiredProducts => Set<GarageJobRequiredProduct>();
+    public DbSet<GarageJobReferencedJob> GarageJobReferencedJobs => Set<GarageJobReferencedJob>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -131,6 +135,51 @@ public class WorkCostsDbContext : DbContext
             e.Property(x => x.ContentType).HasMaxLength(100).IsRequired();
             e.HasIndex(x => new { x.PageUrl, x.ImageUrl }).IsUnique();
             e.HasIndex(x => x.Domain);
+        });
+
+        modelBuilder.Entity<GarageJob>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.TargetLabel).HasMaxLength(200);
+            e.Property(x => x.Description).HasMaxLength(8000);
+            e.Property(x => x.IconRelativePath).HasMaxLength(500);
+            e.Property(x => x.IconContentType).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<GarageJobRepeatCondition>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.GarageJob)
+                .WithMany(x => x.RepeatConditions)
+                .HasForeignKey(x => x.GarageJobId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<GarageJobRequiredProduct>(e =>
+        {
+            e.HasKey(x => new { x.GarageJobId, x.ProductId });
+            e.HasOne(x => x.GarageJob)
+                .WithMany(x => x.RequiredProducts)
+                .HasForeignKey(x => x.GarageJobId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Product)
+                .WithMany(x => x.GarageJobRequiredProducts)
+                .HasForeignKey(x => x.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<GarageJobReferencedJob>(e =>
+        {
+            e.HasKey(x => new { x.GarageJobId, x.JobId });
+            e.HasOne(x => x.GarageJob)
+                .WithMany(x => x.ReferencedJobs)
+                .HasForeignKey(x => x.GarageJobId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Job)
+                .WithMany(x => x.GarageJobReferences)
+                .HasForeignKey(x => x.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
