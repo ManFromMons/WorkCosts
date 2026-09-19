@@ -17,9 +17,9 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | Adding a supplier host | `/start-add-source` + a URL ([AGENTS.md](../AGENTS.md), [README.md](../README.md)) | Confirm Name/price on **≥3** pages ([confirm-samples.md](../.cursor/skills/add-product-source/confirm-samples.md)); story then [parsing/adding-a-source.md](parsing/adding-a-source.md) |
 | Implementing a ready story | `@start-implement`, Seq via `feature-queue`, or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
 | Rebuilding GNOME on Linux | `/start-port gnome` | [platforms/gnome-build-order.md](platforms/gnome-build-order.md); `scripts/Get-NextPortSlice.ps1` |
-| Seeing the Seq board | Skill `feature-queue` | `scripts/Get-FeatureQueue.ps1` |
+| Seeing the Seq board | Skill `feature-queue` **or** the agent TUI | `scripts/Get-FeatureQueue.ps1` / `scripts/Start-AgentTui.ps1` |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
-| Recording questions / review | Skill `update-to-review` | `git show origin/main:docs/features/to-review.md` |
+| Recording questions / review | Skill `update-to-review` **or** the TUI inbox panel | `git show origin/main:docs/features/to-review.md` |
 
 **Two long-lived branches**
 
@@ -190,12 +190,14 @@ powershell -File scripts/Get-NextReadyFeature.ps1
 powershell -File scripts/Get-FeatureQueue.ps1
 powershell -File scripts/Get-FeatureQueue.ps1 -Seq 5
 
+powershell -File scripts/Start-AgentTui.ps1
+
 pwsh -File scripts/Get-NextPortSlice.ps1
 pwsh -File scripts/Get-NextPortSlice.ps1 -List
 pwsh -File scripts/Get-NextPortSlice.ps1 -Slice gnome-scaffold
 ```
 
-VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-feature`, `feature-queue`, `next-port-slice`.
+VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-feature`, `feature-queue`, `next-port-slice`, `agent-tui`.
 
 | Script | Effect |
 | :--- | :--- |
@@ -204,6 +206,7 @@ VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-
 | `Get-NextReadyFeature.ps1` | Prints a kebab id or `QUEUE_EMPTY`. Reads `origin/main`. Fetch only. |
 | `Get-FeatureQueue.ps1` | Prints the Seq dependency tree (working tree overlay). `-Seq N` prints `KEBAB` / `STARTABLE`. Fetch only. |
 | `Get-NextPortSlice.ps1` | Prints next GNOME slice id, `PORT_CAUGHT_UP`, `PORT_WAITING_ON_WINDOWS:<kebab>`, or `PLAYBOOK_MISSING`. `-List` / `-Slice`. Reads `origin/main`. |
+| `Start-AgentTui.ps1` | Lazygit-style TUI: Seq queue, `origin/main` to-review, Cursor SDK chat. Not on `WorkCosts.slnx`. |
 
 Build/test (any branch, for product code):
 
@@ -219,6 +222,53 @@ Linux (no WinUI):
 dotnet test WorkCosts.Tests/WorkCosts.Tests.csproj --settings .runsettings
 dotnet build src/linux/WillIDIY.Gnome.slnx
 ```
+
+---
+
+## Agent ops TUI
+
+Developer tooling (Ink + `@cursor/sdk`), not a Will I DIY? Seq story. **Not** on `WorkCosts.slnx`. Package: `tools/agent-tui/`. Inbox parse/patch tests: `npm test` in that folder (no live SDK in CI).
+
+```powershell
+powershell -File scripts/Start-AgentTui.ps1
+```
+
+Requires Node.js ≥ 22.13 and `CURSOR_API_KEY` (same key as headless `agent`; Cursor Dashboard → Integrations). Local SDK agents require an explicit `model: { id }` on `Agent.create`, `Agent.resume`, and every `send`. Optional `AGENT_TUI_MODEL` (default `composer-2.5`). The TUI keeps **two** local agents (`cwd` = repo root): docked Chat uses `tools/agent-tui/.session-id`; **Plan Feature** uses `tools/agent-tui/.plan-session.json` (agent id + transcript + feature name). Opening the plan panel **shows the stored transcript immediately**, then **resumes** that planning agent. If resume fails, the continue prompt includes a replay of recent turns. Both dispose on quit. Planning URL confirm-samples stay in this chat — never `agent -p` / `Agent.prompt`.
+
+| Panel | Reads | May change |
+| :--- | :--- | :--- |
+| Status | git branch, dirty/clean, `origin/main` vs `Planning`, next pickup | nothing |
+| Queue | `scripts/Get-FeatureQueue.ps1` | nothing (keys send chat prompts) |
+| Working | Feature branches, dirty story files, unfinished inbox/story status; newest activity first | nothing |
+| Story | `docs/features/<kebab>.md` (wrapped, j/k scroll, right scrollbar) | nothing |
+| Inbox | `git show origin/main:docs/features/to-review.md` | local buffer only until **L** |
+| Chat | SDK stream | files the **agent** writes (Agent mode) |
+| Plan Feature | `p` — floating overlay (15% margin). From **Working**, continues that kebab. Reconnects the stored planning conversation | `docs/features/<kebab>.md` via `/plan-feature` (Planning) |
+| `:` palette | `.cursor/skills/*/SKILL.md` + invoke-only names | prefixes the next send with `/skill-name` |
+
+**L** writes **only** `docs/features/to-review.md` then runs `Update-ToReviewOnMain.ps1`. If any other path is dirty, it refuses (same rule as the script). Never `git add` to-review on `Planning` or a feature branch from the TUI. **m** confirms then runs `Merge-PlanningToMain.ps1` (clean tree required).
+
+| Keys | Action |
+| :--- | :--- |
+| `tab` / `shift-tab` / `h` `l` | Move focus (queue ↔ working ↔ story/inbox ↔ chat). `shift-tab` reverses `tab` |
+| `j` `k` / arrows | Move in the focused list; in **Story**, scroll the markdown |
+| `enter` (queue or working) | Open story markdown |
+| `space` / PgDn / PgUp / `G` (story) | Page down / page up / jump to end (`g` still fetch+reload) |
+| `r` | Open that kebab’s inbox heading from `origin/main` |
+| `i` | Send `/start-implement <seq-or-kebab>` |
+| `n` | Send `/pickup-next-feature` (no-op on `QUEUE_EMPTY`) |
+| `p` | Open **Plan Feature**. From **Working**: show stored transcript immediately, resume the planning agent, then auto-prompt to continue (replay last turns only if resume failed). Same live plan reopen skips the prompt. From elsewhere: reconnect last planning chat; Enter on a new name sends `/plan-feature <name>`. Dirty `*`; Esc asks before close |
+| `a` | Prompt for a product URL, then `/start-add-source <url>` |
+| `space` / `s` | Inbox: toggle checkbox / cycle Status (`in-progress` → `ready-for-review` → `done`) |
+| `L` | Land inbox on `main` |
+| `m` | merge-planning (confirm) |
+| `:` | Skill palette |
+| `g` | `git fetch` + reload |
+| `enter` (chat) | Send the draft. The field wraps and grows. `shift-enter` or `ctrl+j` inserts a newline |
+| `ctrl+c` (chat) | Cancel in-flight run if supported |
+| `ctrl+up` / `ctrl+down` (Plan Feature) | Scroll the planning transcript (Ink has no wheel/trackpad). `ctrl+pgup` / `ctrl+pgdn` jump 5 lines |
+| `q` | Quit the TUI. Inside **Plan Feature**, same as Esc: ask to close the panel, do not quit |
+| `?` | Help |
 
 ---
 

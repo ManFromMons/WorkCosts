@@ -61,6 +61,12 @@ _ReSharper*/
 
 *_wpftmp.csproj
 
+# Agent ops TUI (Node)
+tools/agent-tui/node_modules/
+tools/agent-tui/dist/
+tools/agent-tui/.session-id
+tools/agent-tui/.plan-session.json
+
 # Local database files
 *.db
 *.db-shm

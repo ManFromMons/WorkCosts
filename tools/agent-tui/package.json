@@ -1,0 +1,25 @@
+{
+  "name": "workcosts-agent-tui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.tsx",
+    "test": "tsx --test src/inbox.test.ts src/queue.test.ts src/work.test.ts src/frameDiffStdout.test.ts src/multiline.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.0",
+    "ink": "^5.2.1",
+    "ink-text-input": "^6.0.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.10"
+  }
+}
