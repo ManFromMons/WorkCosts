@@ -6,11 +6,13 @@ Do not commit this file on `Planning` or a feature branch. Coder: skill `update-
 
 Unchecked items need a human.
 
+- **Work summary:** required at `ready-for-review`. What landed, in bullets. **Last note** is not enough.
 - **Questions:** write **Answer:** on the line, tick the box, set **Status** to `resume`, then tell the coder to continue.
-- **Deviations to scan:** tick when you accept the reuse (or say to follow the spec instead).
+- **Deviations to scan:** tick when you accept the reuse (or say to follow the spec instead). List every real deviation; `_(none)_` only if there are none.
 - **Verify:** tick when tests and deviations are accepted. Then the feature file **Status** may become `done`.
+- **Change set:** at `ready-for-review` the coder lands this heading on `main` and opens a squash PR against `main` so you can review the diff while answering. Commit your answers on `main`. The agent then **recommences from review**. Do not squash-merge the PR until this heading is **Status** `done`.
 
-Coder: when development is finished, set this heading **Status** to `ready-for-review` (not `done`).
+Coder: when development is finished, set this heading **Status** to `ready-for-review` (not `done`). Fill **Work summary**, **Questions**, and **Deviations**, land this file on `main`, open the PR, then stop.
 
 Copy a new heading from `.cursor/skills/implement-feature/to-review-entry.md`.
 
@@ -21,8 +23,17 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## garage-job-interval-logic
 
 - **Feature:** [docs/features/garage-job-interval-logic.md](garage-job-interval-logic.md)
-- **Status:** ready-for-review
-- **Last note:** Core evaluator, ItemOfWork, roll-up. `WorkCosts.Tests` 160 passed. Branch `cursor/garage-job-interval-logic-f3f1`.
+- **Status:** done
+- **Change set:** branch `cursor/garage-job-interval-logic-f3f1` — https://github.com/ManFromMons/WorkCosts/pull/11
+- **Last note:** Scan accepted. Feature file Status is `done`. PR remains open for squash-merge.
+
+### Work summary
+
+- Persist **`ItemOfWork`** completions (`OccurredAt`, optional odometer miles ≥ 0) with Restrict FK. `ItemOfWorkCommands` create / list / latest / delete. `GarageJobCommands.TryDeleteAsync` returns `HasCompletions` and keeps the parent.
+- Persist **`GarageJob.IntervalAnchorDate`** (`DateOnly?`) via `UpdateAsync`. Empty anchor + no completions → **`DueImmediately`**.
+- **`GarageJobLondonTime`** (`Europe/London`, else Windows `GMT Standard Time`) and **`GarageJobDueEvaluator`**: `NotScheduled` / `DueImmediately` / `NeverDone` / `NotDue` / `Due` / `Overdue`. Multiple same-kind rows stay in force (6 mo vs 12 mo). Miles canonical (`1.609344` km/mile). Due vs Overdue uses the combined next threshold (min/max), so AllMustBeMet 6+12 months is **Due** at 12 months.
+- **`GarageJobRollupCalculator`**: each `ProductJob` quantity 1, merge required products, garage £ + DIY £ to 2 dp `AwayFromZero`, referenced job duration (parent duration echoed, not added). `IsAllJobs` excluded unless linked.
+- Migration `20260920193900_AddItemOfWorkAndIntervalAnchor`. `docs/data/garage-job.md` and `docs/data/schema.md` updated. No WinUI.
 
 ### Questions
 
@@ -30,7 +41,10 @@ _(none)_
 
 ### Deviations to scan
 
-_(none)_
+- [x] `ItemOfWork` latest/list: load then sort in memory by `OccurredAt.UtcDateTime` then `Id`. SQLite cannot translate that `OrderByDescending`. Newest-first contract unchanged.
+- [x] Branch `cursor/garage-job-interval-logic-f3f1` (cloud-agent prefix) instead of `feature/garage-job-interval-logic-…`.
+- [x] EF migration authored by hand because `dotnet ef` was not available on the Linux agent.
+- [x] Review PR opened at inbox `ready-for-review` (https://github.com/ManFromMons/WorkCosts/pull/11) rather than waiting for **Status** `done`.
 
 ### Verify
 
