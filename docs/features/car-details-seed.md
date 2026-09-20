@@ -15,8 +15,8 @@ FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) may also create/match 
 
 ## Objectives
 
-- Store car types (Make, Model, **ModelNumber**, Year, EngineType) as **source in the repo** (JSON, CSV, or similar — question).
-- `DbInitializer` upserts by stable id (and/or unique key Make+ModelNumber+Year+EngineType). Do not wipe user-added types.
+- Store car types (Make, Model, **ModelNumber**, Year, EngineType) as **JSON in the repo**.
+- `DbInitializer` upserts by stable id and unique key Make+ModelNumber+Year+EngineType. Do not wipe user-added types.
 - Car types page shows the seeded rows after first launch / migrate.
 - **Out of scope:** Scraping FastCarCheck or mdecoder to build the file. Home. Changing the unique key.
 
@@ -41,7 +41,7 @@ FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) may also create/match 
 | Need | Reuse | Create |
 | :--- | :--- | :--- |
 | Table / page | Seq 12 | none |
-| Data file | `DbInitializer` pattern | catalogue file in repo |
+| Data file | `DbInitializer` pattern | `WorkCosts.Core/Data/car-details.json` |
 | Ids | stable GUIDs like jobs/categories | one Guid per type row |
 
 ## Tests
@@ -54,12 +54,11 @@ Exact cases after the file format is chosen.
 
 ## Open questions
 
-1. *Assumption:* One JSON file under `WorkCosts.Core/Data/` (or `docs/data/`) with Guid, Make, Model, ModelNumber, Year, EngineType. → **Question:** JSON vs CSV vs C# array, and where should the file live?
-2. *Assumption:* First catalogue is **small** (the makes you care about), not every car ever. → **Question:** Who supplies the first list, and roughly how many rows?
+1. *Assumption:* File is an array of `{ "id", "make", "model", "modelNumber", "year", "engineType" }` with stable GUIDs, shipped as `WorkCosts.Core/Data/car-details.json`. → **Question:** (none on format — JSON there.) Who supplies the **first list**, and roughly how many rows? An empty `[]` is valid until you provide rows.
 
 ## Accepted defaults
 
-- Seq **16**; Depends-on **`car-details`**. Empty table until this lands. Do not delete user types. Status stays **draft** until the file format and first list are decided.
+- Seq **16**; Depends-on **`car-details`**. **JSON** in `WorkCosts.Core/Data/car-details.json`. Empty table until this lands or the array has rows. Do not delete user types. Status stays **draft** until a first list exists (empty `[]` loader can still be written if you want the plumbing only).
 
 ## Implementation notes for an agent
 
