@@ -25,7 +25,7 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 - **Feature:** [docs/features/garage-job-interval-logic.md](garage-job-interval-logic.md)
 - **Status:** done
 - **Change set:** branch `cursor/garage-job-interval-logic-f3f1` — https://github.com/ManFromMons/WorkCosts/pull/11
-- **Last note:** Scan accepted. Feature file Status is `done`. PR remains open for squash-merge.
+- **Last note:** Squash-merged to `main` as `016a199` (#11). Feature file Status is `done`.
 
 ### Work summary
 
