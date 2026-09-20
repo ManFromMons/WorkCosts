@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/cars.md` (new), `docs/screens/shell.md`, `docs/screens/products.md` (Add Product sheet grammar), `docs/screens/jobs.md` (master/detail grammar), `docs/screens/dialogs.md`
 - **Related code:** `Product` / `ProductAddEditor` / `ProductImagePicker` / `WebCacheStore`, `GarageJob` / `GarageJobIconStore` / `GarageJobCommands`, `WorkJob`, `ItemOfWork` / `ItemOfWorkCommands`, `MainWindow` Stuff group, `WorkCostsDbContext`, `DialogHelper`
 
-Sibling stories: [car-details.md](car-details.md), [car-details-seed.md](car-details-seed.md), [car-vin-lookup.md](car-vin-lookup.md), [car-fastcarcheck.md](car-fastcarcheck.md), [car-job-links.md](car-job-links.md), [item-of-work-ui.md](item-of-work-ui.md). Home rewrite is **not** a story yet.
+Sibling stories: [car-details.md](car-details.md), [car-details-seed.md](car-details-seed.md), [car-vin-lookup.md](car-vin-lookup.md), [car-fastcarcheck.md](car-fastcarcheck.md), [workjob-job-subset.md](workjob-job-subset.md), [item-of-work-ui.md](item-of-work-ui.md). Home rewrite is **not** a story yet.
 
 ## Objectives
 
@@ -19,7 +19,7 @@ Sibling stories: [car-details.md](car-details.md), [car-details-seed.md](car-det
 - Photo is a **file** under the data root. SQLite stores path + content type, not a new BLOB.
 - Persist **`VehicleOrderJson`** now (empty until [car-vin-lookup.md](car-vin-lookup.md)). Extra lookup facts stay in that JSON; they do not replace nickname / make / model / model-number / year / engine on the row.
 - Create **car FKs in full** on `GarageJob`, `WorkJob`, and `ItemOfWork` (**Restrict**, never cascade from a car). Soft-delete a car (`DeletedAt` + `UpdatedAt`); later stories filter deleted rows.
-- **Out of scope:** Calling mdecoder or FastCarCheck. **Car types** catalogue UI ([car-details.md](car-details.md)) and encoding a type list in the repo ([car-details-seed.md](car-details-seed.md)). Start-work UI ([car-job-links.md](car-job-links.md)). New Home. Zip import implementation (document merge keys only). GNOME/iPad UI.
+- **Out of scope:** Calling mdecoder or FastCarCheck. **Car types** catalogue UI ([car-details.md](car-details.md)) and encoding a type list in the repo ([car-details-seed.md](car-details-seed.md)). Work-job definition copy ([workjob-job-subset.md](workjob-job-subset.md)). GarageJob collation / ItemOfWork UI ([item-of-work-ui.md](item-of-work-ui.md), later). New Home. Zip import implementation (document merge keys only). GNOME/iPad UI.
 
 ## User requirements
 
@@ -72,7 +72,7 @@ Add-only migration. **No cascade from `Car`.**
 
 | Table | Column | Rules |
 | :--- | :--- | :--- |
-| `GarageJobs` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for rows created before this Seq. New garage-job writes in later UI require a car ([car-job-links.md](car-job-links.md)). `TargetKind` + `TargetLabel` **stay**. |
+| `GarageJobs` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for rows created before this Seq. New garage-job writes in later UI require a car ([item-of-work-ui.md](item-of-work-ui.md)). `TargetKind` + `TargetLabel` **stay**. |
 | `WorkJobs` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for existing work jobs. Later UI requires a car on new work. |
 | `ItemsOfWork` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for existing completions. Later writes also set car-details ([car-details.md](car-details.md)). |
 

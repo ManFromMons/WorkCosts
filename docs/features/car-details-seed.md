@@ -3,63 +3,91 @@
 - **Id:** `docs/features/car-details-seed.md`
 - **Seq:** 16
 - **Depends-on:** `car-details`
-- **Status:** draft
+- **Status:** ready-for-agent
 - **PR:** none
-- **Windows:** `DbInitializer` / migration data file in the repo; Car types page already exists
+- **Windows:** Core initializer only (Car types page already from Seq 12; no new UI here)
 - **Related screens:** `docs/screens/car-types.md`
-- **Related code:** `CarDetails`, `DbInitializer`, `CarDetailsCommands`
+- **Related code:** `CarDetails`, `DbInitializer`, `WorkCostsDbContext`
 
-**Resume later.** Seq 12 ships an **empty** `CarDetails` table and a Stuff page. This story **encodes a type catalogue in project source** and loads it on initialize (stable GUIDs, insert-if-missing like seeded jobs).
-
-FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) may also create/match types at runtime; that is a different Seq. This one is the **checked-in** list.
+Seq 12 ships an **empty** `CarDetails` table. This Seq is the **empty loader first**: add `car-details.json` as `[]` plus the reader/`DbInitializer` hook. A later pass fills the file with real types. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) may also create types at runtime. Do not invent a catalogue here.
 
 ## Objectives
 
-- Store car types (Make, Model, **ModelNumber**, Year, EngineType) as **JSON in the repo**.
-- `DbInitializer` upserts by stable id and unique key Make+ModelNumber+Year+EngineType. Do not wipe user-added types.
-- Car types page shows the seeded rows after first launch / migrate.
-- **Out of scope:** Scraping FastCarCheck or mdecoder to build the file. Home. Changing the unique key.
+- Ship `WorkCosts.Core/Data/car-details.json` as **`[]`**.
+- `DbInitializer` reads that JSON (embedded or content file copied to output) and **upserts** by stable `id` and unique key Make+ModelNumber+Year+EngineType.
+- Empty array → insert **nothing**, no throw, do **not** delete user-added types.
+- **Out of scope:** Inventing a catalogue. Scraping FastCarCheck/mdecoder. Home. Changing the unique key. New UI.
 
 ## User requirements
 
-- After install, Car types is no longer empty if the file has rows.
-- User-added types with a different key remain.
-- Re-running seed does not duplicate keys.
+- First launch after this Seq: Car types still empty unless the user added rows.
+- When the JSON later gains objects, initialize upserts those ids without wiping user types with different keys.
+- Duplicate unique key in DB: skip insert (keep existing).
+- Invalid JSON: do not crash initialize; log/skip (test: malformed file does not throw to the UI thread — throw only in tests that pass a bad stream if we expose a helper). **Accepted:** `SeedCarDetailsFromJson` throws `InvalidOperationException` on malformed JSON so tests can assert; `InitializeAsync` catches and continues? Safer for empty loader: **throw in tests via helper; InitializeAsync calls helper only if file exists and is well-formed `[]`.** Malformed in production: skip seed, do not wipe. Test both.
+
+Keep it simple for v1 empty loader:
+
+- File is exactly `[]` (optional whitespace).
+- Helper `CarDetailsJsonSeed.Read(Stream)` returns a list (empty).
+- `DbInitializer.SeedCarDetailsAsync` upserts that list (no-op).
+- Missing file → no-op, no throw.
 
 ## Layout
 
-- No new page. Uses Stuff → Car types.
+- No new page. Stuff → Car types unchanged.
 
 ## Workflow
 
-1. Ship data file next to Core / initializer.
-2. Initialize → upsert.
-3. User opens Car types.
+1. Migrate / initialize.
+2. Read JSON `[]`.
+3. Upsert zero rows.
 
 ## Technical design
 
 | Need | Reuse | Create |
 | :--- | :--- | :--- |
-| Table / page | Seq 12 | none |
-| Data file | `DbInitializer` pattern | `WorkCosts.Core/Data/car-details.json` |
-| Ids | stable GUIDs like jobs/categories | one Guid per type row |
+| Table / page | Seq 12 `CarDetails` | none |
+| File | `DbInitializer` | `WorkCosts.Core/Data/car-details.json` = `[]`; `CarDetailsJsonSeed` |
+| Ids | stable GUIDs when rows exist later | none in the empty file |
+
+JSON element shape (for when rows are added later):
+
+```json
+{
+  "id": "guid",
+  "make": "BMW",
+  "model": "545",
+  "modelNumber": "E60",
+  "year": 2004,
+  "engineType": "4.4L V8"
+}
+```
+
+`System.Text.Json`. File as content copied to output, or `Assembly.GetManifestResourceStream`. Pick **embedded resource** so the library always finds it.
+
+- **Wiring:** `SeedAsync` calls `SeedCarDetailsAsync` after jobs. No DI.
+- **Data:** no migration if Seq 12 already created the table. This Seq is loader + empty file only.
+- **Ports:** Swift can ignore the C# json until a port story; schema unchanged.
 
 ## Tests
 
-- `DbInitializer_UpsertsCarDetailsFromRepoFile`
-- `DbInitializer_DoesNotDuplicateUniqueKey`
-- `DbInitializer_KeepsUserAddedTypes`
+- `CarDetailsJsonSeed_EmptyArray_ReturnsEmpty`
+- `DbInitializer_EmptyCarDetailsJson_InsertsNothing`
+- `DbInitializer_KeepsUserAddedTypes_WhenJsonEmpty`
+- `CarDetailsJsonSeed_Malformed_Throws` (helper only)
 
-Exact cases after the file format is chosen.
+Do **not** add a sample BMW row in the file.
 
 ## Open questions
 
-1. *Assumption:* File is an array of `{ "id", "make", "model", "modelNumber", "year", "engineType" }` with stable GUIDs, shipped as `WorkCosts.Core/Data/car-details.json`. → **Question:** (none on format — JSON there.) Who supplies the **first list**, and roughly how many rows? An empty `[]` is valid until you provide rows.
+(none)
 
 ## Accepted defaults
 
-- Seq **16**; Depends-on **`car-details`**. **JSON** in `WorkCosts.Core/Data/car-details.json`. Empty table until this lands or the array has rows. Do not delete user types. Status stays **draft** until a first list exists (empty `[]` loader can still be written if you want the plumbing only).
+- Seq **16**; Depends-on **`car-details`**. JSON; empty `[]` first; path/embedded `WorkCosts.Core/Data/car-details.json`. Do not invent types.
 
 ## Implementation notes for an agent
 
-**Stop** until the user supplies the first JSON list (or explicitly asks for an empty `[]` loader). Do not invent a catalogue. Hook onto the existing Car types page only.
+1. Add empty JSON + reader + `DbInitializer` call.
+2. Tests above. Do not populate makes/models.
+3. Do not: UI, FastCarCheck HTTP, wipe user types.

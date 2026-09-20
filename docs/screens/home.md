@@ -25,4 +25,4 @@ Creates a work job (pick template + title — follow Windows flow in `HomePage.x
 
 ## Data
 
-`WorkJobs` include Job + Items, newest first. SQLite cannot `ORDER BY` DateTimeOffset directly; use UTC.
+`WorkJobs` include Job + Items, newest first. **Instances only** (`IsDefinition == false`); definition rows belong to a Job recipe ([workjob-job-subset.md](../features/workjob-job-subset.md)) and must not appear as cards. SQLite cannot `ORDER BY` DateTimeOffset directly; use UTC.

@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/car-types.md` (new), `docs/screens/cars.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
 - **Related code:** `Car`, `Job`, `GarageJob`, `ItemOfWork`, `DbInitializer`, `WorkCostsDbContext`, `DialogHelper`, Stuff nav
 
-A **car type** (`CarDetails`) is “BMW E60 / 545 / 2004 / 4.4L V8”, not a vehicle the user owns. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) and a later **seed-from-repo** story ([car-details-seed.md](car-details-seed.md)) **hook onto the Car types page**. Fitment / start-work: [car-job-links.md](car-job-links.md). Completions UI: [item-of-work-ui.md](item-of-work-ui.md).
+A **car type** (`CarDetails`) is “BMW E60 / 545 / 2004 / 4.4L V8”, not a vehicle the user owns. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) and a later **seed-from-repo** story ([car-details-seed.md](car-details-seed.md)) **hook onto the Car types page**. Job work-job subset (Core copy): [workjob-job-subset.md](workjob-job-subset.md). Completions / garage-job collation UI: [item-of-work-ui.md](item-of-work-ui.md) (refine later).
 
 ## Objectives
 
@@ -50,7 +50,7 @@ Unique among types: normalized **Make + ModelNumber + Year + EngineType** (case-
 ### Bindings
 
 - **Car editor:** optional combo of types (search by make / model-number). Does not clear nickname or scalars. `CarDetailsId` null is allowed.
-- **Job:** not a full fitment UI in this Seq — Core junction `ReplaceJobCarDetailsAsync`. Job page checkboxes/chips can wait for [car-job-links.md](car-job-links.md) if too large; **minimum:** commands + tests. If a small “applies to types” list on Jobs is cheap, include it; do not block on a new destination.
+- **Job:** not a full fitment UI in this Seq — Core junction `ReplaceJobCarDetailsAsync`. Job page checkboxes/chips can wait for a later UI story if too large; **minimum:** commands + tests. If a small “applies to types” list on Jobs is cheap, include it; do not block on a new destination.
 - **GarageJob:** `CarDetailsId` set when the garage job’s car has a type (commands). Snapshot: copy from `Car.CarDetailsId` at write; do not live-update if the car’s type changes later unless the garage job is saved again.
 - **ItemOfWork create:** copy `CarDetailsId` from the car at completion time (null if the car has no type). Do not follow later edits to the car’s type.
 
