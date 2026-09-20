@@ -21,8 +21,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## garage-job
 
 - **Feature:** [docs/features/garage-job.md](garage-job.md)
-- **Status:** ready-for-review
-- **Last note:** Core + tests + data docs only (no WinUI). Branch `feature/garage-job-Garage-job-define-and-build`.
+- **Status:** done
+- **Last note:** Scan accepted. Feature file Status is `done`. Opening squash PR.
 
 ### Questions
 
