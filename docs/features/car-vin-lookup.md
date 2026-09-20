@@ -1,85 +1,85 @@
-# Feature: Car VIN lookup
+# Feature: Car VIN lookup (mdecoder)
 
 - **Id:** `docs/features/car-vin-lookup.md`
-- **Seq:** 12
+- **Seq:** 13
 - **Depends-on:** `cars`
 - **Status:** draft
 - **PR:** none
-- **Windows:** WinUI on the Cars add sheet + editor (Core helpers for the lookup)
+- **Windows:** WinUI on the Cars add sheet + editor; Core helper for fetch/poll/JSON
 - **Related screens:** `docs/screens/cars.md`, `docs/screens/dialogs.md`
-- **Related code:** `Car`, `CarCommands`, Add Car sheet, `ProductImagePicker` (do **not** put the lookup browser in a ContentDialog), `VehicleOrderJson`
+- **Related code:** `Car`, `CarCommands`, Add Car sheet, `ChromiumPageLoader` / `ProductImagePicker` fetch grammar (engine **not** in a ContentDialog), `VehicleOrderJson`
 
-Depends on [cars.md](cars.md). Does not include Home or job links ([car-job-links.md](car-job-links.md)).
+BMW-specific **vehicle order / equipment** from [mdecoder.com](https://www.mdecoder.com/). UK “car type” / MOT / spec is **[car-fastcarcheck.md](car-fastcarcheck.md)**, not this Seq. Lookup keys may be **VIN and/or VRM** depending on the source; mdecoder is VIN-based.
 
 ## Objectives
 
-- When the user enters a **VIN** (and/or **VRM** — see questions) on Add Car or the car editor, run a **details lookup**.
-- Persist the raw result on the car as **`VehicleOrderJson`** (column from Seq 11).
-- Optionally copy obvious fields (make, model, year, engine type) onto the car row when the user accepts the result.
-- Lookup may take time and **multiple requests**; the UI must stay usable (status in the sheet, cancel, no frozen modal).
-- **Out of scope:** Cars CRUD itself. Job/car links. Home. Inventing a paid API account in git. Chromium inside a blocking dialog.
+- From the Cars add sheet or editor, run **mdecoder** on the car’s **VIN**.
+- Convert the returned **vehicle details** to JSON and **replace** `Car.VehicleOrderJson` (column from Seq 11).
+- mdecoder can take **~30 seconds**. The client **keeps state** and **re-requests after a wait** until the page is ready, the user cancels, or a timeout.
+- **Never overwrite the nickname (`Name`)**. The user can still save it. Make / model / year / engine may be filled from the decode only if the user already has them required — do not blank them on failure.
+- **Out of scope:** FastCarCheck. Car-details seed. Home. Job links. Secrets in git.
 
 ## User requirements
 
-- Trigger: leaving the VIN field, an explicit **Lookup** button, or both (question).
-- Status text while requests run. User can cancel.
-- Success: show a summary of what was found; user confirms before overwriting typed fields.
-- Failure / timeout / unknown VIN: message; keep typed fields; `VehicleOrderJson` unchanged or cleared — question.
-- Empty VIN: no request.
-- Offline: fail visibly; app stays local-first otherwise.
+- Control: **Lookup** next to VIN on add sheet and detail editor. Disabled when VIN is empty.
+- Status in the **sheet** (not a blocking dialog): e.g. “Requesting mdecoder…”, “Waiting, retrying in 30s…”.
+- Cancel stops polling; no JSON write.
+- Success: replace `VehicleOrderJson` with the new JSON; keep nickname; do not require a second confirm to store JSON (it is the lookup payload). If decode also suggests make/model/year/engine and those fields are already filled, **do not overwrite them unless the user confirms** (in-sheet banner). Empty required fields may be filled from decode so the user can save.
+- Failure / timeout / non-BMW VIN: message in the sheet; `VehicleOrderJson` unchanged; typed fields unchanged.
+- Offline: fail visibly.
+- Cloudflare / bot check: use Chromium like other blocked hosts if HttpClient cannot load the page. Never put that WebView in a ContentDialog.
 
 ## Layout
 
-- Control on the Add Car sheet and the car detail editor, next to VIN (and VRM if that is a key).
-- Progress/status **in the sheet**, not a blocking dialog. If a WebView is required for a site, it follows Add Product: engine **outside** any ContentDialog.
-- Confirm apply-fields: short Yes/No or in-sheet banner, not a nested browser dialog.
+- Lookup button + status on the Cars sheet/editor, VIN row.
+- Polling UI stays in the sheet. Esc on a dirty sheet still uses unsaved-changes; cancelling lookup is not discard-all.
 
 ## Workflow
 
-1. User enters VIN (or VRM).
-2. Lookup starts (debounce / button — question).
-3. One or more requests run; status updates.
-4. Result stored as JSON on the car when saved. User confirms copying into Make/Model/Year/Engine.
-5. Esc cancels an in-flight lookup without closing the sheet if details are dirty (same unsaved rules as cars).
+1. User enters VIN (required on the car).
+2. Lookup → first request to mdecoder.
+3. If the site says wait / not ready: keep in-memory state (`CarId` or add-sheet draft), wait ~30s, **re-request** with the same VIN. Repeat until HTML/JSON is usable, user cancels, or timeout (default **2 minutes** — leftover if you want a different cap).
+4. Parse vehicle details → JSON object → `VehicleOrderJson` **replace**.
+5. Save car as today.
 
 ## Technical design
 
 | Need | Reuse | Create |
 | :--- | :--- | :--- |
-| Column | `Car.VehicleOrderJson` from Seq 11 | none (or widen max length) |
-| HTTP | existing `HttpClient` identity headers if a JSON API; `ChromiumPageLoader` only if the source blocks HttpClient | `CarVehicleLookup` (name TBD) |
-| UI | Cars add sheet / editor | Lookup status + apply confirmation |
+| Column | `Car.VehicleOrderJson` | none |
+| Fetch | `HttpClient` first; `ChromiumPageLoader` if challenge (mdecoder showed Cloudflare in planning) | `MdecoderVehicleLookup` (name TBD) |
+| Poll | — | State object: VIN, started-at, attempt count, last status |
+| UI | Cars add/editor | Lookup + status + optional apply-fields banner |
 
-- **Wiring:** static helper or small service constructed like `ProductImageService`. No DI container. No secrets in the repo.
-- **Data:** overwrite `VehicleOrderJson` on successful lookup; schema of the JSON is defined here once the source is known.
-- **Ports:** same JSON column; lookup implementation may be Windows-first if it needs WebView2, then GNOME/iPad.
+- **Wiring:** static helper / small service like `ProductImageService`. No DI. No API keys in the repo unless you later supply one (mdecoder public site).
+- **Data:** replace entire `VehicleOrderJson` string. Define the JSON shape from a **fixture** captured during implementation (not invented now). UTF-8 TEXT.
+- **Ports:** same column; Chromium vs WebKit later.
 
 ## Tests
 
-- `CarVehicleLookup_EmptyVin_DoesNotRequest`
-- `CarVehicleLookup_PersistsVehicleOrderJson`
-- `CarVehicleLookup_DoesNotOverwriteFields_UntilAccepted`
-- Fixture/fake handler tests — **no live network in CI** (same rule as parsers).
+No live network in CI. Fixtures for “ready” HTML/JSON and “please wait” HTML.
 
-Exact cases after the source is known.
+- `MdecoderLookup_EmptyVin_DoesNotRequest`
+- `MdecoderLookup_NotReady_RetriesAfterDelay` (fake clock / injected delay)
+- `MdecoderLookup_Timeout_LeavesJsonUnchanged`
+- `MdecoderLookup_Ready_ReplacesVehicleOrderJson`
+- `MdecoderLookup_DoesNotOverwriteNickname`
+- `MdecoderLookup_Cancel_StopsPolling`
 
 ## Open questions
 
-1. *Assumption:* Lookup key is **VIN** as you said; VRM is stored but not sent. → **Question:** VIN, VRM, or both? UK DVLA-style services often key on VRM.
-2. *Assumption:* We must not invent a vendor. → **Question:** Which service or site should we use? (URL, whether it needs a key, whether Chromium is required.)
-3. *Assumption:* Multiple requests are sequential in one helper, with per-step status. → **Question:** What are the steps (e.g. decode VIN, then options/order, then image)?
-4. *Assumption:* On success we fill Make, Model, Year, Engine type only after **Yes**. Nickname/Name is never overwritten. → **Question:** Which fields may the lookup write?
-5. *Assumption:* Image from lookup is a later nice-to-have; Seq 11 image fetch stays. → **Question:** Should lookup also propose a photo?
-6. *Assumption:* `VehicleOrderJson` is the full last successful payload, replaced on each lookup, not a history array. → **Question:** Replace, merge, or keep history?
+1. *Assumption:* Poll every **30s**, give up after **2 minutes**. → **Question:** Different interval or cap?
+2. *Assumption:* mdecoder URL is the public decoder for the VIN (discover the exact request during implementation; planning fetch was a Cloudflare wall). → **Question:** Any login, paid key, or exact URL template you already use?
+3. *Assumption:* Only run this lookup for **BMW-family VINs** (or when Make is BMW); otherwise tell the user to use FastCarCheck later. → **Question:** Gate on Make/VIN WMI, or always allow the button?
 
 ## Accepted defaults
 
-- Seq **12**; Depends-on **`cars`**. No secrets in git. No live network in `WorkCosts.Tests`. Local-first: lookup is optional.
+- Seq **13**; Depends-on **`cars`**. Replace JSON each success. Nickname never overwritten. FastCarCheck is a separate story. No live CI network.
 
 ## Implementation notes for an agent
 
-Do not implement while **Status** is `draft`. Do not implement before `cars` is **done**.
+Do not implement while **Status** is `draft`. Requires `cars` **done**.
 
-1. Confirm source and field mapping; then `ready-for-agent`.
-2. Fake HTTP / fixtures; never commit API keys.
-3. Do not: Home, job FKs, WebView in a ContentDialog, scraping behind a login the user cannot pass.
+1. Discover HttpClient vs Chromium on mdecoder; one wait fixture + one ready fixture; then parser.
+2. Polling state on the client; do not block the UI thread with a 30s sleep without pumping status.
+3. Do not: FastCarCheck, Home, WebView in a ContentDialog, commit cookies.

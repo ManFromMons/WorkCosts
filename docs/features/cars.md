@@ -7,164 +7,152 @@
 - **PR:** none
 - **Windows:** Core + WinUI (Stuff → Cars master/detail + Add sheet)
 - **Related screens:** `docs/screens/cars.md` (new), `docs/screens/shell.md`, `docs/screens/products.md` (Add Product sheet grammar), `docs/screens/jobs.md` (master/detail grammar), `docs/screens/dialogs.md`
-- **Related code:** `Product` / `ProductEditor` / `ProductAddEditor` / `ProductImagePicker` / `WebCacheStore`, `GarageJob` / `GarageJobIconStore` (file-on-disk image pattern), `GarageJobCommands`, `WorkJob`, `MainWindow` Stuff group, `WorkCostsDbContext`, `DialogHelper`
+- **Related code:** `Product` / `ProductAddEditor` / `ProductImagePicker` / `WebCacheStore`, `GarageJob` / `GarageJobIconStore` / `GarageJobCommands`, `WorkJob`, `ItemOfWork` / `ItemOfWorkCommands`, `MainWindow` Stuff group, `WorkCostsDbContext`, `DialogHelper`
 
-Sibling stories (separate files, not this Seq): [car-vin-lookup.md](car-vin-lookup.md), [car-job-links.md](car-job-links.md). Home rewrite (current/pending work, active garage jobs, timeline) is **not** a story yet.
+Sibling stories: [car-details.md](car-details.md), [car-vin-lookup.md](car-vin-lookup.md) (mdecoder / `VehicleOrderJson`), [car-fastcarcheck.md](car-fastcarcheck.md), [car-job-links.md](car-job-links.md). Home rewrite is **not** a story yet.
 
 ## Objectives
 
 - Persist a **`Car`**: the user’s vehicles. Catalogue rows, not work instances.
-- **Stuff → Cars** page: master/detail like Jobs/Products; trailing **Add**; edit the selected car in the detail pane.
-- **Add Car** is a **sheet/overlay** with the same grammar as Add Product: not a blocking dialog; image fetch and image choice live in that sheet; browser/WebView is never inside a ContentDialog.
-- Store the chosen photo as a **file** (same family as garage-job icons / product library photos). SQLite holds path + content type, not a new BLOB column.
-- Add a **`VehicleOrderJson`** string column on `Car` so a later VIN lookup can persist its payload. This Seq does **not** call a lookup service.
-- **Out of scope:** VIN / VRM network lookup and filling fields from it ([car-vin-lookup.md](car-vin-lookup.md)). Optional `CarId` on `GarageJob` / `WorkJob`, starting work from a garage job, make/model fitment filters ([car-job-links.md](car-job-links.md)). New Home (current/pending work, garage-job timeline). Seeded cars. Zip export/import implementation (document merge keys only). GNOME/iPad UI (schema is canonical for ports).
+- **Stuff → Cars** page: master/detail; trailing **Add**; edit the selected car in the detail pane.
+- **Add Car** is a **sheet/overlay** with the same grammar as Add Product (no blocking dialog; Chromium never inside a ContentDialog). Image comes from an **online search**, then the user chooses a candidate (same one-image / chooser pattern as Add Product).
+- Photo is a **file** under the data root. SQLite stores path + content type, not a new BLOB.
+- Persist **`VehicleOrderJson`** now (empty until [car-vin-lookup.md](car-vin-lookup.md)).
+- Create **car FKs in full** on `GarageJob`, `WorkJob`, and `ItemOfWork` (**Restrict**, never cascade from a car). Soft-delete a car (`DeletedAt` + `UpdatedAt`); later stories filter deleted rows.
+- **Out of scope:** Calling mdecoder or FastCarCheck. Seeded **car-details** types ([car-details.md](car-details.md)). Start-work-from-garage-job UI and requiring a car in the Home add flow ([car-job-links.md](car-job-links.md)). New Home (current/pending/timeline). Zip import implementation (document merge keys only). GNOME/iPad UI.
 
 ## User requirements
 
-Observable: the user can add, list, edit, and delete cars, and pick a photo.
+### Fields (all required to save, except `VehicleOrderJson`)
 
-### Fields (persisted)
-
-Exact names and which are required are **open questions**. Intent from planning chat:
-
-| Intent | Notes |
+| Column / intent | Rules |
 | :--- | :--- |
-| Identity the user gives the car | “Name” in the request — may be a nickname, or make; see Q1 |
-| Model | e.g. MX-5 / Golf |
-| Engine type | e.g. petrol / 1.8 / B6 |
-| VRM | UK registration mark |
-| Year | integer year |
-| Image | chosen photo for lists and detail |
-| VIN | needed for later lookup; may be optional here |
-| `VehicleOrderJson` | opaque JSON text; empty until lookup story |
+| **Name** | Nickname (“the daily”). Required, max 200. Lookups never overwrite it. |
+| **Make** | Manufacturer. Required, max 120. |
+| **Model** | Required, max 120. |
+| **EngineType** | Free text (lookup may fill later). Required, max 200. |
+| **Vrm** | UK registration. Required. Unique among **non-deleted** cars (compare case-insensitive, ignore spaces). Max 16. |
+| **Year** | **Model year** `int`, 1900–current calendar year + 1. Required. |
+| **Vin** | Required, max 17. |
+| **Image** | Required. User must choose a photo before save. |
+| **VehicleOrderJson** | Opaque text, default `""`. Not required. This Seq does not parse it. SQLite `TEXT` (no 8000 cap — BMW order JSON can be large). |
+| **UpdatedAt** | `DateTimeOffset`. Set on create, every save, and soft-delete. |
+| **DeletedAt** | `DateTimeOffset?`. Null = active. Set on soft-delete together with `UpdatedAt`. |
 
-No GBP fields. No accounts.
+No GBP fields. No seed cars.
 
 ### List and detail
 
-- Stuff group gains **Cars** (with Products, Jobs, Categories).
-- Regular: list beside editor. Compact: stack (list, then push editor).
+- Stuff: Products, Jobs, Categories, **Cars**. Tag `cars`.
+- Regular: list beside editor. Compact: **stack**.
 - Header: title **Cars**, subtitle, trailing **Add**.
-- List rows: thumbnail, primary title, secondary line (make/model/year or VRM — see questions). Empty: “No cars yet.”
-- Detail: edit the selected car (same fields as add, minus the add-sheet staging). Save on the editor. Delete with Yes/No confirm (`DialogHelper.ConfirmYesNoAsync`).
-- No car selected: empty “select a car”.
-- Dirty editor / dirty add sheet: **Unsaved changes** (`DialogHelper.ConfirmUnsavedWithTimeoutAsync`) like Add Product / Jobs.
+- List: **active** cars only (`DeletedAt` is null). Row: thumbnail, nickname, secondary make · model · year · VRM. Empty: “No cars yet.” Showing deleted cars is a later story.
+- Detail: editor for the selected car. Save updates scalars + `UpdatedAt` and may replace the image file. Soft-delete: Yes/No (`DialogHelper.ConfirmYesNoAsync`); Yes sets `DeletedAt`/`UpdatedAt`, keeps the row, FKs, and image file; list drops it.
+- No selection: “select a car”.
+- Dirty editor / dirty add sheet: **Unsaved changes** (`DialogHelper.ConfirmUnsavedWithTimeoutAsync`).
 
 ### Add Car sheet
 
-- Trigger: trailing **Add**. Sheet/overlay, not a ContentDialog that hosts the browser.
-- User can fetch candidate **make/model images** and **choose** one for the car (same “one image applied without a grid / several → chooser” idea as Add Product). Source of the fetch is an open question (page URL vs search vs file only).
-- Esc: URL/fetch stage with no edits closes with no prompt; dirty details prompt unsaved changes.
-- Enter confirms the primary action; do not steal Enter from Yes/No or unsaved prompts.
-- After save, the new car is selected in the list.
+1. Trailing **Add** opens the sheet (not a ContentDialog).
+2. User fills nickname, make, model, engine type, VRM, model year, VIN (all required).
+3. **Image search (online):** query from make + model + year (and engine if useful). Fetch candidate images; one image applies without a grid; several → chooser sheet. Chromium/WebView stays **outside** any blocking dialog (same as Add Product).
+4. Local file pick is allowed **in addition** to search (same types/size as garage-job icons: PNG/JPEG/WebP, max 512 KB).
+5. Save is disabled until every required field **including image** is set. Duplicate VRM among active cars: in-sheet error, no write.
+6. Save creates the row (`VehicleOrderJson` = `""`, `DeletedAt` null, `UpdatedAt` now), writes `{dataRoot}/images/cars/{carId}.{ext}`, selects the row, closes the sheet.
+7. Esc: clean sheet closes with no row; dirty details prompt unsaved changes. Enter = primary save; do not steal Enter from confirms.
+
+### Car FKs (this Seq, schema + commands; no start-work UI)
+
+Add-only migration. **No cascade from `Car`.**
+
+| Table | Column | Rules |
+| :--- | :--- | :--- |
+| `GarageJobs` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for rows created before this Seq. New garage-job writes in later UI require a car ([car-job-links.md](car-job-links.md)). `TargetKind` + `TargetLabel` **stay**. |
+| `WorkJobs` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for existing work jobs. Later UI requires a car on new work. |
+| `ItemsOfWork` | `CarId` `Guid?` | FK → `Cars`, **Restrict**. Null allowed for existing completions. Later writes also set car-details ([car-details.md](car-details.md)). |
+
+Soft-delete **does not** fail because FKs exist (the row remains). There is no hard delete of `Car` in v1. `CarCommands.TryDeleteAsync` = soft-delete. Unknown id → NotFound.
+
+Commands: unknown `CarId` on garage job / work job / item-of-work update → no write (same as other not-found patterns).
 
 ### Empty / error / cancel
 
-- Invalid year / empty required fields: do not persist; stay on the sheet/editor with a visible reason (no throw to a crash dialog).
-- Image too large or wrong type: reject write; keep previous image if editing.
-- Fetch failure: message in the sheet; user can retry, pick a local file, or continue without an image (if image is optional).
-- Cancel / Esc on clean add: no row.
-- Delete: Yes deletes the row and the image file. If later stories have linked garage/work jobs, this Seq either has no FKs yet or Restrict — see Q8 and the links story.
+- Missing required field or year out of range: no persist; visible reason on the sheet/editor.
+- Image too large / wrong type: reject that file; keep previous image when editing.
+- Search failure: status in the sheet; retry or pick a local file; still cannot save without an image.
+- Duplicate VRM (active): no write.
 
 ## Layout
 
-- Size classes: regular list+detail; compact **stack**. OS spacing, not WinUI pixel copies.
-- Regions: page header (title + subtitle + trailing Add) / master list / detail editor / Add sheet.
-- Detail sits in a grouped/inset panel on the garage background scrim.
-- Image in editor: square thumbnail (same order of size as `ProductEditor` ~118px), choose/clear, not a second destination.
-- Sheets vs dialogs: Add Car + image chooser = **sheets**. Delete / unsaved = **dialogs**. Never host WebView2 / Chromium inside a blocking dialog.
-- New screen file `docs/screens/cars.md`. Update `docs/screens/shell.md` Stuff children: Products, Jobs, Categories, **Cars**. Compact iPad tab bar: do not add Cars as a top tab in this story (Stuff remains the group); list the Cars page under Stuff.
+- OS spacing. Regular list+detail; compact stack.
+- Page header: title + subtitle + trailing Add. Detail in a grouped/inset panel on the garage scrim.
+- Thumbnail ~ product editor square. Sheets: Add Car + image chooser. Dialogs: delete confirm, unsaved. Never host WebView2 inside a blocking dialog.
+- New `docs/screens/cars.md`. `docs/screens/shell.md` Stuff children include Cars. Compact iPad: Cars stays under Stuff, not a new top tab.
 
 ## Workflow
 
-1. User opens **Stuff → Cars**. Empty list or existing cars.
-2. **Add** opens the Add Car **sheet**.
-3. User enters identity fields (and VIN/VRM if shown). Image: fetch candidates (Q5) and choose, or skip, or pick a local file.
-4. Save creates `Car`, writes image file if chosen, closes the sheet, selects the row.
-5. Selecting a row shows the editor. Edit + save updates scalars and may replace the image file.
-6. Delete: confirm Yes/No; Yes removes row + image file.
-7. Esc/back dismisses the sheet (with unsaved prompt if dirty). Compact back returns to the list.
+1. Stuff → Cars.
+2. Add → sheet → fields + online image search + choose image → Save.
+3. Select row → edit → Save (`UpdatedAt`).
+4. Delete → Yes → soft-delete; list no longer shows it; FKs unchanged.
+5. Compact back returns to the list.
 
 ## Technical design
 
 | Need | Reuse | Create |
 | :--- | :--- | :--- |
-| Persistence | `WorkCostsDbContext`, EF migrations, `DatabaseService` / `CreateContext()` | `Car` entity, `Cars` table, `CarCommands` |
-| Image file | `GarageJobIconStore` pattern (max size, png/jpeg/webp, relative path under data root) | `CarImageStore` (or shared helper if a one-line extract is enough — do not invent a DI container) |
-| Add sheet + image choice | `ProductsPage` AddOverlay, `ProductAddEditor`, `ProductImagePicker.FetchPageAsync` / `ChooseFromCandidatesAsync` (if fetch is a page URL) | `CarsPage`, add overlay, car add/editor controls |
-| Confirm / unsaved | `DialogHelper.ConfirmYesNoAsync`, `ConfirmUnsavedWithTimeoutAsync` | none |
-| Nav | `MainWindow` Stuff `NavigationViewItem`s, tag + frame navigation | Tag `cars` |
-| Lookup payload | — | `VehicleOrderJson` string column, default empty; no parser in this Seq |
+| Persistence | `WorkCostsDbContext`, EF, `CreateContext()` | `Car`, `Cars`, `CarCommands` |
+| Image file | `GarageJobIconStore` pattern | `CarImageStore` (`images/cars/`) |
+| Image search | `ProductImagePicker` / `ChromiumPageLoader` / cache **if** the search is a page of images | Search helper — **host TBD (open question)** |
+| Add sheet | `ProductsPage` AddOverlay, `ProductAddEditor` | `CarsPage`, add overlay, editor |
+| Confirm | `DialogHelper` | none |
+| Nav | Stuff `NavigationViewItem` | Tag `cars` |
+| FKs | `GarageJobCommands`, work-job commands, `ItemOfWorkCommands` | `CarId` on those entities |
 
-- **Wiring:** `App.Database` / `CreateContext()` like other pages. Static command helpers. No new DI container.
-- **Data:** SQLite `Cars`. Images `{dataRoot}/images/cars/{carId}.{ext}` (or `icons/cars/` if we keep icons vs photos distinct — default **photos** under `images/cars/`). Future zip: include those blobs keyed by car id; merge on import by id.
-- **Ports:** EF migration is canonical. Swift follows `Cars` + image files. GNOME gets the page in a later port slice, not this Seq.
-
-### Schema (draft — field list pending Q1–Q4)
-
-**`Cars`**
-
-| Column | Type | Notes |
-| :--- | :--- | :--- |
-| `Id` | Guid PK | |
-| `Name` | string | required unless Q1 says otherwise; max 200 |
-| `Make` | string | max 120; may be the same as Name — Q1 |
-| `Model` | string | max 120 |
-| `EngineType` | string | max 120; free text unless Q4 |
-| `Vrm` | string | max 16; UK registration; empty allowed unless Q2 |
-| `Year` | int? | model year unless Q3 |
-| `Vin` | string | max 17 typical; empty allowed |
-| `VehicleOrderJson` | string | max 8000 or larger if lookup blobs are big — Q7; empty default |
-| `ImageRelativePath` | string | empty = no photo |
-| `ImageContentType` | string | empty when no photo |
-
-Index unique on `Vrm` only if Q6 says VRM must be unique when set.
-
-No FK from `GarageJob` / `WorkJob` in this Seq.
+- **Wiring:** `App.Database` / `CreateContext()`. Static helpers. No DI container.
+- **Data:** SQLite. Images `{dataRoot}/images/cars/{carId}.{ext}`. Unique filtered index on normalized VRM where `DeletedAt` IS NULL. Future zip: car rows + image blobs keyed by id; merge by id; keep `DeletedAt`.
+- **Ports:** EF is canonical. Swift follows `Cars` + FKs + files.
 
 ## Tests
 
-Project: `WorkCosts.Tests` (temp SQLite). WinUI sheet is specified; no UI automation required if the rest of the app has none.
+`WorkCosts.Tests`, temp SQLite. No live network in CI. No UI automation.
 
-- `CarCommands_CreateListGetUpdateDelete`
-- `CarCommands_Create_PersistsOptionalVinAndEmptyVehicleOrderJson`
-- `CarCommands_RejectsEmptyRequiredName` (adjust if Q1/Q2 change required fields)
-- `CarCommands_YearOutOfRange_Rejected` (range TBD)
-- `CarImageStore_WriteReadDelete_PngJpegWebp`
+- `CarCommands_CreateListGetUpdate_RequiresAllFields`
+- `CarCommands_Create_EmptyVehicleOrderJson_AndUpdatedAt`
+- `CarCommands_RejectsMissingImage_OrEmptyNicknameMakeModelEngineVrmVin`
+- `CarCommands_YearOutOfRange_Rejected`
+- `CarCommands_VrmUnique_AmongActive_IgnoresSpacesAndCase`
+- `CarCommands_VrmUnique_AllowsReuse_AfterSoftDelete`
+- `CarCommands_TryDelete_SoftDeletes_SetsDeletedAtAndUpdatedAt_KeepsRowAndImage`
+- `CarCommands_List_OmitsSoftDeleted`
+- `CarImageStore_WriteRead_PngJpegWebp`
 - `CarImageStore_RejectsOversizeAndUnknownType`
-- `CarCommands_TryDelete_RemovesImageFile`
-- `CarCommands_VrmUnique_WhenSet` — only if Q6 unique
+- `GarageJobCommands_Update_PersistsCarId_UnknownCar_NoWrite`
+- `WorkJob_PersistsCarId_Restrict_NoCascadeOnCarSoftDelete`
+- `ItemOfWork_PersistsCarId_Restrict_NoCascadeOnCarSoftDelete`
 
 ## Open questions
 
-1. *Assumption:* **Name** is the user’s nickname (“the daily”) and **Make** is the manufacturer (Mazda), with **Model** separate. → **Question:** Is Name a nickname plus Make+Model, or is Name actually the make?
-2. *Assumption:* Required to save: Name, Make, Model. Optional: Engine type, VRM, Year, VIN, image. → **Question:** Which fields are required?
-3. *Assumption:* Year is **model year** (int), 1900–current+1, not first-registration date. → **Question:** Model year, registration year, or a date?
-4. *Assumption:* Engine type is **free text** (lookup may fill it later). → **Question:** Free text, or a closed list (petrol / diesel / hybrid / EV / other)?
-5. *Assumption:* Add-sheet image fetch reuses `ProductImagePicker` against a **page URL** the user pastes (manufacturer, Wikipedia, listing), then the same candidate chooser; plus “choose a local file”. → **Question:** Where do make/model images come from — pasted page URL, a search box, VIN lookup (later), local file only, or something else?
-6. *Assumption:* VRM is optional and **unique when set** (case-insensitive, ignore spaces). → **Question:** Must VRM be unique? Required?
-7. *Assumption:* `VehicleOrderJson` is added in **this** Seq as an empty string column (max 8000) so lookup can land later without another migration if 8000 is enough. → **Question:** Add the column now, and is 8000 enough?
-8. *Assumption:* This Seq is **WinUI + Core** (Stuff → Cars), not Core-only like Seq 9 garage-job. → **Question:** Confirm Windows UI in Seq 11?
-9. *Assumption:* Delete is allowed in this Seq because no job FKs exist yet. → **Question:** Any other reason to block delete (e.g. you want the FKs in this migration)?
+1. *Assumption:* Online image search builds a query from **Make + Model + Year**, loads a results **page** with Chromium if HttpClient is blocked, then reuses the Add Product candidate chooser. → **Question:** Which search (URL / site) should we use? (Do not invent a scrape of Google if you have a preferred engine or image host.)
 
 ## Accepted defaults
 
-- Feature id `cars`; Seq **11**; **Depends-on** `none`.
-- Currency still GBP app-wide; cars have no money fields.
-- No seed cars. No DI container. Image is a file, not a SQLite BLOB.
-- Add Car is a **sheet**, never a dialog hosting Chromium.
-- Compact = stack. Primary Add trailing.
-- `VehicleOrderJson` is opaque; this Seq does not parse it.
-- GarageJob `TargetKind` / `TargetLabel` unchanged here.
+- Feature id `cars`; Seq **11**; Depends-on `none`.
+- Nickname is `Name`; lookups never overwrite it.
+- All listed identity fields + image required; `VehicleOrderJson` optional empty string.
+- Model year int; engine type free text; VRM unique among active cars.
+- Soft-delete only; Restrict FKs; no cascade from car.
+- `TargetKind` / `TargetLabel` unchanged.
+- Add Car is a sheet. Compact = stack. No seed cars. No DI container.
+- This Seq does not parse `VehicleOrderJson` or call VIN sites.
 
 ## Implementation notes for an agent
 
-Do not implement while **Status** is `draft`.
+Do not implement while **Status** is `draft` (image-search host still open).
 
-1. After answers: rewrite this file to `ready-for-agent`; remove resolved questions; put leftovers under **Accepted defaults**.
-2. Migration: `Cars` + image files. Do not add `CarId` on `GarageJob` / `WorkJob` unless Q9 says so.
-3. `CarCommands` + `CarImageStore`. Tests named above.
-4. `docs/data/schema.md`, `docs/data/connection.md`, new `docs/screens/cars.md`, Stuff item in `docs/screens/shell.md`.
-5. WinUI: `CarsPage` master/detail, Add overlay, editor. Reuse `ProductImagePicker` / `DialogHelper` as specified.
-6. Do not: VIN HTTP; Home rewrite; garage-job WinUI; zip import; seed cars; WebView inside a ContentDialog.
+1. After Q1: set **Status** `ready-for-agent`.
+2. Migration: `Cars` + `CarId` on `GarageJobs`, `WorkJobs`, `ItemsOfWork` (Restrict). Soft-delete columns. Do not cascade.
+3. `CarCommands` + `CarImageStore`. Extend garage-job / work-job / item-of-work commands for `CarId`.
+4. `docs/data/schema.md`, `docs/data/connection.md`, `docs/data/garage-job.md`, `docs/screens/cars.md`, Stuff in `docs/screens/shell.md`.
+5. WinUI `CarsPage` + add sheet + search/chooser. Reuse `DialogHelper` / image-picker grammar.
+6. Do not: mdecoder/FastCarCheck HTTP; Home rewrite; hard-delete cars; WebView in a ContentDialog; seed cars.
