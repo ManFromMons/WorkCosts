@@ -18,7 +18,6 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 ## Entries
 
-
 ## garage-job
 
 - **Feature:** [docs/features/garage-job.md](garage-job.md)
@@ -36,7 +35,7 @@ _(none)_
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
 ## source-demon-tweeks
 
@@ -58,7 +57,6 @@ _(none)_
 
 - [x] Tests from the feature file passed
 - [x] Deviations accepted
-
 
 ## unsaved-changes-prompt
 
