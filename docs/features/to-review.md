@@ -21,8 +21,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 ## garage-job-interval-logic
 
 - **Feature:** [docs/features/garage-job-interval-logic.md](garage-job-interval-logic.md)
-- **Status:** in-progress
-- **Last note:** Stacked on Seq 9 now on main. Core evaluator, ItemOfWork, roll-up. Branch `cursor/garage-job-interval-logic-f3f1`.
+- **Status:** ready-for-review
+- **Last note:** Core evaluator, ItemOfWork, roll-up. `WorkCosts.Tests` 160 passed. Branch `cursor/garage-job-interval-logic-f3f1`.
 
 ### Questions
 
@@ -34,7 +34,7 @@ _(none)_
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
 
 
