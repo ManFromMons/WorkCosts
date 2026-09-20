@@ -81,5 +81,5 @@ Each item: *Assumption:* … → **Question:** …?
 
 ## Implementation notes for an agent
 
-1. Follow skill `add-product-source` (discover fetch → one fixture per sample → failing tests → integrate). When tests pass, set to-review **Status** `ready-for-review` (not `done`).
-2. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; `git add` to-review on this branch; open a PR before to-review **Status** `done`.
+1. Follow skill `add-product-source` (discover fetch → one fixture per sample → failing tests → integrate). When tests pass, set to-review **Status** `ready-for-review` (not `done`) with a **Work summary** and deviations, then open the squash PR.
+2. Do not: login scrape; commit cookies; WebView2 in a ContentDialog; `git add` to-review on this branch; squash-merge before to-review **Status** `done`.

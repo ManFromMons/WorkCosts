@@ -42,7 +42,7 @@ One story per host: `docs/features/source-<host>.md` (template `.cursor/skills/a
 /start-add-source source-<host>
 ```
 
-Branch `feature/source-<host>-<Title>` from `origin/main`. Discover HttpClient vs Chromium, one trimmed fixture **per sample**, failing tests for Name and UnitPrice on **all three**, then parser/fetch as skill `add-product-source`. Inbox on `main` via `update-to-review`. No GitHub PR until that heading is **Status** `done`.
+Branch `feature/source-<host>-<Title>` from `origin/main`. Discover HttpClient vs Chromium, one trimmed fixture **per sample**, failing tests for Name and UnitPrice on **all three**, then parser/fetch as skill `add-product-source`. Inbox on `main` via `update-to-review` (**Work summary**, questions, deviations). Open the squash PR at inbox **Status** `ready-for-review`. Do not squash-merge until that heading is **Status** `done`.
 
 ## Porting to GNOME (Linux)
 
@@ -69,7 +69,7 @@ git show origin/main:docs/features/to-review.md > docs/features/to-review.md
 powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: <kebab> <status>"
 ```
 
-Do not `git add` that file on `Planning` or a feature branch. Do **not** open a GitHub PR until the inbox for that feature is **Status** `done` (questions and deviations approved). Then set **PR** on the story header and add `docs/features/<name>-delivery.md` on the feature branch.
+Do not `git add` that file on `Planning` or a feature branch. At **Status** `ready-for-review` the heading on `main` must include a **Work summary**, **Questions**, and **Deviations** (not only **Last note**). Open the squash PR at that point so the human can review the change set. They answer on `main`; then **recommence from review**. When the heading is **Status** `done`, set **PR** on the story header and add `docs/features/<name>-delivery.md` on the feature branch. Do not squash-merge unless asked.
 
 ## Branches and pull requests
 
@@ -92,7 +92,7 @@ Stories are queued by **Seq** (integer, never reused) and **Depends-on** (kebab 
 
 ### Landing agent work
 
-All **implementation** lands on `main` as a **squash pull request** opened **after** the to-review heading is accepted (**Status** `done`). While the coder is finished, that heading is **Status** `ready-for-review` — not `done`. Open the PR against `main` (GitHub). The human then squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks. Do not open the PR while questions or deviations are still unchecked.
+When coding is finished, the coder lands the inbox heading on `main` as **Status** `ready-for-review` (work summary, questions, deviations) and **opens a squash PR against `main`**. That package is what the human reviews and answers; they commit those answers on `main`. The agent then **recommences from review**. When the heading is **Status** `done`, add `*-delivery.md` and mark the PR ready. The human squash-merges. Agents do **not** squash-merge, rebase-merge, or merge-commit the PR unless the user explicitly asks. Do not open the PR with an empty **Work summary** or with real deviations listed as `_(none)_`.
 
 Do not use merge commits onto `main`. After a squash merge, delete the feature branch.
 

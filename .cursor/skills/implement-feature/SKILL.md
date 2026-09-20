@@ -8,7 +8,7 @@ description: Implement a Will I DIY? feature from a ready-for-agent spec under d
 Coding consumes a **feature file**. It does not invent product behaviour from chat.
 
 Source of truth: `docs/features/<kebab-case-name>.md`  
-Inbox (questions, deviations, status): `docs/features/to-review.md` **on `main`**  
+Inbox (work summary, questions, deviations, status): `docs/features/to-review.md` **on `main`**  
 Land inbox edits with skill `update-to-review` and the script below. Never commit that file on this branch.  
 Entry shape: [to-review-entry.md](to-review-entry.md)
 
@@ -36,7 +36,7 @@ If that path does not exist on `origin/main` yet, the inbox is empty. If the fea
 
 Branch from up-to-date `origin/main` as `feature/<feature_code>-<Title>` (see `AGENTS.md`). Do not implement on `Planning` or `main`. Each commit must be **code that builds** (`dotnet build WorkCosts.slnx`). Include the tests the spec names when you claim a unit is done.
 
-You may **push the feature branch**. When development is finished (tests named in the spec pass, no open questions), set the inbox heading **Status** to `ready-for-review` via skill `update-to-review`. Do **not** open a GitHub pull request until the human has approved the work: `origin/main:docs/features/to-review.md` for this feature has no open questions, deviations ticked (or none), **Verify** ticked, and **Status** `done`.
+You may **push the feature branch**. Chat is not the inbox.
 
 - Do not mix inbox edits into code commits.
 - Do not `git add docs/features/to-review.md` on this branch.
@@ -55,7 +55,7 @@ Follow skill `update-to-review`. Exact steps:
    ```
 
    If git prints `fatal: path … does not exist`, copy the how-to plus an empty `## Entries` from this skill’s sibling [to-review-entry.md](to-review-entry.md) into that path first.
-4. Upsert this feature’s heading from [to-review-entry.md](to-review-entry.md). Set **Status** (`in-progress`, `blocked`, `ready-for-review`, …). Add questions and deviations there. Chat is not the inbox.
+4. Upsert this feature’s heading from [to-review-entry.md](to-review-entry.md). Set **Status** (`in-progress`, `blocked`, `ready-for-review`, …). Add the **Work summary**, questions, and deviations there. Chat is not the inbox.
 5. `git status --porcelain` must show **only** `docs/features/to-review.md` (or `?? docs/features/` if the file is new). If anything else is dirty, stop.
 6. Run:
 
@@ -71,20 +71,45 @@ Follow skill `update-to-review`. Exact steps:
    git show origin/main:docs/features/to-review.md
    ```
 
-## Resume
+## Handover to review
 
-Resume when the user says resume / continue, or the inbox on `main` has **Status** `resume`.
+When the spec’s tests pass and there are no open questions, **hand over**. Do not skip this package:
+
+1. Commit and **push** the feature branch.
+2. Land the heading on `main` via the script above, **Status** `ready-for-review`, with:
+   - **Change set:** branch name
+   - **Work summary** (required bullets; **Last note** is not enough)
+   - **Questions** (`_(none)_` only if none)
+   - **Deviations to scan** (every real deviation, **unchecked**; `_(none)_` only if none)
+   - **Verify:** tests ticked; leave deviations for the human
+3. **Open a squash PR against `main`** (draft is OK). Put the same work summary, questions, and deviations in the PR body. This is the code change set the human reviews next to the inbox on `main`.
+4. **Stop.** Do not set inbox **Status** `done`. Do not squash-merge.
+
+The human reviews the inbox on `main` and the PR diff, writes **Answer:** / ticks boxes, and **commits those answers on `main`**. Then **recommence from review**.
+
+A one-line Last note with `_(none)_` deviations is not a handover.
+
+## Recommence from review
+
+Resume when the user says resume / continue / recommence from review, or the inbox on `main` has **Status** `resume` or **Status** `done`.
 
 1. Fetch and read answers from `origin/main:docs/features/to-review.md` (checked box + **Answer:**).
 2. Fold them into the feature file the same way plan-feature does after answers: remove resolved questions; put mechanical choices under **Accepted defaults**; rewrite the conflicting spec section if the answer changes UX or architecture.
 3. Do not re-ask resolved items.
-4. Set inbox **Status** to `in-progress` via the script above, then continue implementation.
+
+**If Status is `resume`** (or answers require more code): set inbox **Status** to `in-progress` via the script, continue implementation, push, update the existing PR.
+
+**If Status is `done`** (no open questions, deviations ticked, **Verify** ticked):
+
+- Set the feature file **Status** to `done` on the feature branch.
+- Set **PR** in the story header. Add `docs/features/<kebab>-delivery.md` from [delivery-template.md](delivery-template.md).
+- Commit and push. Mark the PR **ready** (not draft). Do **not** squash-merge unless the user explicitly asks.
 
 ## Workflow
 
 1. Land **Status** `in-progress` with the script.
 2. Follow **Implementation notes for an agent** in order, and the Technical design reuse table. Do not add destinations, sheets, schema, or controls the spec did not ask for.
-3. **UX / layout-grammar / architecture conflict:** do not invent. Commit any buildable code already done. Add numbered *Assumption:* … → **Question:** …? boxes under **Questions**, set **Status** `blocked`, land with the script, stop. **No PR.**
+3. **UX / layout-grammar / architecture conflict:** do not invent. Commit any buildable code already done. Add numbered *Assumption:* … → **Question:** …? boxes under **Questions**, set **Status** `blocked`, land with the script, stop. **No new PR** until handover; update an existing PR if one is already open.
 4. **Reuse deviation:** if the spec said create a type but the codebase already has the behaviour, use the existing type and keep going. Add an unchecked box under **Deviations to scan**, and one line under the feature file **Implementation notes**. Land with the script. Stop only for UX / architecture conflicts.
 5. Run the tests named in the spec:
 
@@ -93,11 +118,8 @@ Resume when the user says resume / continue, or the inbox on `main` has **Status
    ```
 
    Skip the solution test run only if the spec says UI-only and names no test cases.
-6. If tests pass and no open questions: development is done. Set inbox **Status** to `ready-for-review`. Tick **Verify** → tests passed. Leave deviation boxes for the human. Land with the script. **Still no PR.**
-7. Wait until the human accepts the review (`Status` `done` on `origin/main` to-review, deviations ticked). Then:
-   - Set the feature file **Status** to `done` on the feature branch.
-   - Open a **squash PR to `main`**. Do not merge it.
-   - Set **PR** in the story header. Add `docs/features/<kebab>-delivery.md` from [delivery-template.md](delivery-template.md). Commit and push those docs on the feature branch.
+6. If tests pass and no open questions: follow **Handover to review**.
+7. Wait for the human. Then follow **Recommence from review**.
 
 One named spec per pass, unless the user named more than one ready-for-agent file.
 
@@ -111,7 +133,8 @@ When folding answers, do not invent extra spec sections. Update **Implementation
 
 - Implement during planning, or plan during implementation (no new feature file from this skill).
 - Host questions or status only in chat, or commit the inbox off `main`.
-- Open a PR before the to-review heading is **Status** `done`.
-- Merge Planning to main, squash-merge the feature PR, pack MSIX, or drive-by refactor unrelated files.
-- Force-push `main`, or mark the feature **Status** `done` without a human review.
+- Hand over with only **Last note** and `_(none)_` when real deviations exist.
+- Squash-merge, rebase-merge, or merge-commit the feature PR unless the user explicitly asks.
+- Merge Planning to main, pack MSIX, or drive-by refactor unrelated files.
+- Force-push `main`, or mark the feature **Status** `done` without a human review (**Status** `done` on the inbox heading).
 - Duplicate existing helpers; do not invent a DI container unless the spec requires it.

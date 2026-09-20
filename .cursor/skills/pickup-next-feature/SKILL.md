@@ -34,6 +34,6 @@ To print the full Seq tree instead, follow skill `feature-queue` (`scripts/Get-F
 
 ## Implement
 
-Follow skill `start-implement` for that id (it loads `implement-feature`). Branch `feature/<feature_code>-<Title>` from `origin/main` as in `AGENTS.md`. When development is finished, that skill sets the inbox heading **Status** to `ready-for-review`.
+Follow skill `start-implement` for that id (it loads `implement-feature`). Branch `feature/<feature_code>-<Title>` from `origin/main` as in `AGENTS.md`. When development is finished, that skill **hands over to review**: inbox **Status** `ready-for-review` on `main` plus an open squash PR.
 
 One job per pass unless the user named more than one.

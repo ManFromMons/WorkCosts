@@ -125,7 +125,7 @@ One file per surface. Change the matching file when you change that UI.
 
 **Feature file Status** (on the story): `draft` → `ready-for-agent` → `done`.
 
-**Work states** (inbox on `main` only): `in-progress`, `blocked`, `resume`, `ready-for-review`. Never put those on the feature file. When development is finished, the coder sets **Status** `ready-for-review`. The human then ticks deviations and sets **Status** `done`.
+**Work states** (inbox on `main` only): `in-progress`, `blocked`, `resume`, `ready-for-review`. Never put those on the feature file. When development is finished, the coder sets **Status** `ready-for-review` with a **Work summary**, **Questions**, and **Deviations**, lands that heading on `main`, and opens the squash PR. The human reviews the inbox plus the PR, answers on `main`, then the agent **recommences from review**. After **Status** `done`, add delivery notes; the human squash-merges.
 
 **Queue:** integer **Seq** (never reuse) + **Depends-on** (kebab ids or `none`). Tree + start-by-Seq: skill `feature-queue` / `scripts/Get-FeatureQueue.ps1` (working tree overlay on `origin/main`). Pickup: lowest Seq that is `ready-for-agent` whose dependencies are `done`. Script: `scripts/Get-NextReadyFeature.ps1` (reads **`origin/main`**, not Planning).
 
@@ -153,11 +153,11 @@ All project skills live under `.cursor/skills/<name>/SKILL.md`. Folder name **mu
 | `start-implement` | **No** (`disable-model-invocation: true`) | Kickoff: named ready story, **Seq**, or next in queue. Then follow `implement-feature`. |
 | `start-port` | **No** | Kickoff: GNOME slice from the playbook (`/start-port gnome`). One slice per pass. Script `Get-NextPortSlice.ps1`. |
 | `feature-queue` | Yes | Print the Seq dependency tree; start a story by number (`/feature-queue 5`). Script `Get-FeatureQueue.ps1`. |
-| `implement-feature` | Yes | Code from a `ready-for-agent` spec. Branch from `origin/main`. Inbox via `update-to-review`. When coding is done, inbox **Status** `ready-for-review`. No PR until that heading is **done**. |
+| `implement-feature` | Yes | Code from a `ready-for-agent` spec. Branch from `origin/main`. Inbox via `update-to-review`. Handover: **Work summary** + questions + deviations on `main`, squash PR at **ready-for-review**. Recommence from review after answers. |
 | `pickup-next-feature` | Yes | Run `Get-NextReadyFeature.ps1`, then `start-implement` on that id. Stop on `QUEUE_EMPTY`. Not for GNOME. |
 | `start-add-source` | **No** | URL → interactive confirm of ≥3 pages + story. Ready story id → `add-product-source`. |
 | `add-product-source` | Yes | Discover HttpClient vs Chromium, fixture, failing tests, detector/parser/fetch. Same inbox/PR rules. |
-| `update-to-review` | Yes | Land **only** `docs/features/to-review.md` on `main` via `Update-ToReviewOnMain.ps1`. |
+| `update-to-review` | Yes | Land **only** `docs/features/to-review.md` on `main` via `Update-ToReviewOnMain.ps1`. Handover package: work summary, questions, deviations. |
 | `merge-planning` | Yes | Rebase/squash Planning onto main, fast-forward, push both. Preserves to-review on main. |
 
 **Invoke-only** skills (`start-implement`, `start-add-source`, `start-port`) are never applied from ambient chat. You must type `/start-implement`, `/start-add-source`, or `/start-port` (editor or CLI).
@@ -283,13 +283,18 @@ merge-planning  ─────────────────────�
 
 feature/foo-Title  (from origin/main)
   start-implement / implement-feature
-  update-to-review  ─────────────────►   to-review.md (in-progress / blocked / ready-for-review)
-  human accepts review → Status done
-  open squash PR  ───────────────────►   GitHub PR (human squash-merges)
+  update-to-review  ─────────────────►   to-review.md (in-progress / blocked)
+  handover to review ───────────────►   to-review.md (ready-for-review:
+                                         work summary, questions, deviations)
+  open squash PR  ───────────────────►   GitHub PR (human reviews diff)
+  human answers on main, commits
+  recommence from review
+  human accepts → Status done
   foo.md Status done + foo-delivery.md
+  human squash-merges
 ```
 
-Do **not** open the GitHub PR while to-review for that feature is still questions or unchecked deviations.
+Do **not** hand over with only **Last note** and `_(none)_` when real deviations exist. Do **not** squash-merge the GitHub PR while to-review for that feature still has open questions or unchecked deviations.
 
 ---
 
@@ -509,7 +514,7 @@ or `/start-implement 5`. The agent resolves Seq → kebab, then `start-implement
 ```text
 /start-add-source source-halfords
 Discover fetch, one fixture per sample, failing Name+UnitPrice tests for all three, then integrate.
-Inbox on main via update-to-review. No GitHub PR until that heading is Status done.
+Inbox on main via update-to-review (work summary, questions, deviations). Open the squash PR at ready-for-review. Do not squash-merge until that heading is Status done.
 ```
 
 **GNOME next slice** (Linux box; playbook already on `origin/main`)

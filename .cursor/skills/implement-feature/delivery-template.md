@@ -15,4 +15,4 @@
 
 ## Deviations
 
-- none | one line each, also listed in `docs/features/to-review.md` on `main`
+- none | one line each, matching **Deviations to scan** in `docs/features/to-review.md` on `main`

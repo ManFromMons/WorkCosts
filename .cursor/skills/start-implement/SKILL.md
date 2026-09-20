@@ -29,7 +29,7 @@ GNOME/Linux rebuild is `/start-port gnome`, not this skill.
    dotnet test WorkCosts.slnx --settings .runsettings
    ```
 
-5. Questions, blocks, deviations, and `in-progress` / `ready-for-review` go in `docs/features/to-review.md` on **main** via skill `update-to-review`. Never `git add` that file on the feature branch. When coding and the spec’s tests are done, set that heading **Status** to `ready-for-review`. Exact land:
+5. Questions, blocks, deviations, **Work summary**, and `in-progress` / `ready-for-review` go in `docs/features/to-review.md` on **main** via skill `update-to-review`. Never `git add` that file on the feature branch. When coding and the spec’s tests are done, follow **Handover to review** in `implement-feature`: fill **Work summary**, **Questions**, and **Deviations**, set that heading **Status** to `ready-for-review`, land it on `main`, then open the squash PR. Exact land:
 
    ```powershell
    git fetch origin
@@ -38,6 +38,6 @@ GNOME/Linux rebuild is `/start-port gnome`, not this skill.
    powershell -File scripts/Update-ToReviewOnMain.ps1 -Message "to-review: <kebab> <status>"
    ```
 
-6. You may push the feature branch. **Do not open a pull request** until that inbox heading is **Status** `done` (questions and deviations approved). Then set **PR** on the story, add `docs/features/<kebab>-delivery.md`, open a squash PR to `main`, and do not merge it.
+6. You may push the feature branch. **Open the squash PR at `ready-for-review`** so the human can review the diff next to the inbox. Do **not** squash-merge. After they answer on `main`, **recommence from review**. When the inbox heading is **Status** `done`, set **PR** on the story, add `docs/features/<kebab>-delivery.md`, mark the PR ready, and still do not merge it.
 
 One named spec per pass unless the user named more than one.

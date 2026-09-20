@@ -7,7 +7,9 @@ description: Land docs/features/to-review.md on main only. Use when the coder mu
 
 The living inbox is **`docs/features/to-review.md` on `main`**. Scan it there. Do not commit that file on `Planning` or a feature branch.
 
-Do not open a feature PR until this inbox shows the human has accepted the review (**Status** `done`, questions resolved, deviations ticked). When development is finished, the coder sets **Status** to `ready-for-review` (not `done`).
+This file is the **handover package** the human reviews on `main`: **Work summary**, **Questions**, **Deviations**, **Verify**, and a **Change set** pointer (branch + PR). A one-line **Last note** is not a handover.
+
+When development is finished, set **Status** to `ready-for-review` (not `done`), land this file on `main`, then **open the squash PR** so the human can review the code next to the inbox. Do **not** squash-merge. After they answer on `main`, **recommence from review**.
 
 ## Read the inbox
 
@@ -49,8 +51,24 @@ Do not treat the working-tree copy (or chat) as the source of truth.
 
 If the file is already committed on this branch and differs from `main`, restore it (`git checkout main -- docs/features/to-review.md`) and keep inbox edits uncommitted until the script runs.
 
-## After humans answer
+## Ready-for-review handover
 
-They tick boxes and write **Answer:** (then you land those ticks with this script if they edited a worktree copy, or they land them the same way). Skill `implement-feature` **resume**: fetch, read `origin/main:docs/features/to-review.md`, fold answers into the feature spec, continue coding. Still no PR until **Status** is `done`.
+The heading on `main` must include:
+
+- **Status** `ready-for-review`
+- **Change set:** branch name (and PR url once opened)
+- **Work summary** (bullets; required)
+- **Questions** (or `_(none)_`)
+- **Deviations to scan** (every real deviation, unchecked for the human; `_(none)_` only if none)
+- **Verify:** tests ticked; deviations left for the human
+
+Then open the squash PR against `main` (same summary / questions / deviations in the PR body). **Stop.** Do not set **Status** `done`. Do not squash-merge.
+
+## After humans answer (recommence from review)
+
+They tick boxes and write **Answer:** on `main` (land those ticks with this script if they edited a worktree copy). Then skill `implement-feature` **recommence from review**: fetch, read `origin/main:docs/features/to-review.md`, fold answers into the feature spec, continue coding or close out.
+
+- **Status** `resume` (open questions answered, more code needed): set inbox `in-progress`, keep coding, update the existing PR.
+- **Status** `done` (verify + deviations ticked, no open questions): feature file **Status** `done`, `*-delivery.md`, mark the PR ready. Still do **not** squash-merge unless the user explicitly asks.
 
 VS Code / Cursor task label: `update-to-review`.

@@ -57,8 +57,8 @@ The playbook on **`origin/main`** is canonical (same idea as pickup-next-feature
 
    Plus any command the slice names (usually `dotnet build src/linux/WillIDIY.Gnome.slnx`).
 5. Questions, blocks, deviations, and `in-progress` / `ready-for-review` go in `docs/features/to-review.md` on **main** via skill `update-to-review`. Heading **Feature** links the playbook slice, not a `docs/features/gnome-*.md` story. Never `git add` the inbox on this branch. Do not create `docs/features/gnome-*.md` (that would pollute the Windows Seq queue).
-6. When the slice’s **Done when** is met and the named tests pass: inbox **Status** `ready-for-review`. Tick **Verify**. **Still no PR.**
-7. After the human sets that heading **Status** `done`: set this slice **Status** `done` in `docs/platforms/gnome-build-order.md` on the feature branch, add `docs/features/<slice-id>-delivery.md` from [delivery-template.md](../implement-feature/delivery-template.md) (link the playbook instead of a feature file), open a squash PR to `main`, do not merge it.
+6. When the slice’s **Done when** is met and the named tests pass: inbox **Status** `ready-for-review` with a **Work summary**, **Questions**, and **Deviations**. Tick **Verify** (tests). Land on `main`, then **open the squash PR**. **Do not squash-merge.**
+7. After the human sets that heading **Status** `done`: set this slice **Status** `done` in `docs/platforms/gnome-build-order.md` on the feature branch, add `docs/features/<slice-id>-delivery.md` from [delivery-template.md](../implement-feature/delivery-template.md) (link the playbook instead of a feature file), mark the PR ready, do not merge it.
 
 One slice per pass unless they named more than one startable id.
 
