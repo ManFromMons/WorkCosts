@@ -62,4 +62,4 @@ Exact cases after the file format is chosen.
 
 ## Implementation notes for an agent
 
-**Stop** until the user resumes this story with a format and a list. Do not invent a large unconfirmed catalogue. Hook onto the existing Car types page only.
+**Stop** until the user supplies the first JSON list (or explicitly asks for an empty `[]` loader). Do not invent a catalogue. Hook onto the existing Car types page only.

@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/car-types.md` (new), `docs/screens/cars.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
 - **Related code:** `Car`, `Job`, `GarageJob`, `ItemOfWork`, `DbInitializer`, `WorkCostsDbContext`, `DialogHelper`, Stuff nav
 
-A **car type** (`CarDetails`) is “BMW E60 / 545 / 2004 / 4.4L V8”, not a vehicle the user owns. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) and a later **seed-from-repo** story ([car-details-seed.md](car-details-seed.md)) **hook onto the Car types page**. Fitment workflows: [car-job-links.md](car-job-links.md).
+A **car type** (`CarDetails`) is “BMW E60 / 545 / 2004 / 4.4L V8”, not a vehicle the user owns. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) and a later **seed-from-repo** story ([car-details-seed.md](car-details-seed.md)) **hook onto the Car types page**. Fitment / start-work: [car-job-links.md](car-job-links.md). Completions UI: [item-of-work-ui.md](item-of-work-ui.md).
 
 ## Objectives
 
