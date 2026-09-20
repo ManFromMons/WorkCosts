@@ -66,7 +66,8 @@ public sealed class GarageJobCommandsTests : IAsyncLifetime
             "2.0 TDI",
             "Planned scope",
             120,
-            GarageJobRepeatCombine.AllMustBeMet));
+            GarageJobRepeatCombine.AllMustBeMet,
+            intervalAnchorDate: null));
 
         var loaded = await GarageJobCommands.GetByIdAsync(_db, created.Id);
         Assert.NotNull(loaded);

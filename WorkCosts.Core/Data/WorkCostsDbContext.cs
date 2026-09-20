@@ -22,6 +22,7 @@ public class WorkCostsDbContext : DbContext
     public DbSet<GarageJobRepeatCondition> GarageJobRepeatConditions => Set<GarageJobRepeatCondition>();
     public DbSet<GarageJobRequiredProduct> GarageJobRequiredProducts => Set<GarageJobRequiredProduct>();
     public DbSet<GarageJobReferencedJob> GarageJobReferencedJobs => Set<GarageJobReferencedJob>();
+    public DbSet<ItemOfWork> ItemsOfWork => Set<ItemOfWork>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -145,6 +146,18 @@ public class WorkCostsDbContext : DbContext
             e.Property(x => x.Description).HasMaxLength(8000);
             e.Property(x => x.IconRelativePath).HasMaxLength(500);
             e.Property(x => x.IconContentType).HasMaxLength(100);
+            e.Property(x => x.IntervalAnchorDate);
+        });
+
+        modelBuilder.Entity<ItemOfWork>(e =>
+        {
+            e.ToTable("ItemsOfWork");
+            e.HasKey(x => x.Id);
+            e.HasOne(x => x.GarageJob)
+                .WithMany(x => x.ItemsOfWork)
+                .HasForeignKey(x => x.GarageJobId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.GarageJobId, x.OccurredAt });
         });
 
         modelBuilder.Entity<GarageJobRepeatCondition>(e =>

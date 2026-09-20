@@ -85,6 +85,7 @@ Planning templates (see [garage-job.md](garage-job.md)). No seed rows on first l
 | IconRelativePath | Under data root, e.g. `icons/garage-jobs/{id}.png`; empty = default icon in UI |
 | IconContentType | e.g. `image/png`; empty when no custom icon |
 | RepeatCombine | `WhicheverFirst` or `AllMustBeMet` |
+| IntervalAnchorDate | Optional `DateOnly` (London calendar origin until first `ItemOfWork`) |
 
 ### GarageJobRepeatConditions
 
@@ -113,6 +114,19 @@ Composite PK `(GarageJobId, JobId)`. Links to existing **`Job`** sub-work templa
 | Column | Notes |
 | :--- | :--- |
 | SortOrder | int |
+
+### ItemsOfWork
+
+Completions of a **`GarageJob`**. See [garage-job.md](garage-job.md).
+
+| Column | Notes |
+| :--- | :--- |
+| Id | Guid PK |
+| GarageJobId | FK → GarageJobs, **Restrict** |
+| OccurredAt | DateTimeOffset. SQLite: sort via `UtcDateTime` |
+| OdometerMiles | Optional integer miles; ≥ 0 if set |
+
+Index `(GarageJobId, OccurredAt)`.
 
 ### CachedWebPages / CachedWebImages
 

@@ -11,8 +11,10 @@ public class GarageJob
     public string IconRelativePath { get; set; } = string.Empty;
     public string IconContentType { get; set; } = string.Empty;
     public GarageJobRepeatCombine RepeatCombine { get; set; } = GarageJobRepeatCombine.WhicheverFirst;
+    public DateOnly? IntervalAnchorDate { get; set; }
 
     public ICollection<GarageJobRepeatCondition> RepeatConditions { get; set; } = new List<GarageJobRepeatCondition>();
     public ICollection<GarageJobRequiredProduct> RequiredProducts { get; set; } = new List<GarageJobRequiredProduct>();
     public ICollection<GarageJobReferencedJob> ReferencedJobs { get; set; } = new List<GarageJobReferencedJob>();
+    public ICollection<ItemOfWork> ItemsOfWork { get; set; } = new List<ItemOfWork>();
 }
