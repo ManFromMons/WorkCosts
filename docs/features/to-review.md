@@ -35,8 +35,7 @@ _(none)_
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
-
+- [x] Deviations accepted
 
 ## garage-job
 
