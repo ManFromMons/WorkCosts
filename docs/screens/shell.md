@@ -13,4 +13,4 @@ Selecting a leaf **clears the back stack** (section switch, not a deep link stac
 
 Behind the frame: `GarageBackground` image, `UniformToFill`, plus ~95% opaque page brush.
 
-GNOME/iPad: same destinations. Compact iPad: **tab bar** with Home, Products, Jobs, Categories, Settings (Work can fold into Home until the Work page exists).
+GNOME/iPad: same destinations. Compact iPad: **tab bar** with Home, Products, Jobs, Categories, Settings (Work can fold into Home until the Work page exists). **Cars** and **Car types** stay under Stuff, not extra tabs.
