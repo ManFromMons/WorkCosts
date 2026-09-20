@@ -3,7 +3,7 @@
 - **Id:** `docs/features/garage-job.md`
 - **Seq:** 9
 - **Depends-on:** none
-- **Status:** ready-for-agent
+- **Status:** done
 - **PR:** none
 - **Windows:** Core + tests + data docs in v1 (no WinUI)
 - **Related screens:** none yet (new surface TBD; existing `docs/screens/jobs.md` stays for **`Job`** templates)
