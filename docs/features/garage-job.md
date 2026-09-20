@@ -4,7 +4,7 @@
 - **Seq:** 9
 - **Depends-on:** none
 - **Status:** done
-- **PR:** none
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/10
 - **Windows:** Core + tests + data docs in v1 (no WinUI)
 - **Related screens:** none yet (new surface TBD; existing `docs/screens/jobs.md` stays for **`Job`** templates)
 - **Related code:** existing **`Job`**, **`ProductJob`**, **`WorkJob`**, **`WorkJobItem`** (unchanged), **`Product`**, **`WorkCostsDbContext`**, **`DbInitializer`**, **`ProductCommands`**, **`DurationHelper`**, `DatabaseService` data folder layout (`docs/data/connection.md`)
