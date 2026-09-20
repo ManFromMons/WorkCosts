@@ -19,6 +19,7 @@ Swift: SQLite (GRDB or SQLite.swift) applying the same SQL as EF migrations. Do 
 | Page HTML | cache root / `{domain}/pages/…` | `CachedWebPages` |
 | Chooser images | cache root / `{domain}/images/…` | `CachedWebImages` |
 | Product library photos | **Target:** `…/WorkCosts/images/{productId}.{ext}` | Product row (path or still BLOB until migrated) |
+| Garage job icons | `{dataRoot}/icons/garage-jobs/{garageJobId}.{ext}` | `GarageJobs.IconRelativePath` |
 
 Cache root today is beside the database folder (see `WebCacheStore` / Settings). Domain folders use the **product page host**, not the CDN host.
 

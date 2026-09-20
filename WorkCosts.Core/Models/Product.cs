@@ -25,6 +25,7 @@ public class Product
     public bool IsAllJobs { get; set; }
 
     public ICollection<ProductJob> ProductJobs { get; set; } = new List<ProductJob>();
+    public ICollection<GarageJobRequiredProduct> GarageJobRequiredProducts { get; set; } = new List<GarageJobRequiredProduct>();
     public ICollection<WorkJobItem> WorkJobItems { get; set; } = new List<WorkJobItem>();
     public ICollection<ProductEquivalent> EquivalentLinks { get; set; } = new List<ProductEquivalent>();
     public ICollection<ProductEquivalent> EquivalentOfLinks { get; set; } = new List<ProductEquivalent>();
