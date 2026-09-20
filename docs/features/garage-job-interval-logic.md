@@ -3,8 +3,8 @@
 - **Id:** `docs/features/garage-job-interval-logic.md`
 - **Seq:** 10
 - **Depends-on:** `garage-job`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/11
 - **Windows:** Core + tests + data docs (no WinUI)
 - **Related screens:** none (no new surface; future garage-job UI will call these helpers)
 - **Related code:** `GarageJob`, `GarageJobRepeatCondition`, `GarageJobRepeatKind`, `GarageJobTimeUnit`, `GarageJobDistanceUnit`, `GarageJobRepeatCombine`, `GarageJobRepeatValidation`, `GarageJobRepeatSummary`, `GarageJobCommands`, `GarageJobDeleteResult`, `ProductJob` (no quantity column — each link counts as 1), `Product.UnitCost`, `Job.GaragePrice` / `DurationMinutes`, `docs/data/garage-job.md` (Seq 9)
@@ -369,4 +369,5 @@ Keep Seq 9 `GarageJobCommands` / `GarageJobRepeatSummary` tests passing (extend 
 6. Tests listed above. Linux agents must resolve `Europe/London`.
 7. Do **not** add WinUI pages, vehicle tables, or zip import.
 8. Do not collapse multiple same-kind conditions into one row.
-9. `update-to-review` when tests pass; no GitHub PR until that heading is **Status** `done`.
+9. `update-to-review` when tests pass (work summary + deviations). Inbox **Status** `done` on `main`; PR https://github.com/ManFromMons/WorkCosts/pull/11.
+10. Deviations accepted on `main`: in-memory `OccurredAt.UtcDateTime` sort; cloud-agent branch name; handwritten EF migration; PR opened at `ready-for-review`.

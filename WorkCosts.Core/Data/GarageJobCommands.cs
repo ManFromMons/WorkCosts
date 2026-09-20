@@ -9,6 +9,7 @@ public enum GarageJobDeleteResult
 {
     NotFound,
     Success,
+    HasCompletions,
 }
 
 public sealed record GarageJobRepeatConditionInput(
@@ -65,6 +66,7 @@ public static class GarageJobCommands
         string description,
         int durationMinutes,
         GarageJobRepeatCombine repeatCombine,
+        DateOnly? intervalAnchorDate,
         CancellationToken cancellationToken = default)
     {
         ValidateName(name);
@@ -85,6 +87,7 @@ public static class GarageJobCommands
         entity.Description = description?.Trim() ?? string.Empty;
         entity.DurationMinutes = durationMinutes;
         entity.RepeatCombine = repeatCombine;
+        entity.IntervalAnchorDate = intervalAnchorDate;
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }
@@ -373,6 +376,11 @@ public static class GarageJobCommands
         if (entity is null)
         {
             return GarageJobDeleteResult.NotFound;
+        }
+
+        if (await db.ItemsOfWork.AnyAsync(i => i.GarageJobId == garageJobId, cancellationToken))
+        {
+            return GarageJobDeleteResult.HasCompletions;
         }
 
         var iconPath = entity.IconRelativePath;
