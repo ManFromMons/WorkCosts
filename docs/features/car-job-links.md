@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/cars.md`, `docs/screens/home.md` (today’s Add Work Job — **do not** replace Home), `docs/screens/work-job-detail.md`, `docs/screens/jobs.md`
 - **Related code:** `Car` (soft-delete, `CarId` FKs from Seq 11), `CarDetails`, `GarageJob` (`TargetKind`, `TargetLabel`, `CarId`), `WorkJob`, `Job`, `ItemOfWork`, `GarageJobDueEvaluator`
 
-VIN stories are independent. **Not** the future Home (current/pending/timeline). **`CarId` columns already exist in Seq 11**; this Seq makes the **workflows** and requires a car on new garage/work writes. Fitment uses **[car-details.md](car-details.md)** once that grain is decided.
+VIN stories are independent. **Not** the future Home (current/pending/timeline). **`CarId` columns already exist in Seq 11**; this Seq makes the **workflows** and requires a car on new garage/work writes. Fitment: referenced `Job` rows whose **`JobCarDetails`** includes the work car’s **`CarDetailsId`** (type grain is Make + **ModelNumber** + year + engine; [car-details.md](car-details.md)).
 
 ## Objectives
 
@@ -36,7 +36,7 @@ VIN stories are independent. **Not** the future Home (current/pending/timeline).
 
 ### Start work (WinUI, existing Home — not a new Home)
 
-- Home **Add** (or equivalent): choose garage job **or** job template as today, **and** a car. If a garage job is chosen, car defaults from it and referenced jobs are the candidates, filtered by **car-details** binding (Seq 12).
+- Home **Add** (or equivalent): choose garage job **or** job template as today, **and** a car (Q1). If a garage job is chosen, car defaults from it. Referenced jobs are filtered to those whose **`JobCarDetails`** contains this car’s **`CarDetailsId`**. If the car has no type, show all referenced jobs.
 - Cannot save without a car.
 - Soft-deleted cars do not appear in pickers.
 
@@ -87,12 +87,12 @@ VIN stories are independent. **Not** the future Home (current/pending/timeline).
 - `WorkJob_CreateFromGarageJob_CopiesCarId_SetsGarageJobId`
 - `WorkJob_Create_UnknownOrDeletedCar_NoWrite`
 - `ItemOfWork_Create_SetsCarId_AndCarDetailsId`
-- Fitment filter once Seq 12 cardinality is fixed
+- `StartWork_FiltersReferencedJobs_ByJobCarDetails_MatchingCarType`
+- `StartWork_CarWithNoType_DoesNotFilterReferencedJobs`
 
 ## Open questions
 
-1. *Assumption:* Fitment is “referenced `Job` rows whose car-details bindings include this car’s type”. Exact join waits on [car-details.md](car-details.md) Q1/Q4. → **Question:** None until car-details grain is chosen — then rewrite this section.
-2. *Assumption:* Home Add still can start from a **Job template only** (no garage job), but **must** pick a car. → **Question:** Is template-only start still allowed, or must every work job come from a garage job?
+1. *Assumption:* Home Add still can start from a **Job template only** (no garage job), but **must** pick a car. → **Question:** Is template-only start still allowed, or must every work job come from a garage job?
 
 ## Accepted defaults
 
@@ -103,8 +103,8 @@ VIN stories are independent. **Not** the future Home (current/pending/timeline).
 
 ## Implementation notes for an agent
 
-Do not implement while **Status** is `draft` (blocked on car-details grain and Q2).
+Do not implement while **Status** is `draft` (Q1: template-only start vs garage-job-only).
 
-1. After car-details is `ready-for-agent` and Q2: rewrite fitment; then this file `ready-for-agent`.
+1. After Q1: set **Status** `ready-for-agent`.
 2. Migration: `WorkJobs.GarageJobId` only.
 3. Do not: VIN HTTP; new Home; cascade-delete cars; drop `Jobs`.

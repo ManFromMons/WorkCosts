@@ -6,7 +6,7 @@
 - **Status:** draft
 - **PR:** none
 - **Windows:** WinUI on Cars add/editor; Core fetch + map into **car-details** (and car identity fields)
-- **Related screens:** `docs/screens/cars.md`
+- **Related screens:** `docs/screens/cars.md`, `docs/screens/car-types.md` (hook: create/match types on that page)
 - **Related code:** `Car`, `CarDetails`, `CarCommands`, Chromium/HttpClient fetch grammar
 
 **Resume later.** UK source for **car-type** details (make, model, year, engine, body, MOT/mileage context). Not the BMW vehicle-order JSON ([car-vin-lookup.md](car-vin-lookup.md) / mdecoder).

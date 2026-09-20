@@ -3,95 +3,121 @@
 - **Id:** `docs/features/car-details.md`
 - **Seq:** 12
 - **Depends-on:** `cars`
-- **Status:** draft
+- **Status:** ready-for-agent
 - **PR:** none
-- **Windows:** Core (seed + bindings). WinUI only if a picker is required on Cars / Jobs; otherwise bind in commands and later editors.
-- **Related screens:** `docs/screens/cars.md`, `docs/screens/jobs.md`
-- **Related code:** `Car`, `Job`, `GarageJob`, `ItemOfWork`, `DbInitializer`, `WorkCostsDbContext`
+- **Windows:** Core + WinUI (**Stuff → Car types** master/detail)
+- **Related screens:** `docs/screens/car-types.md` (new), `docs/screens/cars.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
+- **Related code:** `Car`, `Job`, `GarageJob`, `ItemOfWork`, `DbInitializer`, `WorkCostsDbContext`, `DialogHelper`, Stuff nav
 
-This is the **car-type** row that a real **`Car`**, a **`Job`**, a **`GarageJob`**, and an **`ItemOfWork`** can point at. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) is expected to **match or fill** these types. Fitment / start-work filtering is [car-job-links.md](car-job-links.md).
-
-Still in **discussion** — grain of a type, seed source, and whether jobs are many-to-many. Do not mark `ready-for-agent` until the questions below are answered.
+A **car type** (`CarDetails`) is “BMW E60 / 545 / 2004 / 4.4L V8”, not a vehicle the user owns. FastCarCheck ([car-fastcarcheck.md](car-fastcarcheck.md)) and a later **seed-from-repo** story ([car-details-seed.md](car-details-seed.md)) **hook onto the Car types page**. Fitment workflows: [car-job-links.md](car-job-links.md).
 
 ## Objectives
 
-- Persist **`CarDetails`**: a reusable make/model/year/engine-style **type**, distinct from a user’s **`Car`** (nickname, VRM, VIN, photo, `VehicleOrderJson`).
-- **Seed** rows at migration / `DbInitializer` (stable GUIDs), same idea as seeded jobs/categories.
+- Persist **`CarDetails`** including **model-number** (chassis code: **E60**, **E63**, …). Unique type = Make + ModelNumber + model year + engine text (plus display **Model**).
+- **v1 table is empty** — `DbInitializer` does **not** insert types. Population from project source is [car-details-seed.md](car-details-seed.md). Users can add rows by hand on **Stuff → Car types**.
 - Bind:
-  - **`Car`** → optional or required `CarDetailsId` (question)
-  - **`Job`** and **`GarageJob`** → the types they apply to
-  - **`ItemOfWork`** → `CarId` (already Seq 11) **and** `CarDetailsId`
-- **Out of scope:** Cars CRUD UI, mdecoder `VehicleOrderJson`, FastCarCheck HTTP, Home rewrite. Do not scrape a live catalogue in this Seq unless a question says the seed is an import.
+  - **`Car.CarDetailsId`** optional (Seq 11 scalars **stay**; lookups **supplement JSON**, they do not drop make/model/model-number/year/engine).
+  - **`Job`**: many types via junction **`JobCarDetails`**.
+  - **`GarageJob.CarDetailsId`**: snapshot of that garage job’s car’s type (one type; garage job is for one car).
+  - **`ItemOfWork.CarDetailsId`**: **snapshot** at completion (not a live join to the car).
+- **Stuff → Car types**: master/detail like Jobs. Later stories (seed import, FastCarCheck, job fitment UI) attach to this page — do not invent those UIs here beyond a type picker on the car editor.
+- **Out of scope:** Encoding a catalogue in the repo. mdecoder. FastCarCheck HTTP. Home rewrite. Image files on the **type** (photos stay on `Car`, searched as `{Make} {ModelNumber}`).
 
 ## User requirements
 
-- A car-details row is **not** a vehicle the user owns. It is “2004 BMW 545, 4.4L V8” (shape TBD).
-- User cars still have their own Make/Model/Year/EngineType (Seq 11). Binding to car-details **links** that instance to the type; it does not replace the nickname/VRM/VIN.
-- Jobs / garage jobs use the same type to say “this work fits these cars” (exact cardinality TBD).
-- Completions (`ItemOfWork`) store which car **and** which type was in force (so history survives if the car’s type link changes later).
-- Empty seed: still a valid database; bindings null until chosen — unless seed is mandatory (question).
+### Type fields (all required)
+
+| Column | Rules |
+| :--- | :--- |
+| **Make** | Max 120. |
+| **Model** | Display name (e.g. 545). Max 120. |
+| **ModelNumber** | Chassis / series (**E60**, **E63**). Max 32. Image search key with Make. |
+| **Year** | Model year, same range as `Car.Year`. |
+| **EngineType** | Free text. Max 200. |
+
+Unique among types: normalized **Make + ModelNumber + Year + EngineType** (case-insensitive trim). Two engines in the same E60 year are two rows.
+
+### Stuff → Car types
+
+- Nav next to Cars. Tag `car-types`. Title **Car types**, subtitle, trailing **Add**.
+- Regular: list beside editor. Compact: **stack**.
+- List: make · model-number · year · engine. Empty: “No car types yet.”
+- Add: **sheet** with the five required fields (no empty invalid row). Save inserts and selects.
+- Detail: edit fields. Delete: Yes/No. **Restrict** if any `Car`, `JobCarDetails`, `GarageJob`, or `ItemOfWork` points at it (message; no delete). No cascade. No soft-delete on types in v1 (unlike cars).
+- Unsaved changes: same helper as Cars/Jobs.
+- Later features may add buttons/import on this page; this Seq is CRUD only.
+
+### Bindings
+
+- **Car editor:** optional combo of types (search by make / model-number). Does not clear nickname or scalars. `CarDetailsId` null is allowed.
+- **Job:** not a full fitment UI in this Seq — Core junction `ReplaceJobCarDetailsAsync`. Job page checkboxes/chips can wait for [car-job-links.md](car-job-links.md) if too large; **minimum:** commands + tests. If a small “applies to types” list on Jobs is cheap, include it; do not block on a new destination.
+- **GarageJob:** `CarDetailsId` set when the garage job’s car has a type (commands). Snapshot: copy from `Car.CarDetailsId` at write; do not live-update if the car’s type changes later unless the garage job is saved again.
+- **ItemOfWork create:** copy `CarDetailsId` from the car at completion time (null if the car has no type). Do not follow later edits to the car’s type.
+
+### Empty / error
+
+- Duplicate type key: no write; visible reason.
+- Unknown type id on a bind: no write.
+- Delete in use: Restrict, keep the row.
 
 ## Layout
 
-- No new nav destination unless we add a small Stuff editor (question). Default: **no Cars-like page** in this Seq; types are data Jobs/Cars pickers consume later.
-- If a picker is needed on the car editor: combo/search of seeded types, compact stack still applies. No WebView.
+- OS spacing. Header title + subtitle + trailing Add. Detail inset on garage scrim.
+- Sheets: Add type. Dialogs: delete, unsaved. No WebView.
+- `docs/screens/car-types.md`. Shell Stuff: Products, Jobs, Categories, Cars, **Car types**. Compact iPad: still under Stuff, not a new top tab.
 
 ## Workflow
 
-1. App migrates / initializes; seed car-details exist.
-2. Creating or editing a car may set `CarDetailsId` (when we decide it is required).
-3. Job / garage-job editors (later or this Seq) attach one or more types.
-4. Logging `ItemOfWork` copies `CarId` and the type id (from the car’s binding or an explicit snapshot — question).
+1. Stuff → Car types (empty until the user adds, or until Seq 16 / FastCarCheck).
+2. Add → sheet → Save.
+3. Edit / delete (if unused).
+4. On a car, optionally pick a type. Completions snapshot that id.
 
 ## Technical design
 
 | Need | Reuse | Create |
 | :--- | :--- | :--- |
-| Seed | `DbInitializer` stable GUIDs | `CarDetails` table + seed rows |
-| Car | `Car` | `CarDetailsId` FK Restrict |
-| Job / GarageJob | `Job`, `GarageJob` | FK or junction (question) |
-| Completion | `ItemOfWork` | `CarDetailsId` FK Restrict |
-| FastCarCheck later | — | match on make/model/year/engine keys |
+| Table | `WorkCostsDbContext` | `CarDetails`, unique index |
+| Seed | `DbInitializer` | **no type rows** in v1 |
+| Car | `Car` | `CarDetailsId` Guid? Restrict |
+| Job | `Job` | `JobCarDetails` (`JobId`, `CarDetailsId`, `SortOrder`) |
+| Garage job | `GarageJob` | `CarDetailsId` Guid? Restrict |
+| Completion | `ItemOfWork` | `CarDetailsId` Guid? Restrict |
+| UI | Jobs/Cars master-detail, `DialogHelper` | `CarTypesPage`, add sheet, `CarDetailsCommands` |
 
-- **Wiring:** commands + initializer. No DI container.
-- **Data:** add-only migration. No cascade from `CarDetails` to cars/jobs (Restrict). Soft-deleted cars keep their type FK.
-- **Ports:** EF canonical; Swift follows.
-
-### Schema (draft — grain is an open question)
-
-**`CarDetails`** (names TBD)
-
-| Column | Intent |
-| :--- | :--- |
-| `Id` | Guid PK, stable for seed |
-| Make, Model, Year, EngineType, … | Type identity |
-| Maybe body, fuel, doors | Only if we keep them |
+- **Wiring:** `App.Database` / `CreateContext()`. Static commands. No DI.
+- **Data:** add-only migration. Restrict from type to dependents. Zip later: include `CarDetails` + junctions; merge by id.
+- **Ports:** EF canonical.
 
 ## Tests
 
-- `DbInitializer_SeedsCarDetails_StableIds`
-- `CarCommands_Update_PersistsCarDetailsId`
-- `ItemOfWork_PersistsCarDetailsId`
-- Job/garage-job binding tests once cardinality is decided
-- Unknown type id → no write
+- `CarDetailsCommands_CreateListUpdateDelete`
+- `CarDetailsCommands_RejectsDuplicateMakeModelNumberYearEngine`
+- `CarDetailsCommands_TryDelete_InUseByCar_Restrict`
+- `CarDetailsCommands_TryDelete_InUseByJobJunction_Restrict`
+- `DbInitializer_DoesNotSeedCarDetails`
+- `CarCommands_Update_PersistsOptionalCarDetailsId`
+- `JobCarDetails_Replace_DedupesAndOrders`
+- `GarageJobCommands_Update_SnapshotsCarDetailsId`
+- `ItemOfWork_Create_SnapshotsCarDetailsId_FromCar`
+- `ItemOfWork_Snapshot_DoesNotFollowLaterCarTypeChange`
 
 ## Open questions
 
-1. *Assumption:* One type row is **Make + Model + Model year + EngineType** (free text engine). → **Question:** Is that the grain, or do we also key body/fuel/generation? What is a unique type?
-2. *Assumption:* Seed is a **small built-in list** (the user’s cars’ types can be added when FastCarCheck runs later). → **Question:** What should the v1 seed contain — nothing but the table, a handful of common types, or a large catalogue?
-3. *Assumption:* **`Car.CarDetailsId`** is optional in schema, required in the Cars UI once types exist. Seq 11 cars already have denormalized make/model/year/engine. → **Question:** Required bind, optional bind, or drop denormalized fields later?
-4. *Assumption:* A **`Job`** applies to **many** types (junction `JobCarDetails`). A **`GarageJob`** is for one car (Seq 11/15) and also stores **`CarDetailsId`** snapshot for that car’s type. → **Question:** Job = many types (junction) vs one type? Garage job = snapshot of the car’s type, or its own list?
-5. *Assumption:* **`ItemOfWork.CarDetailsId`** is copied from the car’s binding at completion time (snapshot), not a live join. → **Question:** Snapshot or always follow the car?
-6. *Assumption:* **No Stuff page** for types in this Seq (seed + FKs only). → **Question:** Do you want a master/detail to edit the catalogue by hand?
+(none)
 
 ## Accepted defaults
 
-- Seq **12**; Depends-on **`cars`**. Restrict FKs; no cascade from type to cars. FastCarCheck is a different Seq. Home not in scope.
+- Seq **12**; Depends-on **`cars`**.
+- Grain includes **ModelNumber** (E60/E63). Image search on Cars stays `{Make} {ModelNumber}`.
+- Empty catalogue in v1; [car-details-seed.md](car-details-seed.md) encodes data in the repo later.
+- Keep Car scalars; JSON supplements. Optional `Car.CarDetailsId`.
+- Job = many types (junction). Garage job = one type snapshot. ItemOfWork = snapshot.
+- Stuff page **Car types**. Later stories hook here. No type photos.
 
 ## Implementation notes for an agent
 
-Do not implement while **Status** is `draft`.
-
-1. After answers: rewrite grain, seed, and cardinality; then `ready-for-agent`.
-2. Migration + `DbInitializer` seeds. `docs/data/schema.md`.
-3. Do not: VIN HTTP; Home; invent a huge unconfirmed catalogue.
+1. Migration: `CarDetails`, `JobCarDetails`, FKs on `Car` / `GarageJob` / `ItemOfWork`. Empty initializer.
+2. `CarDetailsCommands` + WinUI `CarTypesPage`. Optional type combo on car editor.
+3. `docs/data/schema.md`, `docs/screens/car-types.md`, Stuff in `docs/screens/shell.md`.
+4. Do not: seed a catalogue; FastCarCheck/mdecoder HTTP; Home; type image library; cascade from type.
