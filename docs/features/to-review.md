@@ -139,13 +139,16 @@ _(none)_
 
 - **Feature:** [docs/features/15-workjob-job-subset.md](15-workjob-job-subset.md)
 - **Seq:** 15
-- **Status:** in-progress
+- **Status:** ready-for-review
 - **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset`
-- **Last note:** Implementing definition WorkJob CRUD, copy-to-instance, and Home `!IsDefinition` filter.
+- **Last note:** Named WorkJobCommands tests passed (203 total). WinUI build succeeded. PR next.
 
 ### Work summary
 
-- Branch created from origin/main. Next: `IsDefinition` / `SortOrder` migration, `WorkJobCommands`, named tests, Home filter.
+- `WorkJobs` gained `IsDefinition` (default false) and `SortOrder` (default 0). Migration `20260921233755_AddWorkJobDefinition`. Existing Home Add rows stay instances.
+- `WorkJobCommands` now creates / lists / updates / deletes Job definition work jobs and their line items. Unknown job, blank title, unknown product, qty < 1, or a duplicate product does not write. Deleting a definition removes its items and leaves copied instances.
+- `CopyDefinitionsToInstancesAsync` clones all definitions or a chosen subset (fail the whole call on mixed, unknown, instance, duplicate, or foreign-job ids). Copies get new ids, `IsDefinition = false`, `SortOrder` 0, `CarId` null, and cloned items (skip a line if the product is gone). Empty definition set returns an empty list.
+- Home lists instances only (`!IsDefinition`). No new pages, Jobs editor, or Home Add change.
 
 ### Questions
 
@@ -153,11 +156,12 @@ _(none)_
 
 ### Deviations to scan
 
-_(none)_
+- [ ] Extended the existing `WorkJobCommands` type (it already had `TrySetCarIdAsync` from Seq 11) instead of adding a second command class.
+- [ ] SQLite cannot `ORDER BY CreatedAt.UtcDateTime` together with the `!IsDefinition` filter. Home and `ListInstancesAsync` load then sort in memory, same idea as ItemOfWork.
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
 ## 16-car-details-seed
 
