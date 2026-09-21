@@ -56,13 +56,13 @@ _(none)_
 
 - **Feature:** [docs/features/12-car-details.md](12-car-details.md)
 - **Seq:** 12
-- **Status:** ready-for-agent
-- **Change set:** none (spec only; not started)
-- **Last note:** Landed on main via merge-planning. Waits on **11-cars**. Filename is `12-car-details.md`.
+- **Status:** in-progress
+- **Change set:** branch `feature/12-car-details-Car-types`
+- **Last note:** Implementation started on `feature/12-car-details-Car-types`.
 
 ### Work summary
 
-- Spec only. Stuff → Car types, empty table, `JobCarDetails` junction. Not implemented.
+- Spec only until this branch lands code. Stuff → Car types, empty table, `JobCarDetails` junction. Not implemented.
 
 ### Questions
 
