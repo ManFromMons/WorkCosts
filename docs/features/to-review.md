@@ -14,11 +14,186 @@ Unchecked items need a human.
 
 Coder: when development is finished, set this heading **Status** to `ready-for-review` (not `done`). Fill **Work summary**, **Questions**, and **Deviations**, land this file on `main`, open the PR, then stop.
 
-Copy a new heading from `.cursor/skills/implement-feature/to-review-entry.md`.
+Copy a new heading from `.cursor/skills/implement-feature/to-review-entry.md`. New stories use **`## <seq>-<kebab>`** (example `## 11-cars`) and a **Seq** field that matches `docs/features/<seq>-<kebab>.md`.
 
 Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in-progress`, `blocked`, `resume`, `ready-for-review`) live only here.
 
 ## Entries
+
+## 11-cars
+
+- **Feature:** [docs/features/11-cars.md](11-cars.md)
+- **Seq:** 11
+- **Status:** ready-for-agent
+- **Change set:** none (spec only; not started)
+- **Last note:** Landed on main via merge-planning. Filename is `11-cars.md`.
+
+### Work summary
+
+- Spec only. Stuff → Cars CRUD, Add sheet, Restrict `CarId` FKs, soft-delete. Not implemented.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
+## 12-car-details
+
+- **Feature:** [docs/features/12-car-details.md](12-car-details.md)
+- **Seq:** 12
+- **Status:** ready-for-agent
+- **Change set:** none (spec only; not started)
+- **Last note:** Landed on main via merge-planning. Waits on **11-cars**. Filename is `12-car-details.md`.
+
+### Work summary
+
+- Spec only. Stuff → Car types, empty table, `JobCarDetails` junction. Not implemented.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
+## 13-car-vin-lookup
+
+- **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
+- **Seq:** 13
+- **Status:** ready-for-agent
+- **Change set:** none (spec only; not started)
+- **Last note:** Landed on main via merge-planning. Waits on **11-cars**. Filename is `13-car-vin-lookup.md`.
+
+### Work summary
+
+- Spec only. mdecoder VIN lookup, 30s poll, 2 min cap, BMW gate. Not implemented.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
+## 14-car-fastcarcheck
+
+- **Feature:** [docs/features/14-car-fastcarcheck.md](14-car-fastcarcheck.md)
+- **Seq:** 14
+- **Status:** draft
+- **Change set:** none
+- **Last note:** Landed on main via merge-planning. **Draft — resume later.** Filename is `14-car-fastcarcheck.md`.
+
+### Work summary
+
+- Spec intent only. UK FastCarCheck type lookup. Do not implement.
+
+### Questions
+
+_(parked until resume)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
+## 15-workjob-job-subset
+
+- **Feature:** [docs/features/15-workjob-job-subset.md](15-workjob-job-subset.md)
+- **Seq:** 15
+- **Status:** ready-for-agent
+- **Change set:** none (spec only; not started)
+- **Last note:** Landed on main via merge-planning. Depends-on **none**. Filename is `15-workjob-job-subset.md`.
+
+### Work summary
+
+- Spec only. Core definition CRUD + copy Job work-job subset to instances. No new UI. Not implemented.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
+## 16-car-details-seed
+
+- **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
+- **Seq:** 16
+- **Status:** ready-for-agent
+- **Change set:** none (spec only; not started)
+- **Last note:** Landed on main via merge-planning. Empty JSON loader first. Waits on **12-car-details**. Filename is `16-car-details-seed.md`.
+
+### Work summary
+
+- Spec only. `car-details.json` = `[]` plus DbInitializer hook. Not implemented.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
+
+## 17-item-of-work-ui
+
+- **Feature:** [docs/features/17-item-of-work-ui.md](17-item-of-work-ui.md)
+- **Seq:** 17
+- **Status:** draft
+- **Change set:** none
+- **Last note:** Landed on main via merge-planning. **Draft — refine later.** Filename is `17-item-of-work-ui.md`.
+
+### Work summary
+
+- Spec intent only. GarageJob collates copied work items; ItemOfWork is the completion event. Do not implement.
+
+### Questions
+
+_(parked until resume)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
 
 ## garage-job-interval-logic
 
