@@ -24,13 +24,13 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - **Feature:** [docs/features/11-cars.md](11-cars.md)
 - **Seq:** 11
-- **Status:** ready-for-agent
-- **Change set:** none (spec only; not started)
-- **Last note:** Landed on main via merge-planning. Filename is `11-cars.md`.
+- **Status:** in-progress
+- **Change set:** branch `feature/11-cars-Cars`
+- **Last note:** Implementation started on `feature/11-cars-Cars`.
 
 ### Work summary
 
-- Spec only. Stuff → Cars CRUD, Add sheet, Restrict `CarId` FKs, soft-delete. Not implemented.
+- Spec only until this branch lands code. Stuff → Cars, Add sheet, Restrict `CarId` FKs, soft-delete.
 
 ### Questions
 
