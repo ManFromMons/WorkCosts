@@ -238,8 +238,8 @@ Requires Node.js ≥ 22.13 and `CURSOR_API_KEY` (same key as headless `agent`; C
 | Panel | Reads | May change |
 | :--- | :--- | :--- |
 | Status | git branch, dirty/clean, `origin/main` vs `Planning`, next pickup | nothing |
-| Queue | `scripts/Get-FeatureQueue.ps1` | nothing (keys send chat prompts) |
-| Working | Feature branches, dirty story files, unfinished inbox/story status; newest activity first | nothing |
+| Queue | `scripts/Get-FeatureQueue.ps1`, then **inverted** (latest tree rows first; `?` Seq at the bottom) | nothing (keys send chat prompts) |
+| Working | Dirty story files and unfinished inbox/story status; newest activity first. `*` / cyan = current checkout, not Status. A leftover feature branch does not keep a story once inbox and story are both `done`. | nothing |
 | Story | `docs/features/<kebab>.md` (wrapped, j/k scroll, right scrollbar) | nothing |
 | Inbox | `git show origin/main:docs/features/to-review.md` | local buffer only until **L** |
 | Chat | SDK stream | files the **agent** writes (Agent mode) |
