@@ -139,9 +139,9 @@ _(none)_
 
 - **Feature:** [docs/features/15-workjob-job-subset.md](15-workjob-job-subset.md)
 - **Seq:** 15
-- **Status:** ready-for-review
+- **Status:** done
 - **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset` — [PR #17](https://github.com/ManFromMons/WorkCosts/pull/17)
-- **Last note:** Squash PR https://github.com/ManFromMons/WorkCosts/pull/17 opened. Do not merge until this heading is done.
+- **Last note:** Squash-merged to `main` as `4c5cd31` (#17). Delivery notes on `feature/15-workjob-job-subset-delivery`.
 
 ### Work summary
 
@@ -156,13 +156,13 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Extended the existing `WorkJobCommands` type (it already had `TrySetCarIdAsync` from Seq 11) instead of adding a second command class.
-- [ ] SQLite cannot `ORDER BY CreatedAt.UtcDateTime` together with the `!IsDefinition` filter. Home and `ListInstancesAsync` load then sort in memory, same idea as ItemOfWork.
+- [x] Extended the existing `WorkJobCommands` type (it already had `TrySetCarIdAsync` from Seq 11) instead of adding a second command class.
+- [x] SQLite cannot `ORDER BY CreatedAt.UtcDateTime` together with the `!IsDefinition` filter. Home and `ListInstancesAsync` load then sort in memory, same idea as ItemOfWork.
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 ## 16-car-details-seed
 
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
