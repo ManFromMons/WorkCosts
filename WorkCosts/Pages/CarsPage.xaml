@@ -127,14 +127,26 @@
                             </StackPanel>
                         </StackPanel>
 
-                        <TextBox x:Name="DetailNameBox" Header="Nickname" MaxLength="200" PlaceholderText="The daily" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailMakeBox" Header="Make" MaxLength="120" PlaceholderText="BMW" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailModelBox" Header="Model" MaxLength="120" PlaceholderText="545" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailModelNumberBox" Header="Model number" MaxLength="32" PlaceholderText="E60" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailEngineBox" Header="Engine type" MaxLength="200" PlaceholderText="4.4 V8" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailVrmBox" Header="Registration" MaxLength="16" PlaceholderText="AB12 CDE" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailYearBox" Header="Model year" MaxLength="4" PlaceholderText="2004" TextChanged="DetailField_Changed" />
-                        <TextBox x:Name="DetailVinBox" Header="VIN" MaxLength="17" TextChanged="DetailField_Changed" />
+                        <Grid ColumnSpacing="12" RowSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBox x:Name="DetailNameBox" Header="Nickname" MaxLength="200" PlaceholderText="The daily" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailMakeBox" Grid.Column="1" Header="Make" MaxLength="120" PlaceholderText="BMW" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailModelBox" Grid.Column="2" Header="Model" MaxLength="120" PlaceholderText="545" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailModelNumberBox" Grid.Row="1" Header="Model number" MaxLength="32" PlaceholderText="E60" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailEngineBox" Grid.Row="1" Grid.Column="1" Header="Engine type" MaxLength="200" PlaceholderText="4.4 V8" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailVrmBox" Grid.Row="1" Grid.Column="2" Header="Registration" MaxLength="16" PlaceholderText="AB12 CDE" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailYearBox" Grid.Row="2" Header="Model year" MaxLength="4" PlaceholderText="2004" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailVinBox" Grid.Row="2" Grid.Column="1" Header="VIN" MaxLength="17" TextChanged="DetailField_Changed" />
+                        </Grid>
                         <TextBlock
                             x:Name="DetailStatus"
                             Opacity="0.85"
