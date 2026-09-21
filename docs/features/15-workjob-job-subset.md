@@ -3,8 +3,8 @@
 - **Id:** `docs/features/15-workjob-job-subset.md`
 - **Seq:** 15
 - **Depends-on:** none
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/17
 - **Windows:** Core + tests. **No new UI.** One existing-query filter on Home so definition rows never appear as cards.
 - **Related screens:** none new. `docs/screens/home.md` — cards remain **instance** work jobs. `docs/screens/jobs.md` — no definition editor on this Seq.
 - **Related code:** `WorkJob`, `WorkJobItem`, `Job`, `WorkCostsDbContext`, `HomePage.LoadAsync`
@@ -127,6 +127,8 @@ This command is the Core primitive later UI will call: **pick a Job → copy its
 ## Accepted defaults
 
 - Seq **15**; Depends-on **`none`**. Same `WorkJobs` table + `IsDefinition`. Independent clones. No garage-job FK. No new UI. Optional subset ids on copy. `CarId` not set by copy. Home Add unchanged.
+- Definition CRUD, items, and copy live on the existing `WorkJobCommands` type (`TrySetCarIdAsync` was already there).
+- Home and `ListInstancesAsync` load then sort instances in memory; SQLite cannot `ORDER BY CreatedAt.UtcDateTime` with the `!IsDefinition` filter.
 
 ## Implementation notes for an agent
 
