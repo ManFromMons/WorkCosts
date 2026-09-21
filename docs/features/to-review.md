@@ -66,9 +66,9 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - **Feature:** [docs/features/12-car-details.md](12-car-details.md)
 - **Seq:** 12
-- **Status:** ready-for-review
+- **Status:** done
 - **Change set:** branch `feature/12-car-details-Car-types` — [https://github.com/ManFromMons/WorkCosts/pull/14](https://github.com/ManFromMons/WorkCosts/pull/14)
-- **Last note:** Ready for review. Squash PR [https://github.com/ManFromMons/WorkCosts/pull/14](https://github.com/ManFromMons/WorkCosts/pull/14).
+- **Last note:** Squash-merged to `main` as `a230139` (#14). Feature file Status is `done`.
 
 
 
