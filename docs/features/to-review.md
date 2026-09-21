@@ -141,7 +141,7 @@ _(none)_
 - **Seq:** 15
 - **Status:** done
 - **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset` — [PR #17](https://github.com/ManFromMons/WorkCosts/pull/17)
-- **Last note:** Squash-merged to `main` as `4c5cd31` (#17). Delivery notes on `feature/15-workjob-job-subset-delivery`.
+- **Last note:** Squash-merged to `main` as `4c5cd31` (#17). Delivery notes squash-merged as `08647ef` (#18). Feature file Status is `done`.
 
 ### Work summary
 
