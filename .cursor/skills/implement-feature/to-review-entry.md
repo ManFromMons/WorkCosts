@@ -1,6 +1,7 @@
-## &lt;kebab-case-name&gt;
+## &lt;seq&gt;-&lt;kebab-case-name&gt;
 
-- **Feature:** [docs/features/&lt;kebab-case-name&gt;.md](&lt;kebab-case-name&gt;.md)
+- **Feature:** [docs/features/&lt;seq&gt;-&lt;kebab-case-name&gt;.md](&lt;seq&gt;-&lt;kebab-case-name&gt;.md)
+- **Seq:** &lt;integer, matches the filename prefix and the story header&gt;
 - **Status:** in-progress | blocked | resume | ready-for-review | done
 - **Change set:** branch `feature/&lt;feature_code&gt;-&lt;Title&gt;` — PR url (open the PR at `ready-for-review`)
 - **Last note:** one line. Not a substitute for **Work summary**.

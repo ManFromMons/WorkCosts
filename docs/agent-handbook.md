@@ -117,7 +117,7 @@ One file per surface. Change the matching file when you change that UI.
 
 | Path | Role |
 | :--- | :--- |
-| `docs/features/<kebab>.md` | **Source of truth** for one story. Template: `.cursor/skills/plan-feature/template.md`. |
+| `docs/features/<kebab>.md` | **Source of truth** for one story. New stories are `docs/features/<seq>-<kebab>.md` (e.g. `11-cars.md`). Template: `.cursor/skills/plan-feature/template.md`. |
 | `docs/features/source-<host>.md` | One supplier website. Template: `.cursor/skills/add-product-source/template.md`. Needs **≥3** URLs, each with user-confirmed Name and GBP price. |
 | `docs/features/<kebab>-delivery.md` | Short “what landed” after a PR exists. Template: `.cursor/skills/implement-feature/delivery-template.md`. Not a diary. |
 | `docs/features/to-review.md` | Human inbox. **Canonical copy is on `main` only.** Read with `git show origin/main:docs/features/to-review.md`. |

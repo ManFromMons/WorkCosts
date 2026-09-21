@@ -7,7 +7,9 @@ description: Plan a Will I DIY? feature into a source-of-truth markdown file und
 
 Planning produces a **feature**, not a chat summary. The source of truth is one file:
 
-`docs/features/<kebab-case-name>.md`
+    `docs/features/<seq>-<kebab-case-name>.md`
+
+The integer **Seq** is the filename prefix (`11-cars.md`). Existing stories that landed without a prefix keep their names. New stories always include Seq in the filename and in the **Id** header. **Depends-on** uses those same ids (`11-cars`, or an unprefixed older id such as `garage-job-interval-logic`).
 
 If the user wants a **new supplier website**, do not fold it into a mega-queue file. Follow `.cursor/skills/add-product-source/confirm-samples.md`: propose Name and GBP price from the page, **wait for the user to confirm or correct**, and collect **at least three** product URLs on that host (confirm each page before the next). Then copy `.cursor/skills/add-product-source/template.md` to `docs/features/source-<host>.md`. The kebab `<host>` is the host family (`halfords`, `eurocarparts`). Leave **Status** `draft` until all three samples are confirmed. Implementation is skill `add-product-source` / invoke `start-add-source` on the story id, not this skill. Do not treat an unconfirmed scrape as Expected Name or UnitPrice.
 
@@ -16,7 +18,7 @@ Assign **Seq** as one higher than the current max Seq on `origin/main` and on th
 ## Workflow
 
 1. Read `AGENTS.md`, `docs/agent-handbook.md` if you need the file/skill map, `docs/layout-grammar.md`, and any screen/parsing docs the feature touches. Search the codebase for existing types, controls, and services.
-2. Create or update `docs/features/<name>.md`. Fill every section in the template. Name files after the user-facing feature (`paste-html`, `zip-export-import`), not tickets.
+2. Create or update `docs/features/<seq>-<name>.md`. Fill every section in the template. Name files `<seq>-` plus the user-facing kebab (`11-cars`, `15-workjob-job-subset`), not tickets.
 3. **Assumptions become questions.** If you assumed a control, class, merge rule, or shortcut, write a numbered question that states the assumption. Stop and wait for answers before treating the spec as done. Supplier sources: stop after **each** page’s Name/price proposal until the user confirms (see confirm-samples.md); do not write Expected fields from an unconfirmed scrape.
 4. After answers, rewrite the feature file. Remove resolved questions. List only leftover mechanical defaults under **Accepted defaults**.
 5. Completeness bar: another agent could implement from this file **with no further questions** and get a predictable, acceptable result.
