@@ -16,6 +16,7 @@ public static class ItemOfWorkCommands
         Guid garageJobId,
         DateTimeOffset occurredAt,
         int? odometerMiles,
+        Guid? carId = null,
         CancellationToken cancellationToken = default)
     {
         if (odometerMiles < 0)
@@ -28,11 +29,25 @@ public static class ItemOfWorkCommands
             return null;
         }
 
+        Guid? snapshotTypeId = null;
+        if (carId is Guid id)
+        {
+            var car = await db.Cars.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            if (car is null)
+            {
+                return null;
+            }
+
+            snapshotTypeId = car.CarDetailsId;
+        }
+
         var entity = new ItemOfWork
         {
             GarageJobId = garageJobId,
             OccurredAt = occurredAt,
             OdometerMiles = odometerMiles,
+            CarId = carId,
+            CarDetailsId = snapshotTypeId,
         };
         db.ItemsOfWork.Add(entity);
         await db.SaveChangesAsync(cancellationToken);
@@ -83,5 +98,27 @@ public static class ItemOfWorkCommands
         db.ItemsOfWork.Remove(entity);
         await db.SaveChangesAsync(cancellationToken);
         return ItemOfWorkDeleteResult.Success;
+    }
+
+    public static async Task<bool> TrySetCarIdAsync(
+        WorkCostsDbContext db,
+        Guid itemId,
+        Guid? carId,
+        CancellationToken cancellationToken = default)
+    {
+        var entity = await db.ItemsOfWork.FirstOrDefaultAsync(i => i.Id == itemId, cancellationToken);
+        if (entity is null)
+        {
+            return false;
+        }
+
+        if (carId is Guid id && !await db.Cars.AnyAsync(c => c.Id == id, cancellationToken))
+        {
+            return false;
+        }
+
+        entity.CarId = carId;
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
     }
 }

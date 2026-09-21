@@ -7,7 +7,7 @@ description: Implement a Will I DIY? feature from a ready-for-agent spec under d
 
 Coding consumes a **feature file**. It does not invent product behaviour from chat.
 
-Source of truth: `docs/features/<kebab-case-name>.md`  
+Source of truth: `docs/features/<kebab-case-name>.md` (new stories are `docs/features/<seq>-<kebab>.md`)  
 Inbox (work summary, questions, deviations, status): `docs/features/to-review.md` **on `main`**  
 Land inbox edits with skill `update-to-review` and the script below. Never commit that file on this branch.  
 Entry shape: [to-review-entry.md](to-review-entry.md)

@@ -117,7 +117,7 @@ One file per surface. Change the matching file when you change that UI.
 
 | Path | Role |
 | :--- | :--- |
-| `docs/features/<kebab>.md` | **Source of truth** for one story. Template: `.cursor/skills/plan-feature/template.md`. |
+| `docs/features/<kebab>.md` | **Source of truth** for one story. New stories are `docs/features/<seq>-<kebab>.md` (e.g. `11-cars.md`). Template: `.cursor/skills/plan-feature/template.md`. |
 | `docs/features/source-<host>.md` | One supplier website. Template: `.cursor/skills/add-product-source/template.md`. Needs **≥3** URLs, each with user-confirmed Name and GBP price. |
 | `docs/features/<kebab>-delivery.md` | Short “what landed” after a PR exists. Template: `.cursor/skills/implement-feature/delivery-template.md`. Not a diary. |
 | `docs/features/to-review.md` | Human inbox. **Canonical copy is on `main` only.** Read with `git show origin/main:docs/features/to-review.md`. |
@@ -238,8 +238,8 @@ Requires Node.js ≥ 22.13 and `CURSOR_API_KEY` (same key as headless `agent`; C
 | Panel | Reads | May change |
 | :--- | :--- | :--- |
 | Status | git branch, dirty/clean, `origin/main` vs `Planning`, next pickup | nothing |
-| Queue | `scripts/Get-FeatureQueue.ps1` | nothing (keys send chat prompts) |
-| Working | Feature branches, dirty story files, unfinished inbox/story status; newest activity first | nothing |
+| Queue | `scripts/Get-FeatureQueue.ps1`, then **inverted** (latest tree rows first; `?` Seq at the bottom) | nothing (keys send chat prompts) |
+| Working | Dirty story files and unfinished inbox/story status; newest activity first. `*` / cyan = current checkout, not Status. A leftover feature branch does not keep a story once inbox and story are both `done`. | nothing |
 | Story | `docs/features/<kebab>.md` (wrapped, j/k scroll, right scrollbar) | nothing |
 | Inbox | `git show origin/main:docs/features/to-review.md` | local buffer only until **L** |
 | Chat | SDK stream | files the **agent** writes (Agent mode) |

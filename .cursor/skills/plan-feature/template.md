@@ -1,7 +1,7 @@
 # Feature: &lt;Title&gt;
 
-- **Id:** `docs/features/<kebab-case-name>.md`
-- **Seq:** &lt;integer, assigned by plan-feature, never reuse&gt;
+- **Id:** `docs/features/<seq>-<kebab-case-name>.md`
+- **Seq:** &lt;integer, assigned by plan-feature, never reuse; same integer as the filename prefix&gt;
 - **Depends-on:** none | `kebab-id`, `other-id`
 - **Status:** draft | ready-for-agent | done
   (`blocked` / `in-progress` / `resume` / `ready-for-review` are **not** feature Status; they belong in `docs/features/to-review.md` on **main**. )

@@ -113,7 +113,7 @@ export function relativeTime(atMs: number, nowMs = Date.now()): string {
 const ACTIVE_INBOX = new Set(["in-progress", "blocked", "resume", "ready-for-review"]);
 
 export function isActiveWork(item: WorkItem, storyStatus: string | undefined, inboxStatus: string | undefined): boolean {
-  if (item.branch || item.current || item.source === "dirty") {
+  if (item.source === "dirty") {
     return true;
   }
   if (inboxStatus && ACTIVE_INBOX.has(inboxStatus)) {

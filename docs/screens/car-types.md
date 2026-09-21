@@ -19,4 +19,4 @@ Compact: **stack**. Add is a **sheet**. No WebView.
 - Delete **Restrict** if a car, job, garage job, or completion references the type.
 - Unsaved changes: same as Jobs/Cars.
 
-Spec: `docs/features/car-details.md`. Later: `docs/features/car-details-seed.md`, `docs/features/car-fastcarcheck.md`.
+Spec: `docs/features/12-car-details.md`. Later: `docs/features/16-car-details-seed.md`, `docs/features/14-car-fastcarcheck.md`.

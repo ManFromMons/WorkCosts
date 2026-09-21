@@ -101,6 +101,131 @@ namespace WorkCosts.Data.Migrations
                     b.ToTable("CachedWebPages");
                 });
 
+            modelBuilder.Entity("WorkCosts.Models.Car", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CarDetailsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EngineType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ImageContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ImageRelativePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Make")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModelNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VehicleOrderJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Vin")
+                        .IsRequired()
+                        .HasMaxLength(17)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Vrm")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("VrmKey")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CarDetailsId");
+
+                    b.HasIndex("VrmKey")
+                        .IsUnique()
+                        .HasFilter("\"DeletedAt\" IS NULL");
+
+                    b.ToTable("Cars", (string)null);
+                });
+
+            modelBuilder.Entity("WorkCosts.Models.CarDetails", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EngineType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Make")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModelNumber")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("TypeKey")
+                        .IsRequired()
+                        .HasMaxLength(400)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TypeKey")
+                        .IsUnique();
+
+                    b.ToTable("CarDetails", (string)null);
+                });
+
             modelBuilder.Entity("WorkCosts.Models.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -124,6 +249,12 @@ namespace WorkCosts.Data.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CarDetailsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CarId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Description")
@@ -164,6 +295,10 @@ namespace WorkCosts.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CarDetailsId");
+
+                    b.HasIndex("CarId");
 
                     b.ToTable("GarageJobs");
                 });
@@ -241,6 +376,12 @@ namespace WorkCosts.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CarDetailsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CarId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("GarageJobId")
                         .HasColumnType("TEXT");
 
@@ -252,9 +393,13 @@ namespace WorkCosts.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CarDetailsId");
+
+                    b.HasIndex("CarId");
+
                     b.HasIndex("GarageJobId", "OccurredAt");
 
-                    b.ToTable("ItemsOfWork");
+                    b.ToTable("ItemsOfWork", (string)null);
                 });
 
             modelBuilder.Entity("WorkCosts.Models.Job", b =>
@@ -283,6 +428,24 @@ namespace WorkCosts.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Jobs");
+                });
+
+            modelBuilder.Entity("WorkCosts.Models.JobCarDetails", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CarDetailsId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("JobId", "CarDetailsId");
+
+                    b.HasIndex("CarDetailsId");
+
+                    b.ToTable("JobCarDetails", (string)null);
                 });
 
             modelBuilder.Entity("WorkCosts.Models.Product", b =>
@@ -409,6 +572,9 @@ namespace WorkCosts.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("CarId")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -421,6 +587,8 @@ namespace WorkCosts.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CarId");
 
                     b.HasIndex("JobId");
 
@@ -454,6 +622,33 @@ namespace WorkCosts.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("WorkJobItems");
+                });
+
+            modelBuilder.Entity("WorkCosts.Models.Car", b =>
+                {
+                    b.HasOne("WorkCosts.Models.CarDetails", "CarDetails")
+                        .WithMany()
+                        .HasForeignKey("CarDetailsId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("CarDetails");
+                });
+
+            modelBuilder.Entity("WorkCosts.Models.GarageJob", b =>
+                {
+                    b.HasOne("WorkCosts.Models.CarDetails", "CarDetails")
+                        .WithMany()
+                        .HasForeignKey("CarDetailsId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("WorkCosts.Models.Car", "Car")
+                        .WithMany()
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Car");
+
+                    b.Navigation("CarDetails");
                 });
 
             modelBuilder.Entity("WorkCosts.Models.GarageJobReferencedJob", b =>
@@ -507,13 +702,46 @@ namespace WorkCosts.Data.Migrations
 
             modelBuilder.Entity("WorkCosts.Models.ItemOfWork", b =>
                 {
+                    b.HasOne("WorkCosts.Models.CarDetails", "CarDetails")
+                        .WithMany()
+                        .HasForeignKey("CarDetailsId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("WorkCosts.Models.Car", "Car")
+                        .WithMany()
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("WorkCosts.Models.GarageJob", "GarageJob")
                         .WithMany("ItemsOfWork")
                         .HasForeignKey("GarageJobId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Car");
+
+                    b.Navigation("CarDetails");
+
                     b.Navigation("GarageJob");
+                });
+
+            modelBuilder.Entity("WorkCosts.Models.JobCarDetails", b =>
+                {
+                    b.HasOne("WorkCosts.Models.CarDetails", "CarDetails")
+                        .WithMany("JobLinks")
+                        .HasForeignKey("CarDetailsId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WorkCosts.Models.Job", "Job")
+                        .WithMany("CarDetailsLinks")
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CarDetails");
+
+                    b.Navigation("Job");
                 });
 
             modelBuilder.Entity("WorkCosts.Models.Product", b =>
@@ -567,11 +795,18 @@ namespace WorkCosts.Data.Migrations
 
             modelBuilder.Entity("WorkCosts.Models.WorkJob", b =>
                 {
+                    b.HasOne("WorkCosts.Models.Car", "Car")
+                        .WithMany()
+                        .HasForeignKey("CarId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("WorkCosts.Models.Job", "Job")
                         .WithMany("WorkJobs")
                         .HasForeignKey("JobId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Car");
 
                     b.Navigation("Job");
                 });
@@ -595,6 +830,11 @@ namespace WorkCosts.Data.Migrations
                     b.Navigation("WorkJob");
                 });
 
+            modelBuilder.Entity("WorkCosts.Models.CarDetails", b =>
+                {
+                    b.Navigation("JobLinks");
+                });
+
             modelBuilder.Entity("WorkCosts.Models.Category", b =>
                 {
                     b.Navigation("Products");
@@ -613,6 +853,8 @@ namespace WorkCosts.Data.Migrations
 
             modelBuilder.Entity("WorkCosts.Models.Job", b =>
                 {
+                    b.Navigation("CarDetailsLinks");
+
                     b.Navigation("GarageJobReferences");
 
                     b.Navigation("ProductJobs");

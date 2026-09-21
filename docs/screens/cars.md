@@ -13,8 +13,9 @@ Compact: **stack**. Add stays a **sheet**. Never host WebView2 in a ContentDialo
 
 ## Behaviour
 
-- All identity fields + image required. VRM unique among active cars. `VehicleOrderJson` optional.
+- All identity fields + image required. VRM unique among active cars. `VehicleOrderJson` optional. Optional **car type** combo (search by make / model-number); does not clear nickname or scalars.
+- **Lookup** next to VIN runs mdecoder when the VIN is set and the car looks BMW (`Make` BMW or VIN `WBA`/`WBS`/`WBY`/`5UX`/`5YM`). Status stays on the sheet; cancel stops polling and does not discard the form. Nickname is never overwritten.
 - Delete is **soft-delete** (`DeletedAt` + `UpdatedAt`); keep row, FKs, and photo file.
 - Unsaved changes: same prompt as Add Product / Jobs.
 
-Spec: `docs/features/cars.md`.
+Spec: `docs/features/11-cars.md`.

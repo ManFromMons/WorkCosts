@@ -81,10 +81,10 @@ Name:
 
 `feature/<feature_code>-<Title>`
 
-- **`<feature_code>`** is the spec id: the kebab name of `docs/features/<feature_code>.md` (`paste-html`, `zip-export-import`), or a GNOME playbook slice id (`gnome-scaffold`).
+- **`<feature_code>`** is the spec id: the kebab name of `docs/features/<feature_code>.md` (`paste-html`, `11-cars`, `zip-export-import`), or a GNOME playbook slice id (`gnome-scaffold`). New stories use a **Seq prefix** (`11-cars.md`).
 - **`<Title>`** is a short human title for the feature. Use hyphens instead of spaces (git-safe). Do not use slashes in the title.
 
-Examples: `feature/paste-html-Paste-HTML`, `feature/source-halfords-Halfords`, `feature/zip-export-import-Zip-export-and-import`, `feature/gnome-scaffold-GNOME-scaffold`.
+Examples: `feature/paste-html-Paste-HTML`, `feature/11-cars-Cars`, `feature/source-halfords-Halfords`, `feature/zip-export-import-Zip-export-and-import`, `feature/gnome-scaffold-GNOME-scaffold`.
 
 Create the branch from current `origin/main`. Do not implement on `Planning` or commit product WIP on `main`.
 

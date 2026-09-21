@@ -6,7 +6,8 @@
 | :--- | :--- | :--- |
 | **`Job`** | `Jobs` | Sub-work / job-type template (Jobs page): garage £, duration, `ProductJobs`, feeds **Work Jobs** on Home. |
 | **`GarageJob`** | `GarageJobs` | Larger planning definition: icon, target, description, work duration, repeat rules, extra required products, optional ordered references to **`Job`** rows, optional `IntervalAnchorDate`. |
-| **`ItemOfWork`** | `ItemsOfWork` | Completion of a garage job (`OccurredAt`, optional odometer **miles**). FK Restrict to `GarageJob`. |
+| **`ItemOfWork`** | `ItemsOfWork` | Completion of a garage job (`OccurredAt`, optional odometer **miles**, optional `CarId`). FK Restrict to `GarageJob` and to `Car`. |
+| **`Car`** | `Cars` | The user’s vehicle (nickname, make, model, model-number, engine, VRM, year, VIN, photo). Soft-delete only. |
 
 ```
 GarageJob
@@ -15,6 +16,7 @@ GarageJob
 ├── GarageJobRequiredProducts → Product (planning-only catalogue lines)
 ├── GarageJobReferencedJobs → Job (ordered sub-work types)
 ├── ItemsOfWork (completions; latest OccurredAt wins)
+├── CarId (optional FK → Cars, Restrict; null until a car is chosen)
 └── icon file: {dataRoot}/icons/garage-jobs/{garageJobId}.{ext}
 ```
 
@@ -53,9 +55,10 @@ Include `icons/garage-jobs/` blobs keyed by `GarageJob` id. Catalogue XML should
 
 - Delete **`GarageJob`**: blocked while `ItemsOfWork` exist (`HasCompletions`). Otherwise cascades conditions, required products, referenced-job links; removes icon file; **does not** delete referenced **`Job`** templates.
 - Delete **`ItemOfWork`**: allowed (`ItemOfWorkCommands.TryDeleteAsync`).
+- Soft-delete **`Car`**: sets `DeletedAt` and `UpdatedAt`. Does not cascade. `CarId` on garage jobs, work jobs, and items of work stays. Hard delete of a referenced car is rejected (`Restrict`).
 - Delete **`Job`**: removes `GarageJobReferencedJobs` rows (cascade); does **not** delete parent **`GarageJob`**; still blocked when **`WorkJobs`** exist (unchanged).
 - Delete **`Product`**: `ProductCommands.DeleteAsync` removes `GarageJobRequiredProducts` for that product.
 
 ## Commands
 
-`GarageJobCommands` in Core: CRUD scalars including `IntervalAnchorDate`, replace repeat conditions, required products, referenced jobs, icon set/clear, delete. `ItemOfWorkCommands`: create / list / latest / delete. Pass app **data root** (same folder family as `workcosts.db`) for icon file I/O. `GarageJobDueEvaluator` and `GarageJobRollupCalculator` are static helpers (no DI).
+`GarageJobCommands` in Core: CRUD scalars including `IntervalAnchorDate` and optional `CarId` (`setCarId`), replace repeat conditions, required products, referenced jobs, icon set/clear, delete. `ItemOfWorkCommands`: create / list / latest / delete, optional `CarId`. Pass app **data root** (same folder family as `workcosts.db`) for icon file I/O. `GarageJobDueEvaluator` and `GarageJobRollupCalculator` are static helpers (no DI).

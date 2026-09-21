@@ -23,6 +23,9 @@ public class WorkCostsDbContext : DbContext
     public DbSet<GarageJobRequiredProduct> GarageJobRequiredProducts => Set<GarageJobRequiredProduct>();
     public DbSet<GarageJobReferencedJob> GarageJobReferencedJobs => Set<GarageJobReferencedJob>();
     public DbSet<ItemOfWork> ItemsOfWork => Set<ItemOfWork>();
+    public DbSet<Car> Cars => Set<Car>();
+    public DbSet<CarDetails> CarDetails => Set<CarDetails>();
+    public DbSet<JobCarDetails> JobCarDetails => Set<JobCarDetails>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -99,6 +102,10 @@ public class WorkCostsDbContext : DbContext
                 .WithMany(x => x.WorkJobs)
                 .HasForeignKey(x => x.JobId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Car)
+                .WithMany()
+                .HasForeignKey(x => x.CarId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<WorkJobItem>(e =>
@@ -147,6 +154,64 @@ public class WorkCostsDbContext : DbContext
             e.Property(x => x.IconRelativePath).HasMaxLength(500);
             e.Property(x => x.IconContentType).HasMaxLength(100);
             e.Property(x => x.IntervalAnchorDate);
+            e.HasOne(x => x.Car)
+                .WithMany()
+                .HasForeignKey(x => x.CarId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CarDetails)
+                .WithMany()
+                .HasForeignKey(x => x.CarDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CarDetails>(e =>
+        {
+            e.ToTable("CarDetails");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Make).HasMaxLength(120).IsRequired();
+            e.Property(x => x.Model).HasMaxLength(120).IsRequired();
+            e.Property(x => x.ModelNumber).HasMaxLength(32).IsRequired();
+            e.Property(x => x.EngineType).HasMaxLength(200).IsRequired();
+            e.Property(x => x.TypeKey).HasMaxLength(400).IsRequired();
+            e.HasIndex(x => x.TypeKey).IsUnique();
+        });
+
+        modelBuilder.Entity<JobCarDetails>(e =>
+        {
+            e.ToTable("JobCarDetails");
+            e.HasKey(x => new { x.JobId, x.CarDetailsId });
+            e.HasOne(x => x.Job)
+                .WithMany(x => x.CarDetailsLinks)
+                .HasForeignKey(x => x.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.CarDetails)
+                .WithMany(x => x.JobLinks)
+                .HasForeignKey(x => x.CarDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Car>(e =>
+        {
+            e.ToTable("Cars");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Name).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Make).HasMaxLength(120).IsRequired();
+            e.Property(x => x.Model).HasMaxLength(120).IsRequired();
+            e.Property(x => x.ModelNumber).HasMaxLength(32).IsRequired();
+            e.Property(x => x.EngineType).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Vrm).HasMaxLength(16).IsRequired();
+            e.Property(x => x.VrmKey).HasMaxLength(16).IsRequired();
+            e.Property(x => x.Vin).HasMaxLength(17).IsRequired();
+            e.Property(x => x.ImageRelativePath).HasMaxLength(500).IsRequired();
+            e.Property(x => x.ImageContentType).HasMaxLength(100).IsRequired();
+            e.Property(x => x.VehicleOrderJson).HasColumnType("TEXT");
+            e.HasIndex(x => x.VrmKey)
+                .IsUnique()
+                .HasFilter("\"DeletedAt\" IS NULL");
+            e.HasOne(x => x.CarDetails)
+                .WithMany()
+                .HasForeignKey(x => x.CarDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ItemOfWork>(e =>
@@ -156,6 +221,14 @@ public class WorkCostsDbContext : DbContext
             e.HasOne(x => x.GarageJob)
                 .WithMany(x => x.ItemsOfWork)
                 .HasForeignKey(x => x.GarageJobId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Car)
+                .WithMany()
+                .HasForeignKey(x => x.CarId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CarDetails)
+                .WithMany()
+                .HasForeignKey(x => x.CarDetailsId)
                 .OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.GarageJobId, x.OccurredAt });
         });
