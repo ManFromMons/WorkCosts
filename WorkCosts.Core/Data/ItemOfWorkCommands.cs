@@ -29,9 +29,16 @@ public static class ItemOfWorkCommands
             return null;
         }
 
-        if (carId is Guid id && !await db.Cars.AnyAsync(c => c.Id == id, cancellationToken))
+        Guid? snapshotTypeId = null;
+        if (carId is Guid id)
         {
-            return null;
+            var car = await db.Cars.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
+            if (car is null)
+            {
+                return null;
+            }
+
+            snapshotTypeId = car.CarDetailsId;
         }
 
         var entity = new ItemOfWork
@@ -40,6 +47,7 @@ public static class ItemOfWorkCommands
             OccurredAt = occurredAt,
             OdometerMiles = odometerMiles,
             CarId = carId,
+            CarDetailsId = snapshotTypeId,
         };
         db.ItemsOfWork.Add(entity);
         await db.SaveChangesAsync(cancellationToken);

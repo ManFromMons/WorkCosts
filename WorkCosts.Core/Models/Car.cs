@@ -18,6 +18,8 @@ public class Car
     public string ImageRelativePath { get; set; } = string.Empty;
     public string ImageContentType { get; set; } = string.Empty;
     public string VehicleOrderJson { get; set; } = string.Empty;
+    public Guid? CarDetailsId { get; set; }
+    public CarDetails? CarDetails { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
 }

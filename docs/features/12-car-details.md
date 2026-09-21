@@ -121,3 +121,4 @@ Unique among types: normalized **Make + ModelNumber + Year + EngineType** (case-
 2. `CarDetailsCommands` + WinUI `CarTypesPage`. Optional type combo on car editor.
 3. `docs/data/schema.md`, `docs/screens/car-types.md`, Stuff in `docs/screens/shell.md`.
 4. Do not: seed a catalogue; FastCarCheck/mdecoder HTTP; Home; type image library; cascade from type.
+5. Unique type is stored as `TypeKey` (uppercase `Make|ModelNumber|Year|EngineType`), same idea as `Car.VrmKey`. Job page has no applies-to-types UI; Core `ReplaceJobCarDetailsAsync` only.

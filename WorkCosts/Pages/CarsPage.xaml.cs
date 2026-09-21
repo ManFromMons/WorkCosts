@@ -13,6 +13,7 @@ namespace WorkCosts.Pages;
 public sealed partial class CarsPage : Page, IUnsavedChangesSource
 {
     private readonly List<CarRow> _rows = [];
+    private readonly List<TypePick> _typePicks = [];
     private Car? _loadedCar;
     private byte[]? _detailReplacement;
     private string? _detailReplacementType;
@@ -111,6 +112,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
     private async Task LoadAsync(Guid? selectId)
     {
         await using var db = App.Database.CreateContext();
+        await LoadTypePicksAsync(db);
         var cars = await CarCommands.ListActiveAsync(db);
         var rows = new List<CarRow>();
         foreach (var car in cars)
@@ -245,6 +247,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         DetailVrmBox.Text = car.Vrm;
         DetailYearBox.Text = car.Year.ToString(CultureInfo.InvariantCulture);
         DetailVinBox.Text = car.Vin;
+        SelectType(DetailTypeBox, car.CarDetailsId);
         _suppressFields = false;
         SetStatus(DetailStatus, null);
         UpdateDetailSave();
@@ -326,6 +329,18 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
     private async void AddPick_Click(object sender, RoutedEventArgs e) =>
         await PickFileAsync(applyToAdd: true, AddStatus);
 
+    private void DetailType_Changed(object sender, SelectionChangedEventArgs e)
+    {
+        if (_suppressFields)
+        {
+            return;
+        }
+
+        UpdateDetailSave();
+    }
+
+    private void AddType_Changed(object sender, SelectionChangedEventArgs e) => UpdateAddSave();
+
     private void DetailField_Changed(object sender, TextChangedEventArgs e)
     {
         if (_suppressFields)
@@ -345,7 +360,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        if (!TryRead(DetailNameBox, DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailEngineBox, DetailVrmBox, DetailYearBox, DetailVinBox, _loadedCar.VehicleOrderJson, out var input, out var error))
+        if (!TryRead(DetailNameBox, DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailEngineBox, DetailVrmBox, DetailYearBox, DetailVinBox, _loadedCar.VehicleOrderJson, SelectedTypeId(DetailTypeBox), out var input, out var error))
         {
             SetStatus(DetailStatus, error);
             return false;
@@ -401,7 +416,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        if (!TryRead(AddNameBox, AddMakeBox, AddModelBox, AddModelNumberBox, AddEngineBox, AddVrmBox, AddYearBox, AddVinBox, string.Empty, out var input, out var error))
+        if (!TryRead(AddNameBox, AddMakeBox, AddModelBox, AddModelNumberBox, AddEngineBox, AddVrmBox, AddYearBox, AddVinBox, string.Empty, SelectedTypeId(AddTypeBox), out var input, out var error))
         {
             SetStatus(AddStatus, error);
             return false;
@@ -577,6 +592,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         AddVrmBox.Text = string.Empty;
         AddYearBox.Text = string.Empty;
         AddVinBox.Text = string.Empty;
+        SelectType(AddTypeBox, null);
         SetStatus(AddStatus, null);
         UpdateAddSave();
     }
@@ -590,7 +606,8 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         || HasText(AddEngineBox)
         || HasText(AddVrmBox)
         || HasText(AddYearBox)
-        || HasText(AddVinBox);
+        || HasText(AddVinBox)
+        || SelectedTypeId(AddTypeBox) is not null;
 
     private bool IsDetailDirty()
     {
@@ -607,7 +624,8 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             || DetailEngineBox.Text.Trim() != _loadedCar.EngineType
             || DetailVrmBox.Text.Trim() != _loadedCar.Vrm
             || DetailYearBox.Text.Trim() != _loadedCar.Year.ToString(CultureInfo.InvariantCulture)
-            || DetailVinBox.Text.Trim() != _loadedCar.Vin;
+            || DetailVinBox.Text.Trim() != _loadedCar.Vin
+            || SelectedTypeId(DetailTypeBox) != _loadedCar.CarDetailsId;
     }
 
     private void UpdateDetailSave() =>
@@ -630,7 +648,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         TextBox year,
         TextBox vin,
         bool hasImage) =>
-        TryRead(name, make, model, modelNumber, engine, vrm, year, vin, string.Empty, out _, out _) && hasImage;
+        TryRead(name, make, model, modelNumber, engine, vrm, year, vin, string.Empty, null, out _, out _) && hasImage;
 
     private static bool TryRead(
         TextBox name,
@@ -642,6 +660,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         TextBox yearBox,
         TextBox vin,
         string vehicleOrderJson,
+        Guid? carDetailsId,
         out CarInput input,
         out string? error)
     {
@@ -654,7 +673,8 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             vrm.Text,
             0,
             vin.Text,
-            vehicleOrderJson);
+            vehicleOrderJson,
+            carDetailsId);
         if (string.IsNullOrWhiteSpace(name.Text)
             || string.IsNullOrWhiteSpace(make.Text)
             || string.IsNullOrWhiteSpace(model.Text)
@@ -764,6 +784,37 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.MainAppWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+    }
+
+    private async Task LoadTypePicksAsync(WorkCostsDbContext db)
+    {
+        var types = await CarDetailsCommands.ListAsync(db);
+        _typePicks.Clear();
+        _typePicks.Add(new TypePick { Id = null, Label = "None" });
+        foreach (var type in types)
+        {
+            _typePicks.Add(new TypePick
+            {
+                Id = type.Id,
+                Label = $"{type.Make} {type.ModelNumber} · {type.Year} · {type.EngineType}",
+            });
+        }
+
+        DetailTypeBox.ItemsSource = _typePicks;
+        AddTypeBox.ItemsSource = _typePicks;
+    }
+
+    private void SelectType(ComboBox box, Guid? typeId)
+    {
+        box.SelectedItem = _typePicks.FirstOrDefault(pick => pick.Id == typeId) ?? _typePicks[0];
+    }
+
+    private static Guid? SelectedTypeId(ComboBox box) => (box.SelectedItem as TypePick)?.Id;
+
+    private sealed class TypePick
+    {
+        public Guid? Id { get; init; }
+        public required string Label { get; init; }
     }
 
     private sealed class CarRow

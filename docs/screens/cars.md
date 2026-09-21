@@ -13,7 +13,7 @@ Compact: **stack**. Add stays a **sheet**. Never host WebView2 in a ContentDialo
 
 ## Behaviour
 
-- All identity fields + image required. VRM unique among active cars. `VehicleOrderJson` optional.
+- All identity fields + image required. VRM unique among active cars. `VehicleOrderJson` optional. Optional **car type** combo (search by make / model-number); does not clear nickname or scalars.
 - Delete is **soft-delete** (`DeletedAt` + `UpdatedAt`); keep row, FKs, and photo file.
 - Unsaved changes: same prompt as Add Product / Jobs.
 

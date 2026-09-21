@@ -100,6 +100,17 @@ public static class GarageJobCommands
             entity.CarId = carId;
         }
 
+        var effectiveCarId = entity.CarId;
+        if (effectiveCarId is Guid snapshotCarId)
+        {
+            var car = await db.Cars.AsNoTracking().FirstOrDefaultAsync(c => c.Id == snapshotCarId, cancellationToken);
+            entity.CarDetailsId = car?.CarDetailsId;
+        }
+        else if (setCarId)
+        {
+            entity.CarDetailsId = null;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }
