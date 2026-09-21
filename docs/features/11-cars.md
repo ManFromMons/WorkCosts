@@ -3,8 +3,8 @@
 - **Id:** `docs/features/11-cars.md`
 - **Seq:** 11
 - **Depends-on:** none
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/13
 - **Windows:** Core + WinUI (Stuff → Cars master/detail + Add sheet)
 - **Related screens:** `docs/screens/cars.md` (new), `docs/screens/shell.md`, `docs/screens/products.md` (Add Product sheet grammar), `docs/screens/jobs.md` (master/detail grammar), `docs/screens/dialogs.md`
 - **Related code:** `Product` / `ProductAddEditor` / `ProductImagePicker` / `WebCacheStore`, `GarageJob` / `GarageJobIconStore` / `GarageJobCommands`, `WorkJob`, `ItemOfWork` / `ItemOfWorkCommands`, `MainWindow` Stuff group, `WorkCostsDbContext`, `DialogHelper`
@@ -90,7 +90,7 @@ Commands: unknown `CarId` on garage job / work job / item-of-work update → no 
 ## Layout
 
 - OS spacing. Regular list+detail; compact stack.
-- Page header: title + subtitle + trailing Add. Detail in a grouped/inset panel on the garage scrim.
+- Page header: title + subtitle + trailing Add. Detail in a grouped/inset panel on the garage scrim. Detail fields are three per row: nickname / make / model, then model number / engine / registration, then model year / VIN.
 - Thumbnail ~ product editor square. Sheets: Add Car + image chooser. Dialogs: delete confirm, unsaved. Never host WebView2 inside a blocking dialog.
 - New `docs/screens/cars.md`. `docs/screens/shell.md` Stuff children include Cars. Compact iPad: Cars stays under Stuff, not a new top tab.
 
@@ -154,6 +154,7 @@ Commands: unknown `CarId` on garage job / work job / item-of-work update → no 
 - `TargetKind` / `TargetLabel` unchanged.
 - Add Car is a sheet. Compact = stack. No seed cars. No DI container.
 - This Seq does not parse `VehicleOrderJson` or call VIN sites.
+- Review accepted `VrmKey`, `setCarId` on garage-job update, `WorkJobCommands.TrySetCarIdAsync`, the existing image chooser dialog, and the Entity Framework design-package reference change.
 
 ## Implementation notes for an agent
 
@@ -162,3 +163,6 @@ Commands: unknown `CarId` on garage job / work job / item-of-work update → no 
 3. `docs/data/schema.md`, `docs/data/connection.md`, `docs/data/garage-job.md`, `docs/screens/cars.md`, Stuff in `docs/screens/shell.md`.
 4. WinUI `CarsPage` + add sheet + Bing/Google chooser. Reuse `DialogHelper` / image-picker grammar. No WebView in a ContentDialog.
 5. Do not: mdecoder/FastCarCheck HTTP; Home rewrite; hard-delete cars; seed cars; seed car-details; Car types page (Seq 12).
+6. `GarageJobCommands.UpdateAsync` leaves `CarId` unchanged unless `setCarId` is true, so existing callers do not clear the FK. Unknown car with `setCarId` returns false and writes nothing.
+7. Normalized VRM is stored as `VrmKey` (upper case, spaces removed) with a unique filtered index where `DeletedAt` is null.
+8. The image chooser reuses `ProductImagePicker.ChooseFromCandidatesAsync` (ContentDialog), the same control Add Product uses. Add Car stays a sheet. Chromium runs before that dialog.

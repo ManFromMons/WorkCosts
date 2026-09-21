@@ -56,6 +56,7 @@ Composite key `(ProductId, EquivalentProductId)`. Check: not self. Cascade. Trea
 | JobId | FK to Jobs, Restrict |
 | Title | Required |
 | CreatedAt | DateTimeOffset. SQLite: sort via `UtcDateTime` |
+| CarId | Nullable FK → Cars, **Restrict** |
 
 ### WorkJobItems
 
@@ -86,6 +87,7 @@ Planning templates (see [garage-job.md](garage-job.md)). No seed rows on first l
 | IconContentType | e.g. `image/png`; empty when no custom icon |
 | RepeatCombine | `WhicheverFirst` or `AllMustBeMet` |
 | IntervalAnchorDate | Optional `DateOnly` (London calendar origin until first `ItemOfWork`) |
+| CarId | Nullable FK → Cars, **Restrict**. Null on rows created before cars existed. |
 
 ### GarageJobRepeatConditions
 
@@ -125,8 +127,33 @@ Completions of a **`GarageJob`**. See [garage-job.md](garage-job.md).
 | GarageJobId | FK → GarageJobs, **Restrict** |
 | OccurredAt | DateTimeOffset. SQLite: sort via `UtcDateTime` |
 | OdometerMiles | Optional integer miles; ≥ 0 if set |
+| CarId | Nullable FK → Cars, **Restrict** |
 
 Index `(GarageJobId, OccurredAt)`.
+
+### Cars
+
+The user’s vehicles. Not work instances. No seed rows.
+
+| Column | Notes |
+| :--- | :--- |
+| Id | Guid PK |
+| Name | Nickname. Required, max 200. Lookups do not overwrite it |
+| Make | Required, max 120 |
+| Model | Required, max 120 |
+| ModelNumber | Chassis / series code (E60). Required, max 32. Image search uses make + this |
+| EngineType | Required, max 200 |
+| Vrm | Registration as typed, max 16 |
+| VrmKey | Uppercase registration with spaces removed, max 16. Unique where `DeletedAt` is null |
+| Year | Model year int, 1900 through the current calendar year + 1 |
+| Vin | Required, max 17 |
+| ImageRelativePath | `{dataRoot}/images/cars/{id}.{ext}` |
+| ImageContentType | `image/png`, `image/jpeg`, or `image/webp` |
+| VehicleOrderJson | Opaque `TEXT`, default `""`. Not parsed in this table’s first story |
+| UpdatedAt | Set on create, save, and soft-delete |
+| DeletedAt | Null while active. Soft-delete sets this and `UpdatedAt`. The row, photo, and FKs stay |
+
+Photo bytes are a file, not a BLOB. Soft-delete does not remove the file. There is no hard delete while garage jobs, work jobs, or items of work reference the car (`Restrict`).
 
 ### CachedWebPages / CachedWebImages
 
