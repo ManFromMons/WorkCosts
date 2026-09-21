@@ -140,8 +140,8 @@ _(none)_
 - **Feature:** [docs/features/15-workjob-job-subset.md](15-workjob-job-subset.md)
 - **Seq:** 15
 - **Status:** ready-for-review
-- **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset`
-- **Last note:** Named WorkJobCommands tests passed (203 total). WinUI build succeeded. PR next.
+- **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset` — [PR #17](https://github.com/ManFromMons/WorkCosts/pull/17)
+- **Last note:** Squash PR https://github.com/ManFromMons/WorkCosts/pull/17 opened. Do not merge until this heading is done.
 
 ### Work summary
 
