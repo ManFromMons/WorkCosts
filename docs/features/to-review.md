@@ -24,13 +24,13 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - **Feature:** [docs/features/11-cars.md](11-cars.md)
 - **Seq:** 11
-- **Status:** ready-for-review
-- **Change set:** branch `feature/11-cars-Cars`
-- **Last note:** Ready for review. Squash PR opened against `main`.
+- **Status:** done
+- **Change set:** branch `feature/11-cars-Cars` — https://github.com/ManFromMons/WorkCosts/pull/13
+- **Last note:** Feature file Status is `done`. PR #13 is ready.
 
 ### Work summary
 
-- Stuff → Cars master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list.
+- Stuff → Cars master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list. Detail fields are three per row.
 - Add Car is a sheet. Nickname, make, model, model number, engine, VRM, model year, VIN, and a photo are required. Save stays off until they are set. A duplicate active registration shows an error and does not write.
 - Image search uses `{Make} {ModelNumber}` on Bing Images, then Google Images when Bing has no usable files. HttpClient first; Chromium only if the page is challenged, and not inside a dialog. One photo applies immediately; several open the existing chooser. A local PNG, JPEG, or WebP up to 512 KB is allowed as well.
 - Cars are SQLite rows. Photos are files under `images/cars/`. `VehicleOrderJson` starts empty. Soft-delete sets `DeletedAt` and `UpdatedAt`, keeps the row, the photo, and foreign keys, and drops the car from the list.
@@ -42,15 +42,15 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] Normalized registration is stored as `VrmKey` (upper case, spaces removed) with a unique filtered index where `DeletedAt` is null.
-- [ ] `GarageJobCommands.UpdateAsync` leaves `CarId` unchanged unless `setCarId` is true, so existing updates do not clear the FK. An unknown car with `setCarId` returns false and writes nothing. Work jobs use new `WorkJobCommands.TrySetCarIdAsync` (there was no work-job command type). Items of work take an optional `CarId` on create, plus `TrySetCarIdAsync` for later updates.
-- [ ] The image chooser reuses `ProductImagePicker.ChooseFromCandidatesAsync` (a ContentDialog). An optional title lets cars say “Select a photo”. Add Car stays a sheet. Chromium runs before that dialog.
-- [ ] `Microsoft.EntityFrameworkCore.Design` IncludeAssets now includes runtime so `dotnet ef` can see the package. PrivateAssets stays `all`.
+- [x] Normalized registration is stored as `VrmKey` (upper case, spaces removed) with a unique filtered index where `DeletedAt` is null.
+- [x] `GarageJobCommands.UpdateAsync` leaves `CarId` unchanged unless `setCarId` is true, so existing updates do not clear the FK. An unknown car with `setCarId` returns false and writes nothing. Work jobs use new `WorkJobCommands.TrySetCarIdAsync` (there was no work-job command type). Items of work take an optional `CarId` on create, plus `TrySetCarIdAsync` for later updates.
+- [x] The image chooser reuses `ProductImagePicker.ChooseFromCandidatesAsync` (a ContentDialog). An optional title lets cars say “Select a photo”. Add Car stays a sheet. Chromium runs before that dialog.
+- [x] `Microsoft.EntityFrameworkCore.Design` IncludeAssets now includes runtime so `dotnet ef` can see the package. PrivateAssets stays `all`.
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 
 ## 12-car-details
 
