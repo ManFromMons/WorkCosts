@@ -3,8 +3,8 @@
 - **Id:** `docs/features/13-car-vin-lookup.md`
 - **Seq:** 13
 - **Depends-on:** `11-cars`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/16
 - **Windows:** WinUI on the Cars add sheet + editor; Core helper for fetch/poll/JSON
 - **Related screens:** `docs/screens/cars.md`, `docs/screens/dialogs.md`
 - **Related code:** `Car`, `CarCommands`, Add Car sheet, `ChromiumPageLoader` / `ProductImagePicker` fetch grammar (engine **not** in a ContentDialog), `VehicleOrderJson`
@@ -75,6 +75,7 @@ No live network. Fixtures: ready HTML/JSON, please-wait HTML.
 ## Accepted defaults
 
 - Seq **13**; Depends-on **`11-cars`**. Poll 30s; cap 2 minutes. BMW gate on Make or VIN prefix. Replace JSON. Nickname never overwritten. No live CI network.
+- Wait/ready HTML fixtures are trimmed from documented mdecoder fields (Cloudflare blocked a live capture). JSON is `{ source, vin, productionDate, type, model, steering, engine, transmission, color, upholstery, options[] }` from the ready fixture.
 
 ## Implementation notes for an agent
 
