@@ -89,7 +89,7 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 - **Seq:** 13
 - **Status:** done
 - **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup` — [PR #16](https://github.com/ManFromMons/WorkCosts/pull/16)
-- **Last note:** Feature file Status is `done`. PR #16 is ready.
+- **Last note:** Squash-merged to `main` as `6d92f63` (#16). Feature file Status is `done`.
 
 ### Work summary
 
