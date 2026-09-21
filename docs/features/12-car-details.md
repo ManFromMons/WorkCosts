@@ -3,8 +3,8 @@
 - **Id:** `docs/features/12-car-details.md`
 - **Seq:** 12
 - **Depends-on:** `11-cars`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/14
 - **Windows:** Core + WinUI (**Stuff → Car types** master/detail)
 - **Related screens:** `docs/screens/car-types.md` (new), `docs/screens/cars.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
 - **Related code:** `Car`, `Job`, `GarageJob`, `ItemOfWork`, `DbInitializer`, `WorkCostsDbContext`, `DialogHelper`, Stuff nav
@@ -114,6 +114,7 @@ Unique among types: normalized **Make + ModelNumber + Year + EngineType** (case-
 - Keep Car scalars; JSON supplements. Optional `Car.CarDetailsId`.
 - Job = many types (junction). Garage job = one type snapshot. ItemOfWork = snapshot.
 - Stuff page **Car types**. Later stories hook here. No type photos.
+- Unique type is stored as `TypeKey` (uppercase `Make|ModelNumber|Year|EngineType`).
 
 ## Implementation notes for an agent
 
