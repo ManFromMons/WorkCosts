@@ -106,8 +106,8 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 - **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
 - **Seq:** 13
 - **Status:** ready-for-review
-- **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup`
-- **Last note:** Named lookup tests passed (192 total). WinUI build succeeded. PR next.
+- **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup` — [PR #16](https://github.com/ManFromMons/WorkCosts/pull/16)
+- **Last note:** Squash PR https://github.com/ManFromMons/WorkCosts/pull/16 opened. Do not merge until this heading is done.
 
 ### Work summary
 
