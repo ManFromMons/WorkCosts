@@ -139,27 +139,26 @@ _(none)_
 
 - **Feature:** [docs/features/15-workjob-job-subset.md](15-workjob-job-subset.md)
 - **Seq:** 15
-- **Status:** ready-for-agent
-- **Change set:** none (spec only; not started)
-- **Last note:** Landed on main via merge-planning. Depends-on **none**. Filename is `15-workjob-job-subset.md`.
+- **Status:** in-progress
+- **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset`
+- **Last note:** Implementing definition WorkJob CRUD, copy-to-instance, and Home `!IsDefinition` filter.
 
 ### Work summary
 
-- Spec only. Core definition CRUD + copy Job work-job subset to instances. No new UI. Not implemented.
+- Branch created from origin/main. Next: `IsDefinition` / `SortOrder` migration, `WorkJobCommands`, named tests, Home filter.
 
 ### Questions
 
-*(none)*
+_(none)_
 
 ### Deviations to scan
 
-*(none)*
+_(none)_
 
 ### Verify
 
 - [ ] Tests from the feature file passed
 - [ ] Deviations accepted
-
 ## 16-car-details-seed
 
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
