@@ -25,6 +25,14 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
     private bool _suppressFields;
     private bool _busy;
     private Guid? _selectedId;
+    private string _addVehicleOrderJson = string.Empty;
+    private string _detailVehicleOrderJson = string.Empty;
+    private MdecoderScalars? _addPendingScalars;
+    private MdecoderScalars? _detailPendingScalars;
+    private CancellationTokenSource? _addLookupCts;
+    private CancellationTokenSource? _detailLookupCts;
+    private bool _addLookupRunning;
+    private bool _detailLookupRunning;
 
     public CarsPage()
     {
@@ -52,6 +60,8 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
 
     public Task DiscardUnsavedAsync()
     {
+        CancelLookup(add: true);
+        CancelLookup(add: false);
         CloseAdd();
         if (_loadedCar is not null)
         {
@@ -231,6 +241,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
 
     private void BindDetail(Car car)
     {
+        CancelLookup(add: false);
         _selectedId = car.Id;
         _loadedCar = car;
         _detailReplacement = null;
@@ -247,10 +258,13 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         DetailVrmBox.Text = car.Vrm;
         DetailYearBox.Text = car.Year.ToString(CultureInfo.InvariantCulture);
         DetailVinBox.Text = car.Vin;
+        _detailVehicleOrderJson = car.VehicleOrderJson;
+        HideApplyBanner(add: false);
         SelectType(DetailTypeBox, car.CarDetailsId);
         _suppressFields = false;
         SetStatus(DetailStatus, null);
         UpdateDetailSave();
+        UpdateLookupUi(add: false);
         _ = ShowPreviewAsync(DetailPreview, car.ImageRelativePath);
     }
 
@@ -349,9 +363,30 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         }
 
         UpdateDetailSave();
+        UpdateLookupUi(add: false);
     }
 
-    private void AddField_Changed(object sender, TextChangedEventArgs e) => UpdateAddSave();
+    private void AddField_Changed(object sender, TextChangedEventArgs e)
+    {
+        UpdateAddSave();
+        UpdateLookupUi(add: true);
+    }
+
+    private async void DetailLookup_Click(object sender, RoutedEventArgs e) => await RunLookupAsync(add: false);
+
+    private async void AddLookup_Click(object sender, RoutedEventArgs e) => await RunLookupAsync(add: true);
+
+    private void DetailLookupCancel_Click(object sender, RoutedEventArgs e) => CancelLookup(add: false);
+
+    private void AddLookupCancel_Click(object sender, RoutedEventArgs e) => CancelLookup(add: true);
+
+    private void DetailApplyFields_Click(object sender, RoutedEventArgs e) => ApplyPendingScalars(add: false, overwrite: true);
+
+    private void AddApplyFields_Click(object sender, RoutedEventArgs e) => ApplyPendingScalars(add: true, overwrite: true);
+
+    private void DetailKeepFields_Click(object sender, RoutedEventArgs e) => HideApplyBanner(add: false);
+
+    private void AddKeepFields_Click(object sender, RoutedEventArgs e) => HideApplyBanner(add: true);
 
     private async Task<bool> SaveDetailAsync()
     {
@@ -360,7 +395,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        if (!TryRead(DetailNameBox, DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailEngineBox, DetailVrmBox, DetailYearBox, DetailVinBox, _loadedCar.VehicleOrderJson, SelectedTypeId(DetailTypeBox), out var input, out var error))
+        if (!TryRead(DetailNameBox, DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailEngineBox, DetailVrmBox, DetailYearBox, DetailVinBox, _detailVehicleOrderJson, SelectedTypeId(DetailTypeBox), out var input, out var error))
         {
             SetStatus(DetailStatus, error);
             return false;
@@ -416,7 +451,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        if (!TryRead(AddNameBox, AddMakeBox, AddModelBox, AddModelNumberBox, AddEngineBox, AddVrmBox, AddYearBox, AddVinBox, string.Empty, SelectedTypeId(AddTypeBox), out var input, out var error))
+        if (!TryRead(AddNameBox, AddMakeBox, AddModelBox, AddModelNumberBox, AddEngineBox, AddVrmBox, AddYearBox, AddVinBox, _addVehicleOrderJson, SelectedTypeId(AddTypeBox), out var input, out var error))
         {
             SetStatus(AddStatus, error);
             return false;
@@ -574,6 +609,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
 
     private void CloseAdd()
     {
+        CancelLookup(add: true);
         _addOpen = false;
         AddOverlay.Visibility = Visibility.Collapsed;
         ClearAdd();
@@ -592,9 +628,12 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         AddVrmBox.Text = string.Empty;
         AddYearBox.Text = string.Empty;
         AddVinBox.Text = string.Empty;
+        _addVehicleOrderJson = string.Empty;
+        HideApplyBanner(add: true);
         SelectType(AddTypeBox, null);
         SetStatus(AddStatus, null);
         UpdateAddSave();
+        UpdateLookupUi(add: true);
     }
 
     private bool IsAddDirty() =>
@@ -607,6 +646,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         || HasText(AddVrmBox)
         || HasText(AddYearBox)
         || HasText(AddVinBox)
+        || !string.IsNullOrWhiteSpace(_addVehicleOrderJson)
         || SelectedTypeId(AddTypeBox) is not null;
 
     private bool IsDetailDirty()
@@ -625,6 +665,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             || DetailVrmBox.Text.Trim() != _loadedCar.Vrm
             || DetailYearBox.Text.Trim() != _loadedCar.Year.ToString(CultureInfo.InvariantCulture)
             || DetailVinBox.Text.Trim() != _loadedCar.Vin
+            || _detailVehicleOrderJson != _loadedCar.VehicleOrderJson
             || SelectedTypeId(DetailTypeBox) != _loadedCar.CarDetailsId;
     }
 
@@ -702,6 +743,287 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
 
         error = null;
         return true;
+    }
+
+    private async Task RunLookupAsync(bool add)
+    {
+        var makeBox = add ? AddMakeBox : DetailMakeBox;
+        var vinBox = add ? AddVinBox : DetailVinBox;
+        var status = add ? AddStatus : DetailStatus;
+        var make = makeBox.Text;
+        var vin = vinBox.Text;
+        var nickname = add ? AddNameBox.Text : DetailNameBox.Text;
+        var json = add ? _addVehicleOrderJson : _detailVehicleOrderJson;
+        if (!MdecoderVehicleLookup.HasVin(vin))
+        {
+            SetStatus(status, MdecoderVehicleLookup.EmptyVinStatus);
+            return;
+        }
+
+        if (!MdecoderVehicleLookup.LooksLikeBmw(make, vin))
+        {
+            SetStatus(status, MdecoderVehicleLookup.NonBmwStatus);
+            return;
+        }
+
+        CancelLookup(add);
+        var cts = new CancellationTokenSource();
+        if (add)
+        {
+            _addLookupCts = cts;
+        }
+        else
+        {
+            _detailLookupCts = cts;
+        }
+
+        SetLookupRunning(add, running: true);
+        IBrowserPageSession? browser = null;
+        try
+        {
+            var yearText = add ? AddYearBox.Text : DetailYearBox.Text;
+            int? existingYear = int.TryParse(yearText.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var year)
+                ? year
+                : null;
+            var result = await MdecoderVehicleLookup.RunAsync(
+                make,
+                vin,
+                json,
+                nickname,
+                fetch: async (uri, token) =>
+                {
+                    var html = await MdecoderVehicleLookup.FetchHttpAsync(uri, token);
+                    if (!MdecoderVehicleLookup.NeedsChromium(html))
+                    {
+                        return html;
+                    }
+
+                    ReportStatus(status, "Opening mdecoder in Chromium…");
+                    browser ??= await ChromiumPageLoader.CreateAsync(XamlRoot, token);
+                    var load = await browser.LoadAsync(uri, token);
+                    return load.Html;
+                },
+                delay: (span, token) => Task.Delay(span, token),
+                now: () => DateTimeOffset.Now,
+                status: message => ReportStatus(status, message),
+                existingModel: add ? AddModelBox.Text : DetailModelBox.Text,
+                existingModelNumber: add ? AddModelNumberBox.Text : DetailModelNumberBox.Text,
+                existingEngineType: add ? AddEngineBox.Text : DetailEngineBox.Text,
+                existingYear: existingYear,
+                cancellationToken: cts.Token);
+
+            if (cts.IsCancellationRequested)
+            {
+                SetStatus(status, MdecoderVehicleLookup.CancelledStatus);
+                return;
+            }
+
+            ApplyLookupResult(add, result);
+        }
+        catch (OperationCanceledException)
+        {
+            SetStatus(status, MdecoderVehicleLookup.CancelledStatus);
+        }
+        catch (Exception ex)
+        {
+            SetStatus(status, ex.Message);
+        }
+        finally
+        {
+            if (ReferenceEquals(add ? _addLookupCts : _detailLookupCts, cts))
+            {
+                if (add)
+                {
+                    _addLookupCts = null;
+                }
+                else
+                {
+                    _detailLookupCts = null;
+                }
+
+                SetLookupRunning(add, running: false);
+            }
+
+            if (browser is IAsyncDisposable disposable)
+            {
+                await disposable.DisposeAsync();
+            }
+        }
+    }
+
+    private void ApplyLookupResult(bool add, MdecoderLookupResult result)
+    {
+        var status = add ? AddStatus : DetailStatus;
+        SetStatus(status, result.StatusMessage);
+        if (result.Status != MdecoderLookupStatus.Ready || result.Scalars is null)
+        {
+            return;
+        }
+
+        if (add)
+        {
+            _addVehicleOrderJson = result.VehicleOrderJson;
+            _addPendingScalars = result.Scalars;
+        }
+        else
+        {
+            _detailVehicleOrderJson = result.VehicleOrderJson;
+            _detailPendingScalars = result.Scalars;
+        }
+
+        ApplyScalarsToBoxes(add, result.Scalars, overwrite: false);
+        if (result.OverwriteFields.Count == 0)
+        {
+            HideApplyBanner(add);
+            return;
+        }
+
+        var text = $"mdecoder found different {string.Join(", ", result.OverwriteFields)}. Apply these fields? Nickname stays as it is.";
+        if (add)
+        {
+            AddApplyText.Text = text;
+            AddApplyBanner.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            DetailApplyText.Text = text;
+            DetailApplyBanner.Visibility = Visibility.Visible;
+        }
+    }
+
+    private void ApplyPendingScalars(bool add, bool overwrite)
+    {
+        var scalars = add ? _addPendingScalars : _detailPendingScalars;
+        if (scalars is not null)
+        {
+            ApplyScalarsToBoxes(add, scalars, overwrite);
+        }
+
+        HideApplyBanner(add);
+    }
+
+    private void ApplyScalarsToBoxes(bool add, MdecoderScalars scalars, bool overwrite)
+    {
+        if (add)
+        {
+            FillBox(AddMakeBox, scalars.Make, overwrite);
+            FillBox(AddModelBox, scalars.Model, overwrite);
+            FillBox(AddModelNumberBox, scalars.ModelNumber, overwrite);
+            FillBox(AddEngineBox, scalars.EngineType, overwrite);
+            FillYear(AddYearBox, scalars.Year, overwrite);
+            UpdateAddSave();
+            return;
+        }
+
+        _suppressFields = true;
+        FillBox(DetailMakeBox, scalars.Make, overwrite);
+        FillBox(DetailModelBox, scalars.Model, overwrite);
+        FillBox(DetailModelNumberBox, scalars.ModelNumber, overwrite);
+        FillBox(DetailEngineBox, scalars.EngineType, overwrite);
+        FillYear(DetailYearBox, scalars.Year, overwrite);
+        _suppressFields = false;
+        UpdateDetailSave();
+    }
+
+    private static void FillBox(TextBox box, string? incoming, bool overwrite)
+    {
+        if (string.IsNullOrWhiteSpace(incoming))
+        {
+            return;
+        }
+
+        if (overwrite || string.IsNullOrWhiteSpace(box.Text))
+        {
+            box.Text = incoming;
+        }
+    }
+
+    private static void FillYear(TextBox box, int? incoming, bool overwrite)
+    {
+        if (incoming is not int year)
+        {
+            return;
+        }
+
+        if (overwrite || string.IsNullOrWhiteSpace(box.Text))
+        {
+            box.Text = year.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    private void HideApplyBanner(bool add)
+    {
+        if (add)
+        {
+            _addPendingScalars = null;
+            AddApplyBanner.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        _detailPendingScalars = null;
+        DetailApplyBanner.Visibility = Visibility.Collapsed;
+    }
+
+    private void CancelLookup(bool add)
+    {
+        if (add)
+        {
+            _addLookupCts?.Cancel();
+            return;
+        }
+
+        _detailLookupCts?.Cancel();
+    }
+
+    private void SetLookupRunning(bool add, bool running)
+    {
+        if (add)
+        {
+            _addLookupRunning = running;
+            AddLookupCancelButton.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
+            UpdateLookupUi(add: true);
+            return;
+        }
+
+        _detailLookupRunning = running;
+        DetailLookupCancelButton.Visibility = running ? Visibility.Visible : Visibility.Collapsed;
+        UpdateLookupUi(add: false);
+    }
+
+    private void UpdateLookupUi(bool add)
+    {
+        var running = add ? _addLookupRunning : _detailLookupRunning;
+        var make = add ? AddMakeBox.Text : DetailMakeBox.Text;
+        var vin = add ? AddVinBox.Text : DetailVinBox.Text;
+        var button = add ? AddLookupButton : DetailLookupButton;
+        button.IsEnabled = !running && MdecoderVehicleLookup.CanRequest(make, vin);
+        if (running)
+        {
+            return;
+        }
+
+        var status = add ? AddStatus : DetailStatus;
+        if (MdecoderVehicleLookup.HasVin(vin) && !MdecoderVehicleLookup.LooksLikeBmw(make, vin))
+        {
+            SetStatus(status, MdecoderVehicleLookup.NonBmwStatus);
+            return;
+        }
+
+        if (status.Text == MdecoderVehicleLookup.NonBmwStatus)
+        {
+            SetStatus(status, null);
+        }
+    }
+
+    private void ReportStatus(TextBlock status, string message)
+    {
+        if (DispatcherQueue.HasThreadAccess)
+        {
+            SetStatus(status, message);
+            return;
+        }
+
+        DispatcherQueue.TryEnqueue(() => SetStatus(status, message));
     }
 
     private void SetBusy(bool busy)

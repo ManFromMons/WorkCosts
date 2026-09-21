@@ -145,7 +145,28 @@
                             <TextBox x:Name="DetailEngineBox" Grid.Row="1" Grid.Column="1" Header="Engine type" MaxLength="200" PlaceholderText="4.4 V8" TextChanged="DetailField_Changed" />
                             <TextBox x:Name="DetailVrmBox" Grid.Row="1" Grid.Column="2" Header="Registration" MaxLength="16" PlaceholderText="AB12 CDE" TextChanged="DetailField_Changed" />
                             <TextBox x:Name="DetailYearBox" Grid.Row="2" Header="Model year" MaxLength="4" PlaceholderText="2004" TextChanged="DetailField_Changed" />
-                            <TextBox x:Name="DetailVinBox" Grid.Row="2" Grid.Column="1" Header="VIN" MaxLength="17" TextChanged="DetailField_Changed" />
+                            <Grid Grid.Row="2" Grid.Column="1" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="DetailVinBox" Header="VIN" MaxLength="17" TextChanged="DetailField_Changed" />
+                                <Button
+                                    x:Name="DetailLookupButton"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Bottom"
+                                    Click="DetailLookup_Click"
+                                    Content="Lookup"
+                                    IsEnabled="False" />
+                                <Button
+                                    x:Name="DetailLookupCancelButton"
+                                    Grid.Column="2"
+                                    VerticalAlignment="Bottom"
+                                    Click="DetailLookupCancel_Click"
+                                    Content="Cancel"
+                                    Visibility="Collapsed" />
+                            </Grid>
                             <ComboBox
                                 x:Name="DetailTypeBox"
                                 Grid.Row="2"
@@ -157,6 +178,20 @@
                                 PlaceholderText="Optional"
                                 SelectionChanged="DetailType_Changed" />
                         </Grid>
+                        <Border
+                            x:Name="DetailApplyBanner"
+                            Padding="12"
+                            Visibility="Collapsed"
+                            Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                            CornerRadius="6">
+                            <StackPanel Spacing="8">
+                                <TextBlock x:Name="DetailApplyText" TextWrapping="WrapWholeWords" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button Click="DetailApplyFields_Click" Content="Apply fields" />
+                                    <Button Click="DetailKeepFields_Click" Content="Keep current" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
                         <TextBlock
                             x:Name="DetailStatus"
                             Opacity="0.85"
@@ -211,7 +246,28 @@
                     <TextBox x:Name="AddEngineBox" Header="Engine type" MaxLength="200" PlaceholderText="4.4 V8" TextChanged="AddField_Changed" />
                     <TextBox x:Name="AddVrmBox" Header="Registration" MaxLength="16" PlaceholderText="AB12 CDE" TextChanged="AddField_Changed" />
                     <TextBox x:Name="AddYearBox" Header="Model year" MaxLength="4" PlaceholderText="2004" TextChanged="AddField_Changed" />
-                    <TextBox x:Name="AddVinBox" Header="VIN" MaxLength="17" TextChanged="AddField_Changed" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="AddVinBox" Header="VIN" MaxLength="17" TextChanged="AddField_Changed" />
+                        <Button
+                            x:Name="AddLookupButton"
+                            Grid.Column="1"
+                            VerticalAlignment="Bottom"
+                            Click="AddLookup_Click"
+                            Content="Lookup"
+                            IsEnabled="False" />
+                        <Button
+                            x:Name="AddLookupCancelButton"
+                            Grid.Column="2"
+                            VerticalAlignment="Bottom"
+                            Click="AddLookupCancel_Click"
+                            Content="Cancel"
+                            Visibility="Collapsed" />
+                    </Grid>
                     <ComboBox
                         x:Name="AddTypeBox"
                         Header="Car type"
@@ -220,6 +276,20 @@
                         DisplayMemberPath="Label"
                         PlaceholderText="Optional"
                         SelectionChanged="AddType_Changed" />
+                    <Border
+                        x:Name="AddApplyBanner"
+                        Padding="12"
+                        Visibility="Collapsed"
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                        CornerRadius="6">
+                        <StackPanel Spacing="8">
+                            <TextBlock x:Name="AddApplyText" TextWrapping="WrapWholeWords" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Click="AddApplyFields_Click" Content="Apply fields" />
+                                <Button Click="AddKeepFields_Click" Content="Keep current" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                     <TextBlock
                         x:Name="AddStatus"
                         Opacity="0.85"
