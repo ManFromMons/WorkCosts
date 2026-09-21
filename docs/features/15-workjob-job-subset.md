@@ -131,6 +131,6 @@ This command is the Core primitive later UI will call: **pick a Job → copy its
 ## Implementation notes for an agent
 
 1. Migration: `WorkJobs.IsDefinition` default false, `WorkJobs.SortOrder` default 0.
-2. `WorkJobCommands` definition CRUD + items + copy. Filter Home’s existing list query (`!IsDefinition`).
+2. `WorkJobCommands` already has `TrySetCarIdAsync` (Seq 11). Add definition CRUD + items + copy on that type. Filter Home’s existing list query (`!IsDefinition`). SQLite cannot `ORDER BY CreatedAt.UtcDateTime` together with that filter; Home and `ListInstancesAsync` load then sort in memory (same idea as ItemOfWork).
 3. `docs/data/schema.md`. Do not invent `GarageJobId`.
 4. Do not: new pages, Jobs-page subset editor, ItemOfWork UI, VIN, seed definitions, garage-job collation, Home Add rewrite.
