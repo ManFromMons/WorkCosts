@@ -56,13 +56,19 @@ _(none)_
 
 - **Feature:** [docs/features/12-car-details.md](12-car-details.md)
 - **Seq:** 12
-- **Status:** in-progress
+- **Status:** ready-for-review
 - **Change set:** branch `feature/12-car-details-Car-types`
-- **Last note:** Implementation started on `feature/12-car-details-Car-types`.
+- **Last note:** Ready for review. Squash PR to be opened against main.
 
 ### Work summary
 
-- Spec only until this branch lands code. Stuff → Car types, empty table, `JobCarDetails` junction. Not implemented.
+- Stuff → Car types master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list.
+- Add type is a sheet. Make, model, model number, year, and engine are required. Save inserts and selects. Duplicate make + model-number + year + engine does not write.
+- Delete is hard delete and Restrict if a car, job junction, garage job, or completion points at the type. No soft-delete. Unsaved changes use the same helper as Cars.
+- Optional car-type combo on the car editor. Nickname and scalars stay. Unknown type id does not write.
+- `GarageJob` and `ItemOfWork` snapshot `CarDetailsId` from the car at write / completion. Later car-type edits do not follow unless the garage job is saved again.
+- Job fitment is Core only: `ReplaceJobCarDetailsAsync` dedupes and orders. No Jobs-page chips in this Seq.
+- Migration `20260921220928_AddCarDetails`. `DbInitializer` still seeds no types.
 
 ### Questions
 
@@ -70,13 +76,12 @@ _(none)_
 
 ### Deviations to scan
 
-_(none)_
+- [ ] Unique type is stored as `TypeKey` (uppercase Make|ModelNumber|Year|EngineType) with a unique index, same idea as `Car.VrmKey`.
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
-
 ## 13-car-vin-lookup
 
 - **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
