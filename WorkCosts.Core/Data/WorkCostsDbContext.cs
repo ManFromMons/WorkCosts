@@ -24,6 +24,8 @@ public class WorkCostsDbContext : DbContext
     public DbSet<GarageJobReferencedJob> GarageJobReferencedJobs => Set<GarageJobReferencedJob>();
     public DbSet<ItemOfWork> ItemsOfWork => Set<ItemOfWork>();
     public DbSet<Car> Cars => Set<Car>();
+    public DbSet<CarDetails> CarDetails => Set<CarDetails>();
+    public DbSet<JobCarDetails> JobCarDetails => Set<JobCarDetails>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -156,6 +158,36 @@ public class WorkCostsDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(x => x.CarId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CarDetails)
+                .WithMany()
+                .HasForeignKey(x => x.CarDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<CarDetails>(e =>
+        {
+            e.ToTable("CarDetails");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Make).HasMaxLength(120).IsRequired();
+            e.Property(x => x.Model).HasMaxLength(120).IsRequired();
+            e.Property(x => x.ModelNumber).HasMaxLength(32).IsRequired();
+            e.Property(x => x.EngineType).HasMaxLength(200).IsRequired();
+            e.Property(x => x.TypeKey).HasMaxLength(400).IsRequired();
+            e.HasIndex(x => x.TypeKey).IsUnique();
+        });
+
+        modelBuilder.Entity<JobCarDetails>(e =>
+        {
+            e.ToTable("JobCarDetails");
+            e.HasKey(x => new { x.JobId, x.CarDetailsId });
+            e.HasOne(x => x.Job)
+                .WithMany(x => x.CarDetailsLinks)
+                .HasForeignKey(x => x.JobId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.CarDetails)
+                .WithMany(x => x.JobLinks)
+                .HasForeignKey(x => x.CarDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Car>(e =>
@@ -176,6 +208,10 @@ public class WorkCostsDbContext : DbContext
             e.HasIndex(x => x.VrmKey)
                 .IsUnique()
                 .HasFilter("\"DeletedAt\" IS NULL");
+            e.HasOne(x => x.CarDetails)
+                .WithMany()
+                .HasForeignKey(x => x.CarDetailsId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ItemOfWork>(e =>
@@ -189,6 +225,10 @@ public class WorkCostsDbContext : DbContext
             e.HasOne(x => x.Car)
                 .WithMany()
                 .HasForeignKey(x => x.CarId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.CarDetails)
+                .WithMany()
+                .HasForeignKey(x => x.CarDetailsId)
                 .OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.GarageJobId, x.OccurredAt });
         });

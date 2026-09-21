@@ -14,6 +14,8 @@ public class GarageJob
     public DateOnly? IntervalAnchorDate { get; set; }
     public Guid? CarId { get; set; }
     public Car? Car { get; set; }
+    public Guid? CarDetailsId { get; set; }
+    public CarDetails? CarDetails { get; set; }
 
     public ICollection<GarageJobRepeatCondition> RepeatConditions { get; set; } = new List<GarageJobRepeatCondition>();
     public ICollection<GarageJobRequiredProduct> RequiredProducts { get; set; } = new List<GarageJobRequiredProduct>();

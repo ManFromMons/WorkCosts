@@ -13,6 +13,7 @@ public enum CarWriteStatus
     MissingImage,
     DuplicateVrm,
     ImageRejected,
+    UnknownCarDetails,
 }
 
 public sealed record CarWriteResult(CarWriteStatus Status, string? Detail, Car? Car)
@@ -29,7 +30,8 @@ public sealed record CarInput(
     string Vrm,
     int Year,
     string Vin,
-    string VehicleOrderJson = "");
+    string VehicleOrderJson = "",
+    Guid? CarDetailsId = null);
 
 public enum CarDeleteResult
 {
@@ -72,6 +74,11 @@ public static class CarCommands
             return invalid;
         }
 
+        if (!await TypeExistsOrUnsetAsync(db, input.CarDetailsId, cancellationToken))
+        {
+            return Fail(CarWriteStatus.UnknownCarDetails, "That car type does not exist.");
+        }
+
         var vrmKey = NormalizeVrm(input.Vrm);
         if (await ActiveVrmExistsAsync(db, vrmKey, exceptId: null, cancellationToken))
         {
@@ -103,6 +110,7 @@ public static class CarCommands
             ImageRelativePath = CarImageStore.RelativePathFor(id, imageContentType!),
             ImageContentType = NormalizeContentType(imageContentType!),
             VehicleOrderJson = string.Empty,
+            CarDetailsId = input.CarDetailsId,
             UpdatedAt = now,
             DeletedAt = null,
         };
@@ -159,6 +167,11 @@ public static class CarCommands
             return Fail(CarWriteStatus.NotFound, "This car no longer exists.");
         }
 
+        if (!await TypeExistsOrUnsetAsync(db, input.CarDetailsId, cancellationToken))
+        {
+            return Fail(CarWriteStatus.UnknownCarDetails, "That car type does not exist.");
+        }
+
         var vrmKey = NormalizeVrm(input.Vrm);
         if (await ActiveVrmExistsAsync(db, vrmKey, carId, cancellationToken))
         {
@@ -208,6 +221,7 @@ public static class CarCommands
         entity.Year = input.Year;
         entity.Vin = input.Vin.Trim();
         entity.VehicleOrderJson = input.VehicleOrderJson ?? string.Empty;
+        entity.CarDetailsId = input.CarDetailsId;
         entity.UpdatedAt = now;
         if (newRelative is not null && newContentType is not null)
         {
@@ -264,6 +278,12 @@ public static class CarCommands
         await db.SaveChangesAsync(cancellationToken);
         return CarDeleteResult.Deleted;
     }
+
+    private static async Task<bool> TypeExistsOrUnsetAsync(
+        WorkCostsDbContext db,
+        Guid? carDetailsId,
+        CancellationToken cancellationToken) =>
+        carDetailsId is not Guid id || await db.CarDetails.AnyAsync(t => t.Id == id, cancellationToken);
 
     private static async Task<bool> ActiveVrmExistsAsync(
         WorkCostsDbContext db,

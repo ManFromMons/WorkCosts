@@ -13,4 +13,5 @@ public class Job
     public ICollection<ProductJob> ProductJobs { get; set; } = new List<ProductJob>();
     public ICollection<WorkJob> WorkJobs { get; set; } = new List<WorkJob>();
     public ICollection<GarageJobReferencedJob> GarageJobReferences { get; set; } = new List<GarageJobReferencedJob>();
+    public ICollection<JobCarDetails> CarDetailsLinks { get; set; } = new List<JobCarDetails>();
 }

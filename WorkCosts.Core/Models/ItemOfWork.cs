@@ -9,4 +9,6 @@ public class ItemOfWork
     public int? OdometerMiles { get; set; }
     public Guid? CarId { get; set; }
     public Car? Car { get; set; }
+    public Guid? CarDetailsId { get; set; }
+    public CarDetails? CarDetails { get; set; }
 }
