@@ -80,6 +80,6 @@ No live network. Fixtures: ready HTML/JSON, please-wait HTML.
 
 Requires `11-cars` **Status** `done`.
 
-1. Discover HttpClient vs Chromium; wait fixture + ready fixture; parser.
+1. Discover HttpClient vs Chromium; wait fixture + ready fixture; parser. Request URL is `GET https://www.mdecoder.com/decode/{vin}` (`MdecoderVehicleLookup.DecodeUrlFormat`).
 2. Polling on the client; do not freeze the UI for 30s without status.
 3. Do not: FastCarCheck, Home, ItemOfWork UI, WebView in a ContentDialog, commit cookies.
