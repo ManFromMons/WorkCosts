@@ -57,8 +57,8 @@ _(none)_
 - **Feature:** [docs/features/12-car-details.md](12-car-details.md)
 - **Seq:** 12
 - **Status:** ready-for-review
-- **Change set:** branch `feature/12-car-details-Car-types`
-- **Last note:** Ready for review. Squash PR to be opened against main.
+- **Change set:** branch `feature/12-car-details-Car-types` — https://github.com/ManFromMons/WorkCosts/pull/14
+- **Last note:** Ready for review. Squash PR https://github.com/ManFromMons/WorkCosts/pull/14.
 
 ### Work summary
 
