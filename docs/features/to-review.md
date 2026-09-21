@@ -105,13 +105,16 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
 - **Seq:** 13
-- **Status:** in-progress
+- **Status:** ready-for-review
 - **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup`
-- **Last note:** Implementing mdecoder VIN lookup. Decode URL is `/decode/{vin}`. HttpClient first, then Chromium.
+- **Last note:** Named lookup tests passed (192 total). WinUI build succeeded. PR next.
 
 ### Work summary
 
-- Branch created from origin/main. Next: wait/ready fixtures, `MdecoderVehicleLookup` poll, Lookup on Cars VIN row.
+- Lookup sits next to VIN on the Cars add sheet and editor. It is enabled when VIN is set and the car looks BMW (Make BMW, ignore case, or VIN starts with WBA / WBS / WBY / 5UX / 5YM). Otherwise the sheet says to use FastCarCheck later and mdecoder is not called.
+- First request is HttpClient GET `https://www.mdecoder.com/decode/{vin}`. A Cloudflare / robot-check body opens the same off-dialog Chromium path as Autodoc. Polling stays on the sheet: "Requesting mdecoder…", then "Waiting, retrying in 30s…". Cancel stops polling and does not discard the form.
+- A ready decode replaces `VehicleOrderJson`. Nickname is never overwritten. Empty make / model / model-number / year / engine fill from the decode; filled values that differ show an in-sheet Apply fields / Keep current banner.
+- Timeout after 2 minutes leaves JSON and typed fields unchanged. Offline or unusable HTML fails on the sheet. Tests use `mdecoder-wait.snippet.html` and `mdecoder-ready.snippet.html` (no live network).
 
 ### Questions
 
@@ -119,13 +122,12 @@ _(none)_
 
 ### Deviations to scan
 
-_(none)_
+- [ ] Wait/ready HTML fixtures were written from documented mdecoder fields (Cloudflare blocked a live capture). JSON is `{ source, vin, productionDate, type, model, steering, engine, transmission, color, upholstery, options[] }` serialized from the ready fixture.
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
-
 ## 14-car-fastcarcheck
 
 - **Feature:** [docs/features/14-car-fastcarcheck.md](14-car-fastcarcheck.md)
