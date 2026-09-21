@@ -87,27 +87,29 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
 - **Seq:** 13
-- **Status:** ready-for-agent
-- **Change set:** none (spec only; not started)
-- **Last note:** Landed on main via merge-planning. Waits on **11-cars**. Filename is `13-car-vin-lookup.md`.
+- **Status:** done
+- **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup` — [PR #16](https://github.com/ManFromMons/WorkCosts/pull/16)
+- **Last note:** Feature file Status is `done`. PR #16 is ready.
 
 ### Work summary
 
-- Spec only. mdecoder VIN lookup, 30s poll, 2 min cap, BMW gate. Not implemented.
+- Lookup sits next to VIN on the Cars add sheet and editor. It is enabled when VIN is set and the car looks BMW (Make BMW, ignore case, or VIN starts with WBA / WBS / WBY / 5UX / 5YM). Otherwise the sheet says to use FastCarCheck later and mdecoder is not called.
+- First request is HttpClient GET `https://www.mdecoder.com/decode/{vin}`. A Cloudflare / robot-check body opens the same off-dialog Chromium path as Autodoc. Polling stays on the sheet: "Requesting mdecoder…", then "Waiting, retrying in 30s…". Cancel stops polling and does not discard the form.
+- A ready decode replaces `VehicleOrderJson`. Nickname is never overwritten. Empty make / model / model-number / year / engine fill from the decode; filled values that differ show an in-sheet Apply fields / Keep current banner.
+- Timeout after 2 minutes leaves JSON and typed fields unchanged. Offline or unusable HTML fails on the sheet. Tests use `mdecoder-wait.snippet.html` and `mdecoder-ready.snippet.html` (no live network).
 
 ### Questions
 
-*(none)*
+_(none)_
 
 ### Deviations to scan
 
-*(none)*
+- [x] Wait/ready HTML fixtures were written from documented mdecoder fields (Cloudflare blocked a live capture). JSON is `{ source, vin, productionDate, type, model, steering, engine, transmission, color, upholstery, options[] }` serialized from the ready fixture.
 
 ### Verify
 
 - [x] Tests from the feature file passed
 - [x] Deviations accepted
-
 ## 14-car-fastcarcheck
 
 - **Feature:** [docs/features/14-car-fastcarcheck.md](14-car-fastcarcheck.md)
