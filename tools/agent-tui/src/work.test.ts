@@ -72,13 +72,14 @@ describe("mergeWorkItems", () => {
 });
 
 describe("isActiveWork", () => {
-  it("includes branches, dirty files, and unfinished inbox/story status", () => {
+  it("includes dirty files and unfinished inbox/story status, not leftover done branches", () => {
     const base = { kebab: "x", title: "x", atMs: 1, branch: null, current: false, source: "commit" as const };
     assert.equal(isActiveWork(base, "done", undefined), false);
     assert.equal(isActiveWork(base, "ready-for-agent", undefined), true);
-    assert.equal(isActiveWork({ ...base, branch: "feature/x-Y" }, "done", "done"), true);
+    assert.equal(isActiveWork({ ...base, branch: "feature/x-Y", current: true }, "done", "done"), false);
     assert.equal(isActiveWork({ ...base, source: "dirty" }, "done", "done"), true);
     assert.equal(isActiveWork(base, "done", "ready-for-review"), true);
+    assert.equal(isActiveWork({ ...base, branch: "feature/x-Y" }, "ready-for-agent", "done"), true);
   });
 });
 

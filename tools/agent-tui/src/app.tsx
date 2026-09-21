@@ -817,7 +817,7 @@ export function App(props: { repoRoot: string }): React.ReactElement {
                   <Text
                     key={item.kebab}
                     inverse={i === workIndex}
-                    color={item.current ? "green" : item.source === "dirty" ? "yellow" : undefined}
+                    color={item.current ? "cyan" : item.source === "dirty" ? "yellow" : undefined}
                   >
                     {`${item.current ? "*" : " "}${relativeTime(item.atMs)}  ${item.kebab}${item.branch ? `  ${item.branch}` : item.source === "dirty" ? "  dirty" : ""}`}
                   </Text>
@@ -1119,7 +1119,7 @@ function Help(): React.ReactElement {
       <Text>Working: p continues that story's plan — history shows first, then state/next unless same live plan</Text>
       <Text>Story: j/k scroll  space/PgDn  PgUp  G end  scrollbar on the right</Text>
       <Text>Plan Feature: q/esc close  ctrl-up/down scroll transcript  y/enter close confirm</Text>
-      <Text>Working: newest active stories first (feature branches, dirty files, unfinished status)</Text>
+      <Text>Queue: inverted tree (latest rows first). Working: unfinished inbox/story, dirty files; * current checkout</Text>
       <Text>Inbox: space toggle checkbox  s cycle Status  L Update-ToReviewOnMain.ps1</Text>
       <Text>Chat: type wraps  enter send  shift-enter newline  esc back  ctrl+c cancel run</Text>
       <Text>Canonical inbox is origin/main. Land only if no other dirty files.</Text>
@@ -1165,7 +1165,7 @@ function footerFor(focus: Focus, overlay: Overlay, contextMode: ContextMode, pla
     return "j/k  tab/S-tab  l story  enter  r inbox  i implement  n next  p plan  a add-source  m merge  :  g  ?  q";
   }
   if (focus === "work") {
-    return "j/k newest-first  h queue  l story  enter  r inbox  i implement  p continue-plan  a add-source  tab/S-tab  ?  q";
+    return "j/k newest-first  * current  h queue  l story  enter  r inbox  i implement  p continue-plan  a add-source  tab/S-tab  ?  q";
   }
   if (focus === "context" && contextMode === "inbox") {
     return "j/k boxes  space tick  s Status  L land  h left  l chat  p plan  esc";

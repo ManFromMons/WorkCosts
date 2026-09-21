@@ -34,6 +34,20 @@ export function parseQueueOutput(text: string): QueueItem[] {
   return items;
 }
 
+/** Newest / last tree rows first. Unknown Seq stays at the bottom. */
+export function invertQueue(items: QueueItem[]): QueueItem[] {
+  const known: QueueItem[] = [];
+  const unknown: QueueItem[] = [];
+  for (const item of items) {
+    if (item.seq === "?") {
+      unknown.push(item);
+    } else {
+      known.push(item);
+    }
+  }
+  return known.reverse().concat(unknown);
+}
+
 export function parseSeqLookup(text: string): Record<string, string> {
   const map: Record<string, string> = {};
   for (const line of text.split(/\r?\n/)) {

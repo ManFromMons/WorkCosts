@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { runGit, runPowershell } from "./shell.ts";
-import { parseQueueOutput, parseSeqLookup, type QueueItem } from "./queue.ts";
+import { invertQueue, parseQueueOutput, parseSeqLookup, type QueueItem } from "./queue.ts";
 import {
   isActiveWork,
   kebabFromFeaturePath,
@@ -95,7 +95,7 @@ export async function loadQueue(repoRoot: string): Promise<{ raw: string; items:
     throw new Error(result.stderr.trim() || result.stdout.trim() || `Get-FeatureQueue.ps1 exited ${result.code}`);
   }
   const raw = result.stdout;
-  return { raw, items: parseQueueOutput(raw) };
+  return { raw, items: invertQueue(parseQueueOutput(raw)) };
 }
 
 export async function loadPickup(repoRoot: string): Promise<string> {
@@ -191,9 +191,7 @@ export async function loadRecentWork(
     titles: input.titles,
   });
 
-  const active = merged.filter((item) =>
-    isActiveWork(item, input.storyStatus.get(item.kebab), input.inboxStatus.get(item.kebab)),
-  );
-  const list = active.length > 0 ? active : merged;
-  return list.slice(0, 20);
+  return merged
+    .filter((item) => isActiveWork(item, input.storyStatus.get(item.kebab), input.inboxStatus.get(item.kebab)))
+    .slice(0, 20);
 }
