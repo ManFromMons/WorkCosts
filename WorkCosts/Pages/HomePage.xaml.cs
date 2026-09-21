@@ -52,8 +52,11 @@ public sealed partial class HomePage : Page
         var workJobs = await db.WorkJobs
             .Include(w => w.Job)
             .Include(w => w.Items)
-            .OrderByDescending(w => w.CreatedAt.UtcDateTime)
+            .Where(w => !w.IsDefinition)
             .ToListAsync();
+        workJobs = workJobs
+            .OrderByDescending(w => w.CreatedAt.UtcDateTime)
+            .ToList();
 
         WorkJobGrid.ItemsSource = workJobs.Select(w => new WorkJobCard(w)).ToList();
         EmptyText.Visibility = workJobs.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

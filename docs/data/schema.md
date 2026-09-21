@@ -57,6 +57,8 @@ Composite key `(ProductId, EquivalentProductId)`. Check: not self. Cascade. Trea
 | Title | Required |
 | CreatedAt | DateTimeOffset. SQLite: sort via `UtcDateTime` |
 | CarId | Nullable FK → Cars, **Restrict** |
+| IsDefinition | bool, default false. `true` = Job recipe row (not a Home card). Migration `20260921233755_AddWorkJobDefinition` |
+| SortOrder | int, default 0. Orders definitions on a Job |
 
 ### WorkJobItems
 

@@ -9,6 +9,8 @@ public class WorkJob
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.Now;
     public Guid? CarId { get; set; }
     public Car? Car { get; set; }
+    public bool IsDefinition { get; set; }
+    public int SortOrder { get; set; }
 
     public ICollection<WorkJobItem> Items { get; set; } = new List<WorkJobItem>();
 }

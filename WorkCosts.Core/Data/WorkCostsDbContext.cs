@@ -98,6 +98,8 @@ public class WorkCostsDbContext : DbContext
         {
             e.HasKey(x => x.Id);
             e.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            e.Property(x => x.IsDefinition).HasDefaultValue(false);
+            e.Property(x => x.SortOrder).HasDefaultValue(0);
             e.HasOne(x => x.Job)
                 .WithMany(x => x.WorkJobs)
                 .HasForeignKey(x => x.JobId)
