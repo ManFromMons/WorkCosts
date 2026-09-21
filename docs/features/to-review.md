@@ -105,32 +105,26 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
 - **Seq:** 13
-- **Status:** ready-for-agent
-- **Change set:** none (spec only; not started)
-- **Last note:** Landed on main via merge-planning. Waits on **11-cars**. Filename is `13-car-vin-lookup.md`.
-
-
+- **Status:** in-progress
+- **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup`
+- **Last note:** Implementing mdecoder VIN lookup. Decode URL is `/decode/{vin}`. HttpClient first, then Chromium.
 
 ### Work summary
 
-- Spec only. mdecoder VIN lookup, 30s poll, 2 min cap, BMW gate. Not implemented.
-
-
+- Branch created from origin/main. Next: wait/ready fixtures, `MdecoderVehicleLookup` poll, Lookup on Cars VIN row.
 
 ### Questions
 
-*(none)*
+_(none)_
 
 ### Deviations to scan
 
-*(none)*
+_(none)_
 
 ### Verify
 
 - [ ] Tests from the feature file passed
 - [ ] Deviations accepted
-
-
 
 ## 14-car-fastcarcheck
 
