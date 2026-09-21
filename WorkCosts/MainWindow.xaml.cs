@@ -311,6 +311,7 @@ public sealed partial class MainWindow : Window
             "categories" => typeof(CategoriesPage),
             "jobs" => typeof(MasterDetailPage),
             "products" => typeof(ProductsPage),
+            "cars" => typeof(CarsPage),
             _ => null
         };
 
@@ -389,6 +390,7 @@ public sealed partial class MainWindow : Window
             CategoriesPage => "categories",
             MasterDetailPage => "jobs",
             ProductsPage => "products",
+            CarsPage => "cars",
             WorkJobDetailPage => "home",
             _ => null
         };

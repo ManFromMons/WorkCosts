@@ -67,12 +67,19 @@ public static class GarageJobCommands
         int durationMinutes,
         GarageJobRepeatCombine repeatCombine,
         DateOnly? intervalAnchorDate,
+        Guid? carId = null,
+        bool setCarId = false,
         CancellationToken cancellationToken = default)
     {
         ValidateName(name);
         if (durationMinutes < 0)
         {
             throw new ArgumentOutOfRangeException(nameof(durationMinutes));
+        }
+
+        if (setCarId && carId is Guid id && !await db.Cars.AnyAsync(c => c.Id == id, cancellationToken))
+        {
+            return false;
         }
 
         var entity = await db.GarageJobs.FirstOrDefaultAsync(g => g.Id == garageJobId, cancellationToken);
@@ -88,6 +95,11 @@ public static class GarageJobCommands
         entity.DurationMinutes = durationMinutes;
         entity.RepeatCombine = repeatCombine;
         entity.IntervalAnchorDate = intervalAnchorDate;
+        if (setCarId)
+        {
+            entity.CarId = carId;
+        }
+
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }

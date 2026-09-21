@@ -83,6 +83,11 @@
                                 <FontIcon FontSize="18" Glyph="&#xE8FD;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
+                        <NavigationViewItem Content="Cars" FontSize="18" Tag="cars">
+                            <NavigationViewItem.Icon>
+                                <FontIcon FontSize="18" Glyph="&#xE804;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
                     </NavigationViewItem.MenuItems>
                 </NavigationViewItem>
             </NavigationView.MenuItems>

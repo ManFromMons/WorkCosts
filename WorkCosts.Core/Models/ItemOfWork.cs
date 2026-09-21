@@ -7,4 +7,6 @@ public class ItemOfWork
     public GarageJob? GarageJob { get; set; }
     public DateTimeOffset OccurredAt { get; set; }
     public int? OdometerMiles { get; set; }
+    public Guid? CarId { get; set; }
+    public Car? Car { get; set; }
 }

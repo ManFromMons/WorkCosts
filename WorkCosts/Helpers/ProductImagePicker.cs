@@ -99,7 +99,8 @@ public static class ProductImagePicker
 
     public static async Task<ProductImageCandidate?> ChooseFromCandidatesAsync(
         XamlRoot xamlRoot,
-        IReadOnlyList<ProductImageCandidate> images)
+        IReadOnlyList<ProductImageCandidate> images,
+        string title = "Select product image")
     {
         StartupLog.Write($"ChooseFromCandidatesAsync count={images.Count}");
         var grid = new GridView
@@ -165,7 +166,7 @@ public static class ProductImagePicker
 
         dialog = new ContentDialog
         {
-            Title = "Select product image",
+            Title = title,
             Content = grid,
             PrimaryButtonText = "Use image",
             CloseButtonText = "Cancel",

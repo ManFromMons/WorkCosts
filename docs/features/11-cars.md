@@ -162,3 +162,6 @@ Commands: unknown `CarId` on garage job / work job / item-of-work update → no 
 3. `docs/data/schema.md`, `docs/data/connection.md`, `docs/data/garage-job.md`, `docs/screens/cars.md`, Stuff in `docs/screens/shell.md`.
 4. WinUI `CarsPage` + add sheet + Bing/Google chooser. Reuse `DialogHelper` / image-picker grammar. No WebView in a ContentDialog.
 5. Do not: mdecoder/FastCarCheck HTTP; Home rewrite; hard-delete cars; seed cars; seed car-details; Car types page (Seq 12).
+6. `GarageJobCommands.UpdateAsync` leaves `CarId` unchanged unless `setCarId` is true, so existing callers do not clear the FK. Unknown car with `setCarId` returns false and writes nothing.
+7. Normalized VRM is stored as `VrmKey` (upper case, spaces removed) with a unique filtered index where `DeletedAt` is null.
+8. The image chooser reuses `ProductImagePicker.ChooseFromCandidatesAsync` (ContentDialog), the same control Add Product uses. Add Car stays a sheet. Chromium runs before that dialog.
