@@ -167,13 +167,15 @@ _(none)_
 
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
 - **Seq:** 16
-- **Status:** in-progress
+- **Status:** ready-for-review
 - **Change set:** branch `feature/16-car-details-seed-Car-details-seed`
-- **Last note:** Implementing empty `car-details.json` loader and `DbInitializer` hook.
+- **Last note:** Named seed tests passed (208 total). WinUI build succeeded. PR next.
 
 ### Work summary
 
-- Branch created from origin/main. Next: embedded `[]`, `CarDetailsJsonSeed.Read`, `SeedCarDetailsAsync`, named tests.
+- `WorkCosts.Core/Data/car-details.json` is embedded `[]`. `CarDetailsJsonSeed.Read` returns an empty list for that file and throws `InvalidOperationException` on malformed JSON.
+- `DbInitializer.SeedAsync` calls `SeedCarDetailsAsync` after jobs. Empty JSON inserts nothing. User-added types stay. A missing embedded file is a no-op. Malformed JSON is skipped in initialize (helper still throws for tests).
+- No catalogue rows. No migration. No Car types UI change.
 
 ### Questions
 
@@ -185,7 +187,7 @@ _(none)_
 
 ### Verify
 
-- [ ] Tests from the feature file passed
+- [x] Tests from the feature file passed
 - [ ] Deviations accepted
 ## 17-item-of-work-ui
 
