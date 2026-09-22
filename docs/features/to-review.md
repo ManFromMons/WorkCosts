@@ -168,8 +168,8 @@ _(none)_
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
 - **Seq:** 16
 - **Status:** ready-for-review
-- **Change set:** branch `feature/16-car-details-seed-Car-details-seed`
-- **Last note:** Named seed tests passed (208 total). WinUI build succeeded. PR next.
+- **Change set:** branch `feature/16-car-details-seed-Car-details-seed` — [PR #19](https://github.com/ManFromMons/WorkCosts/pull/19)
+- **Last note:** Squash PR https://github.com/ManFromMons/WorkCosts/pull/19 opened. Do not merge until this heading is done.
 
 ### Work summary
 
