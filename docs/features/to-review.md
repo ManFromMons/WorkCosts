@@ -167,27 +167,26 @@ _(none)_
 
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
 - **Seq:** 16
-- **Status:** ready-for-agent
-- **Change set:** none (spec only; not started)
-- **Last note:** Landed on main via merge-planning. Empty JSON loader first. Waits on **12-car-details**. Filename is `16-car-details-seed.md`.
+- **Status:** in-progress
+- **Change set:** branch `feature/16-car-details-seed-Car-details-seed`
+- **Last note:** Implementing empty `car-details.json` loader and `DbInitializer` hook.
 
 ### Work summary
 
-- Spec only. `car-details.json` = `[]` plus DbInitializer hook. Not implemented.
+- Branch created from origin/main. Next: embedded `[]`, `CarDetailsJsonSeed.Read`, `SeedCarDetailsAsync`, named tests.
 
 ### Questions
 
-*(none)*
+_(none)_
 
 ### Deviations to scan
 
-*(none)*
+_(none)_
 
 ### Verify
 
 - [ ] Tests from the feature file passed
 - [ ] Deviations accepted
-
 ## 17-item-of-work-ui
 
 - **Feature:** [docs/features/17-item-of-work-ui.md](17-item-of-work-ui.md)
