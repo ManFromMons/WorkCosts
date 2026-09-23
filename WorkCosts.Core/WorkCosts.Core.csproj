@@ -24,4 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\WorkCosts.Parsing\WorkCosts.Parsing.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Data\car-details.json" />
+  </ItemGroup>
 </Project>

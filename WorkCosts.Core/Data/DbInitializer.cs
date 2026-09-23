@@ -30,7 +30,14 @@ public static class DbInitializer
     {
         await SeedCategoriesAsync(db);
         await SeedJobsAsync(db);
+        await SeedCarDetailsAsync(db);
     }
+
+    public static Task SeedCarDetailsAsync(
+        WorkCostsDbContext db,
+        Stream? source = null,
+        CancellationToken cancellationToken = default) =>
+        CarDetailsJsonSeed.SeedCarDetailsAsync(db, source, cancellationToken);
 
     private static async Task SeedCategoriesAsync(WorkCostsDbContext db)
     {

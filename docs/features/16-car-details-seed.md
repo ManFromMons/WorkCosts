@@ -3,8 +3,8 @@
 - **Id:** `docs/features/16-car-details-seed.md`
 - **Seq:** 16
 - **Depends-on:** `12-car-details`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/19
 - **Windows:** Core initializer only (Car types page already from Seq 12; no new UI here)
 - **Related screens:** `docs/screens/car-types.md`
 - **Related code:** `CarDetails`, `DbInitializer`, `WorkCostsDbContext`
