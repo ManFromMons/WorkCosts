@@ -48,7 +48,7 @@ Unique among types: uppercase trimmed **`Make|Model|ModelNumber|Year`**. `Model`
 ### Cars (engine code)
 
 - `CarsPage` Add sheet and editor: header **Engine code** (was “Engine type”). Placeholder an engine code (`N62`, `M57`), not `4.4 V8`. Still required. Max 200. Column remains `Car.EngineType`.
-- Type combo search stays make / model-number. Combo label is make · model-number · years — **no engine**. Selecting a type does **not** write `Car.EngineType`.
+- Type picker is an autocomplete box. `BMW E60` is two wildcard terms (AND). Label is make · model-number · years — **no engine**. Selecting a type does **not** write `Car.EngineType`.
 - Save still refuses a blank engine code (`CarCommands` unchanged except tests that mention the label).
 
 ### Empty / error / cancel

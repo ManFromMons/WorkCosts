@@ -71,6 +71,22 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task CarDetailsCommands_List_SortsByMakeThenModel()
+    {
+        Assert.True((await CarDetailsCommands.CreateAsync(_db, new("ZZ-SortB", "M2", "B2", 2002))).Saved);
+        Assert.True((await CarDetailsCommands.CreateAsync(_db, new("ZZ-SortA", "M2", "A2", 2001))).Saved);
+        Assert.True((await CarDetailsCommands.CreateAsync(_db, new("ZZ-SortB", "M1", "B1", 2000))).Saved);
+
+        var listed = (await CarDetailsCommands.ListAsync(_db))
+            .Where(type => type.Make.StartsWith("ZZ-Sort", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.Equal(
+            [("ZZ-SortA", "M2"), ("ZZ-SortB", "M1"), ("ZZ-SortB", "M2")],
+            listed.Select(type => (type.Make, type.Model)).ToArray());
+    }
+
+    [Fact]
     public async Task CarDetailsCommands_RejectsDuplicateMakeModelModelNumberYear()
     {
         Assert.True((await CarDetailsCommands.CreateAsync(_db, Sample())).Saved);

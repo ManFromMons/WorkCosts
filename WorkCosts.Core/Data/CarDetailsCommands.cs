@@ -96,6 +96,7 @@ public static class CarDetailsCommands
         CancellationToken cancellationToken = default) =>
         db.CarDetails.AsNoTracking()
             .OrderBy(t => t.Make)
+            .ThenBy(t => t.Model)
             .ThenBy(t => t.ModelNumber)
             .ThenBy(t => t.Year)
             .ThenBy(t => t.Id)

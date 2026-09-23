@@ -7,7 +7,7 @@ Seeded from the repo JSON ([19-car-details-catalogue.md](../features/19-car-deta
 ## Regions (regular)
 
 - Header: title **Car types**, subtitle, trailing **Add**.
-- Left: list (make · model-number · year–end year). Empty: “No car types yet.”
+- Left: list (make · model-number · year–end year), sorted by **Make**, then **Model**. Empty: “No car types yet.”
 - Right: editor, or “select a car type”.
 - Overlay/sheet: Add type (make, model, model-number, year; end year optional).
 

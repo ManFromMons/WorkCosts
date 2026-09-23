@@ -167,16 +167,18 @@
                                     Content="Cancel"
                                     Visibility="Collapsed" />
                             </Grid>
-                            <ComboBox
+                            <AutoSuggestBox
                                 x:Name="DetailTypeBox"
                                 Grid.Row="2"
                                 Grid.Column="2"
                                 Header="Car type"
                                 HorizontalAlignment="Stretch"
-                                IsTextSearchEnabled="True"
                                 DisplayMemberPath="Label"
-                                PlaceholderText="Optional"
-                                SelectionChanged="DetailType_Changed" />
+                                PlaceholderText="Optional, e.g. BMW E60"
+                                TextChanged="TypeBox_TextChanged"
+                                SuggestionChosen="TypeBox_SuggestionChosen"
+                                QuerySubmitted="TypeBox_QuerySubmitted"
+                                UpdateTextOnSelect="False" />
                         </Grid>
                         <Border
                             x:Name="DetailApplyBanner"
@@ -268,14 +270,16 @@
                             Content="Cancel"
                             Visibility="Collapsed" />
                     </Grid>
-                    <ComboBox
+                    <AutoSuggestBox
                         x:Name="AddTypeBox"
                         Header="Car type"
                         HorizontalAlignment="Stretch"
-                        IsTextSearchEnabled="True"
                         DisplayMemberPath="Label"
-                        PlaceholderText="Optional"
-                        SelectionChanged="AddType_Changed" />
+                        PlaceholderText="Optional, e.g. BMW E60"
+                        TextChanged="TypeBox_TextChanged"
+                        SuggestionChosen="TypeBox_SuggestionChosen"
+                        QuerySubmitted="TypeBox_QuerySubmitted"
+                        UpdateTextOnSelect="False" />
                     <Border
                         x:Name="AddApplyBanner"
                         Padding="12"
