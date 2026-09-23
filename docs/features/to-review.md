@@ -195,13 +195,14 @@ _(none)_
 - **Seq:** 19
 - **Status:** done
 - **Change set:** branch `feature/19-car-details-catalogue-Car-details-catalogue` - [PR #20](https://github.com/ManFromMons/WorkCosts/pull/20)
-- **Last note:** Deviations accepted. Feature file Status next. Do not squash-merge until asked.
+- **Last note:** Type autocomplete and Make/Model sort accepted. PR #20 updated. Do not squash-merge until asked.
 
 ### Work summary
 
 - ``CarDetails`` no longer has engine. Unique key is ``Make|Model|ModelNumber|Year``. Nullable ``EndYear``. Migration ``20260923200000_CarDetailsDropEngineAddEndYear``.
 - Seed file has 2515 Tiresaddict generations. Seq 16 upsert overwrites the same id. User-added other keys stay. App does not call Tiresaddict or Wikidata.
-- Car types page: four required fields plus optional end year. Cars page: **Engine code** label; type combo shows years, not engine.
+- Car types page: four required fields plus optional end year. List sorted by Make, then Model.
+- Cars page: **Engine code** label. Car type is an autocomplete box; ``BMW E60`` is two wildcard terms. Suggestions capped at 25.
 - Generator: ``scripts/Build-CarDetailsSeed.ps1`` runs ``tools/BuildCarDetailsSeed``. Committed JSON was built with ``-SkipWikidata``.
 
 ### Questions
@@ -213,6 +214,7 @@ _(none)_
 - [x] ``scripts/Build-CarDetailsSeed.ps1`` wraps ``tools/BuildCarDetailsSeed`` (not in ``WorkCosts.slnx``).
 - [x] Committed ``car-details.json`` was generated with ``-SkipWikidata``; no-parens chassis is the Tiresaddict model line.
 - [x] Mapper tests use in-memory Tiresaddict rows instead of files under ``WorkCosts.Tests/Fixtures/car-details/``.
+- [x] Cars type picker is ``AutoSuggestBox`` (not a combo). Empty text clears the type. Enter in the box picks a match and does not save the car.
 
 ### Verify
 
