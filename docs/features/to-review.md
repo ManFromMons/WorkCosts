@@ -169,7 +169,7 @@ _(none)_
 - **Seq:** 16
 - **Status:** done
 - **Change set:** branch `feature/16-car-details-seed-Car-details-seed` — [PR #19](https://github.com/ManFromMons/WorkCosts/pull/19)
-- **Last note:** Feature file Status is `done`. PR #19 is ready.
+- **Last note:** Squash-merged to `main` as `1cd37c3` (#19). Feature file Status is `done`.
 
 ### Work summary
 
