@@ -25,12 +25,12 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 - **Feature:** [docs/features/11-cars.md](11-cars.md)
 - **Seq:** 11
 - **Status:** done
-- **Change set:** branch `feature/11-cars-Cars` — [https://github.com/ManFromMons/WorkCosts/pull/13](https://github.com/ManFromMons/WorkCosts/pull/13)
+- **Change set:** branch `feature/11-cars-Cars` ÔÇö [https://github.com/ManFromMons/WorkCosts/pull/13](https://github.com/ManFromMons/WorkCosts/pull/13)
 - **Last note:** Feature file Status is `done`. PR #13 is ready.
 
 ### Work summary
 
-- Stuff → Cars master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list. Detail fields are three per row.
+- Stuff ÔåÆ Cars master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list. Detail fields are three per row.
 - Add Car is a sheet. Nickname, make, model, model number, engine, VRM, model year, VIN, and a photo are required. Save stays off until they are set. A duplicate active registration shows an error and does not write.
 - Image search uses `{Make} {ModelNumber}` on Bing Images, then Google Images when Bing has no usable files. HttpClient first; Chromium only if the page is challenged, and not inside a dialog. One photo applies immediately; several open the existing chooser. A local PNG, JPEG, or WebP up to 512 KB is allowed as well.
 - Cars are SQLite rows. Photos are files under `images/cars/`. `VehicleOrderJson` starts empty. Soft-delete sets `DeletedAt` and `UpdatedAt`, keeps the row, the photo, and foreign keys, and drops the car from the list.
@@ -44,7 +44,7 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 
 - [x] Normalized registration is stored as `VrmKey` (upper case, spaces removed) with a unique filtered index where `DeletedAt` is null.
 - [x] `GarageJobCommands.UpdateAsync` leaves `CarId` unchanged unless `setCarId` is true, so existing updates do not clear the FK. An unknown car with `setCarId` returns false and writes nothing. Work jobs use new `WorkJobCommands.TrySetCarIdAsync` (there was no work-job command type). Items of work take an optional `CarId` on create, plus `TrySetCarIdAsync` for later updates.
-- [x] The image chooser reuses `ProductImagePicker.ChooseFromCandidatesAsync` (a ContentDialog). An optional title lets cars say “Select a photo”. Add Car stays a sheet. Chromium runs before that dialog.
+- [x] The image chooser reuses `ProductImagePicker.ChooseFromCandidatesAsync` (a ContentDialog). An optional title lets cars say ÔÇ£Select a photoÔÇØ. Add Car stays a sheet. Chromium runs before that dialog.
 - [x] `Microsoft.EntityFrameworkCore.Design` IncludeAssets now includes runtime so `dotnet ef` can see the package. PrivateAssets stays `all`.
 
 ### Verify
@@ -57,12 +57,12 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 - **Feature:** [docs/features/12-car-details.md](12-car-details.md)
 - **Seq:** 12
 - **Status:** done
-- **Change set:** branch `feature/12-car-details-Car-types` — [https://github.com/ManFromMons/WorkCosts/pull/14](https://github.com/ManFromMons/WorkCosts/pull/14)
+- **Change set:** branch `feature/12-car-details-Car-types` ÔÇö [https://github.com/ManFromMons/WorkCosts/pull/14](https://github.com/ManFromMons/WorkCosts/pull/14)
 - **Last note:** Squash-merged to `main` as `a230139` (#14). Feature file Status is `done`.
 
 ### Work summary
 
-- Stuff → Car types master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list.
+- Stuff ÔåÆ Car types master/detail, trailing Add. Narrow width stacks the list, then the detail, with Back to the list.
 - Add type is a sheet. Make, model, model number, year, and engine are required. Save inserts and selects. Duplicate make + model-number + year + engine does not write.
 - Delete is hard delete and Restrict if a car, job junction, garage job, or completion points at the type. No soft-delete. Unsaved changes use the same helper as Cars.
 - Optional car-type combo on the car editor. Nickname and scalars stay. Unknown type id does not write.
@@ -88,13 +88,13 @@ Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in
 - **Feature:** [docs/features/13-car-vin-lookup.md](13-car-vin-lookup.md)
 - **Seq:** 13
 - **Status:** done
-- **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup` — [PR #16](https://github.com/ManFromMons/WorkCosts/pull/16)
+- **Change set:** branch `feature/13-car-vin-lookup-VIN-lookup` ÔÇö [PR #16](https://github.com/ManFromMons/WorkCosts/pull/16)
 - **Last note:** Squash-merged to `main` as `6d92f63` (#16). Feature file Status is `done`.
 
 ### Work summary
 
 - Lookup sits next to VIN on the Cars add sheet and editor. It is enabled when VIN is set and the car looks BMW (Make BMW, ignore case, or VIN starts with WBA / WBS / WBY / 5UX / 5YM). Otherwise the sheet says to use FastCarCheck later and mdecoder is not called.
-- First request is HttpClient GET `https://www.mdecoder.com/decode/{vin}`. A Cloudflare / robot-check body opens the same off-dialog Chromium path as Autodoc. Polling stays on the sheet: "Requesting mdecoder…", then "Waiting, retrying in 30s…". Cancel stops polling and does not discard the form.
+- First request is HttpClient GET `https://www.mdecoder.com/decode/{vin}`. A Cloudflare / robot-check body opens the same off-dialog Chromium path as Autodoc. Polling stays on the sheet: "Requesting mdecoderÔÇª", then "Waiting, retrying in 30sÔÇª". Cancel stops polling and does not discard the form.
 - A ready decode replaces `VehicleOrderJson`. Nickname is never overwritten. Empty make / model / model-number / year / engine fill from the decode; filled values that differ show an in-sheet Apply fields / Keep current banner.
 - Timeout after 2 minutes leaves JSON and typed fields unchanged. Offline or unusable HTML fails on the sheet. Tests use `mdecoder-wait.snippet.html` and `mdecoder-ready.snippet.html` (no live network).
 
@@ -116,7 +116,7 @@ _(none)_
 - **Seq:** 14
 - **Status:** draft
 - **Change set:** none
-- **Last note:** Landed on main via merge-planning. **Draft — resume later.** Filename is `14-car-fastcarcheck.md`.
+- **Last note:** Landed on main via merge-planning. **Draft ÔÇö resume later.** Filename is `14-car-fastcarcheck.md`.
 
 ### Work summary
 
@@ -140,7 +140,7 @@ _(none)_
 - **Feature:** [docs/features/15-workjob-job-subset.md](15-workjob-job-subset.md)
 - **Seq:** 15
 - **Status:** done
-- **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset` — [PR #17](https://github.com/ManFromMons/WorkCosts/pull/17)
+- **Change set:** branch `feature/15-workjob-job-subset-Work-job-subset` ÔÇö [PR #17](https://github.com/ManFromMons/WorkCosts/pull/17)
 - **Last note:** Squash-merged to `main` as `4c5cd31` (#17). Delivery notes squash-merged as `08647ef` (#18). Feature file Status is `done`.
 
 ### Work summary
@@ -168,7 +168,7 @@ _(none)_
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
 - **Seq:** 16
 - **Status:** done
-- **Change set:** branch `feature/16-car-details-seed-Car-details-seed` — [PR #19](https://github.com/ManFromMons/WorkCosts/pull/19)
+- **Change set:** branch `feature/16-car-details-seed-Car-details-seed` ÔÇö [PR #19](https://github.com/ManFromMons/WorkCosts/pull/19)
 - **Last note:** Squash-merged to `main` as `1cd37c3` (#19). Feature file Status is `done`.
 
 ### Work summary
@@ -189,13 +189,37 @@ _(none)_
 
 - [x] Tests from the feature file passed
 - [x] Deviations accepted
+## 19-car-details-catalogue
+
+- **Feature:** [docs/features/19-car-details-catalogue.md](19-car-details-catalogue.md)
+- **Seq:** 19
+- **Status:** in-progress
+- **Change set:** branch ``feature/19-car-details-catalogue-Car-details-catalogue``
+- **Last note:** Implementing catalogue seed: drop type engine, add EndYear, Tiresaddict mapper.
+
+### Work summary
+
+_(in progress)_
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+_(none)_
+
+### Verify
+
+- [ ] Tests from the feature file passed
+- [ ] Deviations accepted
 ## 17-item-of-work-ui
 
 - **Feature:** [docs/features/17-item-of-work-ui.md](17-item-of-work-ui.md)
 - **Seq:** 17
 - **Status:** draft
 - **Change set:** none
-- **Last note:** Landed on main via merge-planning. **Draft — refine later.** Filename is `17-item-of-work-ui.md`.
+- **Last note:** Landed on main via merge-planning. **Draft ÔÇö refine later.** Filename is `17-item-of-work-ui.md`.
 
 ### Work summary
 
@@ -218,15 +242,15 @@ _(none)_
 
 - **Feature:** [docs/features/garage-job-interval-logic.md](garage-job-interval-logic.md)
 - **Status:** done
-- **Change set:** branch `cursor/garage-job-interval-logic-f3f1` — [https://github.com/ManFromMons/WorkCosts/pull/11](https://github.com/ManFromMons/WorkCosts/pull/11)
+- **Change set:** branch `cursor/garage-job-interval-logic-f3f1` ÔÇö [https://github.com/ManFromMons/WorkCosts/pull/11](https://github.com/ManFromMons/WorkCosts/pull/11)
 - **Last note:** Squash-merged to `main` as `016a199` (#11). Feature file Status is `done`.
 
 ### Work summary
 
-- Persist `ItemOfWork` completions (`OccurredAt`, optional odometer miles ≥ 0) with Restrict FK. `ItemOfWorkCommands` create / list / latest / delete. `GarageJobCommands.TryDeleteAsync` returns `HasCompletions` and keeps the parent.
-- Persist `GarageJob.IntervalAnchorDate` (`DateOnly?`) via `UpdateAsync`. Empty anchor + no completions → `DueImmediately`.
+- Persist `ItemOfWork` completions (`OccurredAt`, optional odometer miles ÔëÑ 0) with Restrict FK. `ItemOfWorkCommands` create / list / latest / delete. `GarageJobCommands.TryDeleteAsync` returns `HasCompletions` and keeps the parent.
+- Persist `GarageJob.IntervalAnchorDate` (`DateOnly?`) via `UpdateAsync`. Empty anchor + no completions ÔåÆ `DueImmediately`.
 - `GarageJobLondonTime` (`Europe/London`, else Windows `GMT Standard Time`) and `GarageJobDueEvaluator`: `NotScheduled` / `DueImmediately` / `NeverDone` / `NotDue` / `Due` / `Overdue`. Multiple same-kind rows stay in force (6 mo vs 12 mo). Miles canonical (`1.609344` km/mile). Due vs Overdue uses the combined next threshold (min/max), so AllMustBeMet 6+12 months is **Due** at 12 months.
-- `GarageJobRollupCalculator`: each `ProductJob` quantity 1, merge required products, garage £ + DIY £ to 2 dp `AwayFromZero`, referenced job duration (parent duration echoed, not added). `IsAllJobs` excluded unless linked.
+- `GarageJobRollupCalculator`: each `ProductJob` quantity 1, merge required products, garage ┬ú + DIY ┬ú to 2 dp `AwayFromZero`, referenced job duration (parent duration echoed, not added). `IsAllJobs` excluded unless linked.
 - Migration `20260920193900_AddItemOfWorkAndIntervalAnchor`. `docs/data/garage-job.md` and `docs/data/schema.md` updated. No WinUI.
 
 ### Questions
@@ -236,7 +260,7 @@ _(none)_
 ### Deviations to scan
 
 - [x] `ItemOfWork` latest/list: load then sort in memory by `OccurredAt.UtcDateTime` then `Id`. SQLite cannot translate that `OrderByDescending`. Newest-first contract unchanged.
-- [x] Branch `cursor/garage-job-interval-logic-f3f1` (cloud-agent prefix) instead of `feature/garage-job-interval-logic-…`.
+- [x] Branch `cursor/garage-job-interval-logic-f3f1` (cloud-agent prefix) instead of `feature/garage-job-interval-logic-ÔÇª`.
 - [x] EF migration authored by hand because `dotnet ef` was not available on the Linux agent.
 - [x] Review PR opened at inbox `ready-for-review` ([https://github.com/ManFromMons/WorkCosts/pull/11](https://github.com/ManFromMons/WorkCosts/pull/11)) rather than waiting for **Status** `done`.
 
@@ -317,7 +341,7 @@ _(none)_
 ### Deviations to scan
 
 - [x] Vendor is the host label `"Online Car Parts"` (JSON-LD seller is the shop URL).
-- [x] Sample 1 live `.product__new-price` on 2026-08-21 was **�49.96**; fixtures lock the confirmed **�50.24**.
+- [x] Sample 1 live `.product__new-price` on 2026-08-21 was **´┐¢49.96**; fixtures lock the confirmed **´┐¢50.24**.
 - [x] Added `ProductPageMetadata.ExtraUnknown` / client merge into `ProductExtra.UnknownKeys` (no editor boxes).
 
 ### Verify
@@ -356,7 +380,7 @@ _(none)_
 
 ### Deviations to scan
 
-- [x] Sample 2 fixture uses the confirmed unit price **£98.50**; live HttpClient HTML on 2026-08-21 showed **£103.30** (RRP £109.09). Tests no longer lock a GBP amount.
+- [x] Sample 2 fixture uses the confirmed unit price **┬ú98.50**; live HttpClient HTML on 2026-08-21 showed **┬ú103.30** (RRP ┬ú109.09). Tests no longer lock a GBP amount.
 - [x] Vendor is the host label `"Car Battery Market"` (first-party shop; no sold-by node).
 
 ### Verify
@@ -376,7 +400,7 @@ _(none)_
 
 ### Deviations to scan
 
-- [x] Manufacturer is the first token of `brandImage` alt so “Eicher Premium” matches confirmed **Eicher**.
+- [x] Manufacturer is the first token of `brandImage` alt so ÔÇ£Eicher PremiumÔÇØ matches confirmed **Eicher**.
 - [x] Vendor is the host label `"Euro Car Parts"` (first-party shop; no sold-by node).
 
 ### Verify
@@ -416,7 +440,7 @@ _(none)_
 ### Deviations to scan
 
 - [x] Also added `ExtraYaml` in `DatabaseService.RepairProductSchema` (same pattern as `PricePoint`) so existing unpackaged databases get the column if migration history is incomplete.
-- [x] Added `InputToolTip.Bind(ComboBox, …)` so Technology matches the other extra-spec tooltips.
+- [x] Added `InputToolTip.Bind(ComboBox, ÔÇª)` so Technology matches the other extra-spec tooltips.
 
 ### Verify
 
