@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/car-types.md` (new), `docs/screens/cars.md`, `docs/screens/jobs.md`, `docs/screens/shell.md`
 - **Related code:** `Car`, `Job`, `GarageJob`, `ItemOfWork`, `DbInitializer`, `WorkCostsDbContext`, `DialogHelper`, Stuff nav
 
-A **car type** (`CarDetails`) is “BMW E60 / 545 / 2004 / 4.4L V8”, not a vehicle the user owns. FastCarCheck ([14-car-fastcarcheck.md](14-car-fastcarcheck.md)) and a later **seed-from-repo** story ([16-car-details-seed.md](16-car-details-seed.md)) **hook onto the Car types page**. Job work-job subset (Core copy): [15-workjob-job-subset.md](15-workjob-job-subset.md). Completions / garage-job collation UI: [17-item-of-work-ui.md](17-item-of-work-ui.md) (refine later).
+A **car type** (`CarDetails`) is a generation (make + label + chassis + years), not a vehicle the user owns. Seq 12 shipped engine on the type; [19-car-details-catalogue.md](19-car-details-catalogue.md) **drops type engine** and changes the unique key. FastCarCheck ([14-car-fastcarcheck.md](14-car-fastcarcheck.md)) and the empty loader ([16-car-details-seed.md](16-car-details-seed.md)) hook onto the Car types page. Job work-job subset (Core copy): [15-workjob-job-subset.md](15-workjob-job-subset.md). Completions / garage-job collation UI: [17-item-of-work-ui.md](17-item-of-work-ui.md) (refine later).
 
 ## Objectives
 

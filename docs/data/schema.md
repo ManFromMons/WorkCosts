@@ -146,7 +146,7 @@ The user’s vehicles. Not work instances. No seed rows.
 | Make | Required, max 120 |
 | Model | Required, max 120 |
 | ModelNumber | Chassis / series code (E60). Required, max 32. Image search uses make + this |
-| EngineType | Required, max 200 |
+| EngineType | Required, max 200. UI label **Engine code**. Not copied from the type |
 | Vrm | Registration as typed, max 16 |
 | VrmKey | Uppercase registration with spaces removed, max 16. Unique where `DeletedAt` is null |
 | Year | Model year int, 1900 through the current calendar year + 1 |
@@ -162,17 +162,17 @@ Photo bytes are a file, not a BLOB. Soft-delete does not remove the file. There 
 
 ### CarDetails
 
-Catalogue of **car types** (make, model, model-number, year, engine). Not a vehicle the user owns. No seed rows. No type photos.
+Catalogue of **car types** (make, generation label, chassis, years). Not a vehicle the user owns. No type photos. Engine lives on **`Car`**. Seeded from `WorkCosts.Core/Data/car-details.json` ([19-car-details-catalogue.md](../features/19-car-details-catalogue.md)).
 
 | Column | Notes |
 | :--- | :--- |
-| Id | Guid PK |
+| Id | Guid PK. Seeded ids are stable from TypeKey |
 | Make | Required, max 120 |
-| Model | Display name. Required, max 120 |
+| Model | Generation label (`5 series (E60)`). Required, max 120 |
 | ModelNumber | Chassis / series (E60). Required, max 32 |
-| Year | Model year int, same range as `Car.Year` |
-| EngineType | Required, max 200 |
-| TypeKey | Uppercase `Make\|ModelNumber\|Year\|EngineType`. Unique |
+| Year | First year of the generation, same range as `Car.Year` |
+| EndYear | Optional last year. Null = still in production |
+| TypeKey | Uppercase `Make\|Model\|ModelNumber\|Year`. Unique |
 
 Delete is **Restrict** if a car, `JobCarDetails` row, garage job, or item of work points at the type. No soft-delete.
 

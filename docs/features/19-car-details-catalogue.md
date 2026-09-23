@@ -3,8 +3,8 @@
 - **Id:** `docs/features/19-car-details-catalogue.md`
 - **Seq:** 19
 - **Depends-on:** `16-car-details-seed`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/20
 - **Windows:** Core + WinUI (Car types page and Cars engine label; no new destination)
 - **Related screens:** `docs/screens/car-types.md`, `docs/screens/cars.md`
 - **Related code:** `CarDetails`, `CarDetailsCommands`, `CarDetailsJsonSeed`, `CarDetailsJsonRow`, `DbInitializer`, `Car`, `CarCommands`, `CarTypesPage`, `CarsPage`
@@ -48,7 +48,7 @@ Unique among types: uppercase trimmed **`Make|Model|ModelNumber|Year`**. `Model`
 ### Cars (engine code)
 
 - `CarsPage` Add sheet and editor: header **Engine code** (was “Engine type”). Placeholder an engine code (`N62`, `M57`), not `4.4 V8`. Still required. Max 200. Column remains `Car.EngineType`.
-- Type combo search stays make / model-number. Combo label is make · model-number · years — **no engine**. Selecting a type does **not** write `Car.EngineType`.
+- Type picker is an autocomplete box. `BMW E60` is two wildcard terms (AND). Label is make · model-number · years — **no engine**. Selecting a type does **not** write `Car.EngineType`.
 - Save still refuses a blank engine code (`CarCommands` unchanged except tests that mention the label).
 
 ### Empty / error / cancel
@@ -213,3 +213,4 @@ Project: `WorkCosts.Tests`. Fixtures are **tiny** slices, not the full dump. No 
 5. `CarTypesPage`: remove engine boxes; add optional End year; list years. `CarsPage`: Engine code label and placeholder. Type combo without engine.
 6. Update `docs/data/schema.md`, `docs/screens/car-types.md`, `docs/screens/cars.md` to this contract. Point Seq 12 / 16 at this file for the superseded key.
 7. Do not: call Tiresaddict or Wikidata from `DbInitializer` or the UI; scrape FastCarCheck/mdecoder; invent engines; pay for or commit a paid dump; add a new page; change `Car.EngineType`’s column name; host a browser in a dialog.
+8. Coder: `scripts/Build-CarDetailsSeed.ps1` runs `tools/BuildCarDetailsSeed` (not in `WorkCosts.slnx`). The committed `car-details.json` was built with `-SkipWikidata`; no-parens chassis is the Tiresaddict `model` line. Mapper tests use in-memory rows rather than files under `WorkCosts.Tests/Fixtures/car-details/`.

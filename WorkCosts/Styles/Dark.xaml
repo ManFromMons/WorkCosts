@@ -68,6 +68,10 @@
         <Setter Property="FontSize" Value="{StaticResource AppInputFontSize}" />
     </Style>
 
+    <Style TargetType="AutoSuggestBox">
+        <Setter Property="FontSize" Value="{StaticResource AppInputFontSize}" />
+    </Style>
+
     <Style TargetType="NumberBox">
         <Setter Property="FontSize" Value="{StaticResource AppInputFontSize}" />
     </Style>

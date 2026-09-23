@@ -2,6 +2,7 @@ using System.Globalization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 using WorkCosts.Data;
 using WorkCosts.Helpers;
@@ -27,6 +28,9 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
     private Guid? _selectedId;
     private string _addVehicleOrderJson = string.Empty;
     private string _detailVehicleOrderJson = string.Empty;
+    private Guid? _detailTypeId;
+    private Guid? _addTypeId;
+    private bool _bindingTypeBox;
     private MdecoderScalars? _addPendingScalars;
     private MdecoderScalars? _detailPendingScalars;
     private CancellationTokenSource? _addLookupCts;
@@ -100,7 +104,9 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             return;
         }
 
-        if (e.Key != Windows.System.VirtualKey.Enter || e.OriginalSource is not TextBox)
+        if (e.Key != Windows.System.VirtualKey.Enter
+            || e.OriginalSource is not TextBox
+            || IsInsideAutoSuggestBox(e.OriginalSource))
         {
             return;
         }
@@ -260,7 +266,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         DetailVinBox.Text = car.Vin;
         _detailVehicleOrderJson = car.VehicleOrderJson;
         HideApplyBanner(add: false);
-        SelectType(DetailTypeBox, car.CarDetailsId);
+        BindTypeBox(DetailTypeBox, car.CarDetailsId);
         _suppressFields = false;
         SetStatus(DetailStatus, null);
         UpdateDetailSave();
@@ -342,18 +348,6 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
 
     private async void AddPick_Click(object sender, RoutedEventArgs e) =>
         await PickFileAsync(applyToAdd: true, AddStatus);
-
-    private void DetailType_Changed(object sender, SelectionChangedEventArgs e)
-    {
-        if (_suppressFields)
-        {
-            return;
-        }
-
-        UpdateDetailSave();
-    }
-
-    private void AddType_Changed(object sender, SelectionChangedEventArgs e) => UpdateAddSave();
 
     private void DetailField_Changed(object sender, TextChangedEventArgs e)
     {
@@ -630,7 +624,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         AddVinBox.Text = string.Empty;
         _addVehicleOrderJson = string.Empty;
         HideApplyBanner(add: true);
-        SelectType(AddTypeBox, null);
+        BindTypeBox(AddTypeBox, null);
         SetStatus(AddStatus, null);
         UpdateAddSave();
         UpdateLookupUi(add: true);
@@ -647,7 +641,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
         || HasText(AddYearBox)
         || HasText(AddVinBox)
         || !string.IsNullOrWhiteSpace(_addVehicleOrderJson)
-        || SelectedTypeId(AddTypeBox) is not null;
+        || _addTypeId is not null;
 
     private bool IsDetailDirty()
     {
@@ -666,7 +660,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             || DetailYearBox.Text.Trim() != _loadedCar.Year.ToString(CultureInfo.InvariantCulture)
             || DetailVinBox.Text.Trim() != _loadedCar.Vin
             || _detailVehicleOrderJson != _loadedCar.VehicleOrderJson
-            || SelectedTypeId(DetailTypeBox) != _loadedCar.CarDetailsId;
+            || _detailTypeId != _loadedCar.CarDetailsId;
     }
 
     private void UpdateDetailSave() =>
@@ -1112,31 +1106,163 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
     {
         var types = await CarDetailsCommands.ListAsync(db);
         _typePicks.Clear();
-        _typePicks.Add(new TypePick { Id = null, Label = "None" });
         foreach (var type in types)
         {
             _typePicks.Add(new TypePick
             {
                 Id = type.Id,
-                Label = $"{type.Make} {type.ModelNumber} · {type.Year} · {type.EngineType}",
+                Label = $"{type.Make} {type.ModelNumber} · {type.Year}{(type.EndYear is int end ? "–" + end : "–")}",
+                Haystack = CarDetailsTypeLookup.Haystack(type.Make, type.Model, type.ModelNumber, type.Year, type.EndYear),
             });
         }
-
-        DetailTypeBox.ItemsSource = _typePicks;
-        AddTypeBox.ItemsSource = _typePicks;
     }
 
-    private void SelectType(ComboBox box, Guid? typeId)
+    private void BindTypeBox(AutoSuggestBox box, Guid? typeId)
     {
-        box.SelectedItem = _typePicks.FirstOrDefault(pick => pick.Id == typeId) ?? _typePicks[0];
+        var pick = typeId is Guid id ? _typePicks.FirstOrDefault(row => row.Id == id) : null;
+        ApplyTypePick(box, pick);
+        if (pick is not null)
+        {
+            box.DispatcherQueue.TryEnqueue(() =>
+            {
+                if (SelectedTypeId(box) == pick.Id && box.Text != pick.Label)
+                {
+                    ApplyTypePick(box, pick);
+                }
+            });
+        }
     }
 
-    private static Guid? SelectedTypeId(ComboBox box) => (box.SelectedItem as TypePick)?.Id;
+    private void ApplyTypePick(AutoSuggestBox box, TypePick? pick)
+    {
+        _bindingTypeBox = true;
+        try
+        {
+            SetTypeId(box, pick?.Id);
+            box.ItemsSource = Array.Empty<TypePick>();
+            box.Text = pick?.Label ?? string.Empty;
+        }
+        finally
+        {
+            _bindingTypeBox = false;
+        }
+    }
+
+    private void TypeBox_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs e)
+    {
+        if (_bindingTypeBox || e.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
+        {
+            return;
+        }
+
+        var selected = TypePickFor(SelectedTypeId(sender));
+        if (selected is not null && string.Equals(sender.Text, selected.Label, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        SetTypeId(sender, null);
+        sender.ItemsSource = CarDetailsTypeLookup.Filter(_typePicks, pick => pick.Haystack, sender.Text);
+        UpdateTypeSave(sender);
+    }
+
+    private void TypeBox_SuggestionChosen(AutoSuggestBox sender, AutoSuggestBoxSuggestionChosenEventArgs e)
+    {
+        if (e.SelectedItem is TypePick pick)
+        {
+            ApplyTypePick(sender, pick);
+        }
+
+        UpdateTypeSave(sender);
+    }
+
+    private void TypeBox_QuerySubmitted(AutoSuggestBox sender, AutoSuggestBoxQuerySubmittedEventArgs e)
+    {
+        if (e.ChosenSuggestion is TypePick chosen)
+        {
+            ApplyTypePick(sender, chosen);
+            UpdateTypeSave(sender);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(sender.Text))
+        {
+            ApplyTypePick(sender, null);
+            UpdateTypeSave(sender);
+            return;
+        }
+
+        var matches = CarDetailsTypeLookup.Filter(_typePicks, pick => pick.Haystack, sender.Text, max: 2);
+        if (matches.Count == 1)
+        {
+            ApplyTypePick(sender, matches[0]);
+        }
+
+        UpdateTypeSave(sender);
+    }
+
+    private TypePick? TypePickFor(Guid? typeId) =>
+        typeId is Guid id ? _typePicks.FirstOrDefault(row => row.Id == id) : null;
+
+    private void SetTypeId(AutoSuggestBox box, Guid? typeId)
+    {
+        if (ReferenceEquals(box, DetailTypeBox))
+        {
+            _detailTypeId = typeId;
+        }
+        else
+        {
+            _addTypeId = typeId;
+        }
+    }
+
+    private Guid? SelectedTypeId(AutoSuggestBox box) =>
+        ReferenceEquals(box, DetailTypeBox) ? _detailTypeId : _addTypeId;
+
+    private void UpdateTypeSave(AutoSuggestBox box)
+    {
+        if (_suppressFields)
+        {
+            return;
+        }
+
+        if (ReferenceEquals(box, DetailTypeBox))
+        {
+            UpdateDetailSave();
+        }
+        else
+        {
+            UpdateAddSave();
+        }
+    }
+
+    private static bool IsInsideAutoSuggestBox(object source)
+    {
+        if (source is not DependencyObject node)
+        {
+            return false;
+        }
+
+        while (node is not null)
+        {
+            if (node is AutoSuggestBox)
+            {
+                return true;
+            }
+
+            node = VisualTreeHelper.GetParent(node);
+        }
+
+        return false;
+    }
 
     private sealed class TypePick
     {
-        public Guid? Id { get; init; }
+        public Guid Id { get; init; }
         public required string Label { get; init; }
+        public required string Haystack { get; init; }
+
+        public override string ToString() => Label;
     }
 
     private sealed class CarRow

@@ -51,10 +51,11 @@ public sealed class CarDetailsJsonSeedTests : IAsyncLifetime
     [Fact]
     public async Task DbInitializer_EmptyCarDetailsJson_InsertsNothing()
     {
-        Assert.Equal(0, await _db.CarDetails.CountAsync());
+        var before = await _db.CarDetails.CountAsync();
         Assert.NotNull(CarDetailsJsonSeed.OpenEmbedded());
-        await DbInitializer.SeedCarDetailsAsync(_db);
-        Assert.Equal(0, await _db.CarDetails.CountAsync());
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("[]"));
+        await DbInitializer.SeedCarDetailsAsync(_db, stream);
+        Assert.Equal(before, await _db.CarDetails.CountAsync());
     }
 
     [Fact]
@@ -62,14 +63,13 @@ public sealed class CarDetailsJsonSeedTests : IAsyncLifetime
     {
         var created = await CarDetailsCommands.CreateAsync(
             _db,
-            new CarDetailsInput("BMW", "545", "E60", 2004, "4.4 V8"));
+            new CarDetailsInput("BMW", "545", "E60", 2004));
         Assert.True(created.Saved);
 
-        await DbInitializer.SeedCarDetailsAsync(_db);
+        using var empty = new MemoryStream(Encoding.UTF8.GetBytes("[]"));
+        await DbInitializer.SeedCarDetailsAsync(_db, empty);
         var listed = await CarDetailsCommands.ListAsync(_db);
-        Assert.Single(listed);
-        Assert.Equal(created.Type!.Id, listed[0].Id);
-        Assert.Equal("E60", listed[0].ModelNumber);
+        Assert.Contains(listed, type => type.Id == created.Type!.Id && type.ModelNumber == "E60");
     }
 
     [Fact]
@@ -85,11 +85,11 @@ public sealed class CarDetailsJsonSeedTests : IAsyncLifetime
     {
         var created = await CarDetailsCommands.CreateAsync(
             _db,
-            new CarDetailsInput("BMW", "545", "E60", 2004, "4.4 V8"));
+            new CarDetailsInput("BMW", "545", "E60", 2004));
         Assert.True(created.Saved);
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("not-json"));
         await DbInitializer.SeedCarDetailsAsync(_db, stream);
-        Assert.Single(await CarDetailsCommands.ListAsync(_db));
+        Assert.Contains(await CarDetailsCommands.ListAsync(_db), type => type.Id == created.Type!.Id);
     }
 }

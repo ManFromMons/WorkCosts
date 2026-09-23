@@ -10,7 +10,7 @@ public sealed record CarDetailsJsonRow(
     string Model,
     string ModelNumber,
     int Year,
-    string EngineType);
+    int? EndYear);
 
 public static class CarDetailsJsonSeed
 {
@@ -89,7 +89,7 @@ public static class CarDetailsJsonSeed
         var changed = false;
         foreach (var row in rows)
         {
-            var typeKey = CarDetailsCommands.NormalizeTypeKey(row.Make, row.ModelNumber, row.Year, row.EngineType);
+            var typeKey = CarDetailsCommands.NormalizeTypeKey(row.Make, row.Model, row.ModelNumber, row.Year);
             var existing = await db.CarDetails.FirstOrDefaultAsync(t => t.Id == row.Id, cancellationToken);
             if (existing is not null)
             {
@@ -97,7 +97,7 @@ public static class CarDetailsJsonSeed
                 existing.Model = row.Model.Trim();
                 existing.ModelNumber = row.ModelNumber.Trim();
                 existing.Year = row.Year;
-                existing.EngineType = row.EngineType.Trim();
+                existing.EndYear = row.EndYear;
                 existing.TypeKey = typeKey;
                 changed = true;
                 continue;
@@ -115,7 +115,7 @@ public static class CarDetailsJsonSeed
                 Model = row.Model.Trim(),
                 ModelNumber = row.ModelNumber.Trim(),
                 Year = row.Year,
-                EngineType = row.EngineType.Trim(),
+                EndYear = row.EndYear,
                 TypeKey = typeKey,
             });
             changed = true;

@@ -7,9 +7,9 @@ public class CarDetails
     public string Model { get; set; } = string.Empty;
     public string ModelNumber { get; set; } = string.Empty;
     public int Year { get; set; }
-    public string EngineType { get; set; } = string.Empty;
+    public int? EndYear { get; set; }
 
-    /// <summary>Uppercase Make + ModelNumber + Year + EngineType. Unique.</summary>
+    /// <summary>Uppercase Make + Model + ModelNumber + Year. Unique.</summary>
     public string TypeKey { get; set; } = string.Empty;
 
     public ICollection<JobCarDetails> JobLinks { get; set; } = new List<JobCarDetails>();

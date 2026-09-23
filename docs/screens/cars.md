@@ -1,6 +1,6 @@
 # Cars
 
-User’s vehicles (nickname, make, model, model-number, engine, VRM, year, VIN, photo). Not work instances. Not car **types** (`docs/screens/car-types.md`).
+User’s vehicles (nickname, make, model, model-number, **engine code**, VRM, year, VIN, photo). Not work instances. Not car **types** (`docs/screens/car-types.md`).
 
 ## Regions (regular)
 
@@ -13,7 +13,7 @@ Compact: **stack**. Add stays a **sheet**. Never host WebView2 in a ContentDialo
 
 ## Behaviour
 
-- All identity fields + image required. VRM unique among active cars. `VehicleOrderJson` optional. Optional **car type** combo (search by make / model-number); does not clear nickname or scalars.
+- All identity fields + image required. Engine field label is **Engine code**. VRM unique among active cars. `VehicleOrderJson` optional. Optional **car type** is an autocomplete box (Add and detail). Query is whitespace-split: `BMW E60` is two terms; each term is a case-insensitive wildcard (contains) against make, model, chassis, and years. Suggestions stay in Make then Model order, capped at 25. Empty text clears the type. Selecting a type does not clear nickname, scalars, or engine. Label is make · model-number · years.
 - **Lookup** next to VIN runs mdecoder when the VIN is set and the car looks BMW (`Make` BMW or VIN `WBA`/`WBS`/`WBY`/`5UX`/`5YM`). Status stays on the sheet; cancel stops polling and does not discard the form. Nickname is never overwritten.
 - Delete is **soft-delete** (`DeletedAt` + `UpdatedAt`); keep row, FKs, and photo file.
 - Unsaved changes: same prompt as Add Product / Jobs.
