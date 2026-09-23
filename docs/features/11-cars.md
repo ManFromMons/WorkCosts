@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/cars.md` (new), `docs/screens/shell.md`, `docs/screens/products.md` (Add Product sheet grammar), `docs/screens/jobs.md` (master/detail grammar), `docs/screens/dialogs.md`
 - **Related code:** `Product` / `ProductAddEditor` / `ProductImagePicker` / `WebCacheStore`, `GarageJob` / `GarageJobIconStore` / `GarageJobCommands`, `WorkJob`, `ItemOfWork` / `ItemOfWorkCommands`, `MainWindow` Stuff group, `WorkCostsDbContext`, `DialogHelper`
 
-Sibling stories: [12-car-details.md](12-car-details.md), [16-car-details-seed.md](16-car-details-seed.md), [13-car-vin-lookup.md](13-car-vin-lookup.md), [14-car-fastcarcheck.md](14-car-fastcarcheck.md), [15-workjob-job-subset.md](15-workjob-job-subset.md), [17-item-of-work-ui.md](17-item-of-work-ui.md). Home rewrite is **not** a story yet.
+Sibling stories: [12-car-details.md](12-car-details.md), [16-car-details-seed.md](16-car-details-seed.md), [13-car-vin-lookup.md](13-car-vin-lookup.md), [14-car-fastcarcheck.md](14-car-fastcarcheck.md), [15-workjob-job-subset.md](15-workjob-job-subset.md), [17-item-of-work-ui.md](17-item-of-work-ui.md), [18-car-image-sources.md](18-car-image-sources.md), [19-car-details-catalogue.md](19-car-details-catalogue.md). Home rewrite is **not** a story yet.
 
 ## Objectives
 
