@@ -1118,7 +1118,7 @@ public sealed partial class CarsPage : Page, IUnsavedChangesSource
             _typePicks.Add(new TypePick
             {
                 Id = type.Id,
-                Label = $"{type.Make} {type.ModelNumber} · {type.Year} · {type.EngineType}",
+                Label = $"{type.Make} {type.ModelNumber} · {type.Year}{(type.EndYear is int end ? "–" + end : "–")}",
             });
         }
 

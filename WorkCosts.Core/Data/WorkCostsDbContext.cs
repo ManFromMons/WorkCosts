@@ -173,7 +173,6 @@ public class WorkCostsDbContext : DbContext
             e.Property(x => x.Make).HasMaxLength(120).IsRequired();
             e.Property(x => x.Model).HasMaxLength(120).IsRequired();
             e.Property(x => x.ModelNumber).HasMaxLength(32).IsRequired();
-            e.Property(x => x.EngineType).HasMaxLength(200).IsRequired();
             e.Property(x => x.TypeKey).HasMaxLength(400).IsRequired();
             e.HasIndex(x => x.TypeKey).IsUnique();
         });

@@ -213,3 +213,4 @@ Project: `WorkCosts.Tests`. Fixtures are **tiny** slices, not the full dump. No 
 5. `CarTypesPage`: remove engine boxes; add optional End year; list years. `CarsPage`: Engine code label and placeholder. Type combo without engine.
 6. Update `docs/data/schema.md`, `docs/screens/car-types.md`, `docs/screens/cars.md` to this contract. Point Seq 12 / 16 at this file for the superseded key.
 7. Do not: call Tiresaddict or Wikidata from `DbInitializer` or the UI; scrape FastCarCheck/mdecoder; invent engines; pay for or commit a paid dump; add a new page; change `Car.EngineType`’s column name; host a browser in a dialog.
+8. Coder: `scripts/Build-CarDetailsSeed.ps1` runs `tools/BuildCarDetailsSeed` (not in `WorkCosts.slnx`). The committed `car-details.json` was built with `-SkipWikidata`; no-parens chassis is the Tiresaddict `model` line. Mapper tests use in-memory rows rather than files under `WorkCosts.Tests/Fixtures/car-details/`.

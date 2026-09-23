@@ -22,7 +22,7 @@ public sealed record CarDetailsInput(
     string Model,
     string ModelNumber,
     int Year,
-    string EngineType);
+    int? EndYear = null);
 
 public enum CarDetailsDeleteResult
 {
@@ -36,13 +36,12 @@ public static class CarDetailsCommands
     public const int MaxMakeLength = 120;
     public const int MaxModelLength = 120;
     public const int MaxModelNumberLength = 32;
-    public const int MaxEngineTypeLength = 200;
     public const int MinModelYear = CarCommands.MinModelYear;
 
     public static int MaxModelYear(DateTimeOffset now) => CarCommands.MaxModelYear(now);
 
-    public static string NormalizeTypeKey(string make, string modelNumber, int year, string engineType) =>
-        $"{make.Trim().ToUpperInvariant()}|{modelNumber.Trim().ToUpperInvariant()}|{year}|{engineType.Trim().ToUpperInvariant()}";
+    public static string NormalizeTypeKey(string make, string model, string modelNumber, int year) =>
+        $"{make.Trim().ToUpperInvariant()}|{model.Trim().ToUpperInvariant()}|{modelNumber.Trim().ToUpperInvariant()}|{year}";
 
     public static async Task<CarDetailsWriteResult> CreateAsync(
         WorkCostsDbContext db,
@@ -57,10 +56,10 @@ public static class CarDetailsCommands
             return invalid;
         }
 
-        var typeKey = NormalizeTypeKey(input.Make, input.ModelNumber, input.Year, input.EngineType);
+        var typeKey = NormalizeTypeKey(input.Make, input.Model, input.ModelNumber, input.Year);
         if (await db.CarDetails.AnyAsync(t => t.TypeKey == typeKey, cancellationToken))
         {
-            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model number, year, and engine already exists.");
+            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model, model number, and year already exists.");
         }
 
         var entity = new CarDetails
@@ -69,7 +68,7 @@ public static class CarDetailsCommands
             Model = input.Model.Trim(),
             ModelNumber = input.ModelNumber.Trim(),
             Year = input.Year,
-            EngineType = input.EngineType.Trim(),
+            EndYear = input.EndYear,
             TypeKey = typeKey,
         };
         db.CarDetails.Add(entity);
@@ -80,7 +79,7 @@ public static class CarDetailsCommands
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
             db.Entry(entity).State = EntityState.Detached;
-            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model number, year, and engine already exists.");
+            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model, model number, and year already exists.");
         }
 
         return new CarDetailsWriteResult(CarDetailsWriteStatus.Saved, null, entity);
@@ -99,7 +98,6 @@ public static class CarDetailsCommands
             .OrderBy(t => t.Make)
             .ThenBy(t => t.ModelNumber)
             .ThenBy(t => t.Year)
-            .ThenBy(t => t.EngineType)
             .ThenBy(t => t.Id)
             .ToListAsync(cancellationToken);
 
@@ -123,17 +121,17 @@ public static class CarDetailsCommands
             return Fail(CarDetailsWriteStatus.NotFound, "This car type no longer exists.");
         }
 
-        var typeKey = NormalizeTypeKey(input.Make, input.ModelNumber, input.Year, input.EngineType);
+        var typeKey = NormalizeTypeKey(input.Make, input.Model, input.ModelNumber, input.Year);
         if (await db.CarDetails.AnyAsync(t => t.TypeKey == typeKey && t.Id != typeId, cancellationToken))
         {
-            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model number, year, and engine already exists.");
+            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model, model number, and year already exists.");
         }
 
         entity.Make = input.Make.Trim();
         entity.Model = input.Model.Trim();
         entity.ModelNumber = input.ModelNumber.Trim();
         entity.Year = input.Year;
-        entity.EngineType = input.EngineType.Trim();
+        entity.EndYear = input.EndYear;
         entity.TypeKey = typeKey;
 
         try
@@ -143,7 +141,7 @@ public static class CarDetailsCommands
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
             await db.Entry(entity).ReloadAsync(cancellationToken);
-            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model number, year, and engine already exists.");
+            return Fail(CarDetailsWriteStatus.DuplicateType, "A car type with this make, model, model number, and year already exists.");
         }
 
         return new CarDetailsWriteResult(CarDetailsWriteStatus.Saved, null, entity);
@@ -264,6 +262,21 @@ public static class CarDetailsCommands
                 $"Model year must be from {MinModelYear} to {MaxModelYear(now)}.");
         }
 
+        if (input.EndYear is int endYear)
+        {
+            if (endYear < MinModelYear || endYear > MaxModelYear(now))
+            {
+                return Fail(
+                    CarDetailsWriteStatus.YearOutOfRange,
+                    $"End year must be from {MinModelYear} to {MaxModelYear(now)}.");
+            }
+
+            if (endYear < input.Year)
+            {
+                return Fail(CarDetailsWriteStatus.YearOutOfRange, "End year must be on or after the start year.");
+            }
+        }
+
         return null;
     }
 
@@ -282,11 +295,6 @@ public static class CarDetailsCommands
         if (IsBlank(input.ModelNumber, MaxModelNumberLength))
         {
             return FieldMessage("Model number", input.ModelNumber, MaxModelNumberLength);
-        }
-
-        if (IsBlank(input.EngineType, MaxEngineTypeLength))
-        {
-            return FieldMessage("Engine type", input.EngineType, MaxEngineTypeLength);
         }
 
         return null;

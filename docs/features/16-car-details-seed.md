@@ -9,7 +9,7 @@
 - **Related screens:** `docs/screens/car-types.md`
 - **Related code:** `CarDetails`, `DbInitializer`, `WorkCostsDbContext`
 
-Seq 12 ships an **empty** `CarDetails` table. This Seq is the **empty loader first**: add `car-details.json` as `[]` plus the reader/`DbInitializer` hook. A later pass fills the file with real types. FastCarCheck ([14-car-fastcarcheck.md](14-car-fastcarcheck.md)) may also create types at runtime. Do not invent a catalogue here.
+Seq 12 ships an **empty** `CarDetails` table. This Seq is the **empty loader first**: add `car-details.json` as `[]` plus the reader/`DbInitializer` hook. Filling the file and dropping type engine is [19-car-details-catalogue.md](19-car-details-catalogue.md). FastCarCheck ([14-car-fastcarcheck.md](14-car-fastcarcheck.md)) may also create types at runtime. Do not invent a catalogue here.
 
 ## Objectives
 

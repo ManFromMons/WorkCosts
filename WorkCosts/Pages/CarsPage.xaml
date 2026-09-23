@@ -142,7 +142,7 @@
                             <TextBox x:Name="DetailMakeBox" Grid.Column="1" Header="Make" MaxLength="120" PlaceholderText="BMW" TextChanged="DetailField_Changed" />
                             <TextBox x:Name="DetailModelBox" Grid.Column="2" Header="Model" MaxLength="120" PlaceholderText="545" TextChanged="DetailField_Changed" />
                             <TextBox x:Name="DetailModelNumberBox" Grid.Row="1" Header="Model number" MaxLength="32" PlaceholderText="E60" TextChanged="DetailField_Changed" />
-                            <TextBox x:Name="DetailEngineBox" Grid.Row="1" Grid.Column="1" Header="Engine type" MaxLength="200" PlaceholderText="4.4 V8" TextChanged="DetailField_Changed" />
+                            <TextBox x:Name="DetailEngineBox" Grid.Row="1" Grid.Column="1" Header="Engine code" MaxLength="200" PlaceholderText="N62" TextChanged="DetailField_Changed" />
                             <TextBox x:Name="DetailVrmBox" Grid.Row="1" Grid.Column="2" Header="Registration" MaxLength="16" PlaceholderText="AB12 CDE" TextChanged="DetailField_Changed" />
                             <TextBox x:Name="DetailYearBox" Grid.Row="2" Header="Model year" MaxLength="4" PlaceholderText="2004" TextChanged="DetailField_Changed" />
                             <Grid Grid.Row="2" Grid.Column="1" ColumnSpacing="8">
@@ -243,7 +243,7 @@
                     <TextBox x:Name="AddMakeBox" Header="Make" MaxLength="120" PlaceholderText="BMW" TextChanged="AddField_Changed" />
                     <TextBox x:Name="AddModelBox" Header="Model" MaxLength="120" PlaceholderText="545" TextChanged="AddField_Changed" />
                     <TextBox x:Name="AddModelNumberBox" Header="Model number" MaxLength="32" PlaceholderText="E60" TextChanged="AddField_Changed" />
-                    <TextBox x:Name="AddEngineBox" Header="Engine type" MaxLength="200" PlaceholderText="4.4 V8" TextChanged="AddField_Changed" />
+                    <TextBox x:Name="AddEngineBox" Header="Engine code" MaxLength="200" PlaceholderText="N62" TextChanged="AddField_Changed" />
                     <TextBox x:Name="AddVrmBox" Header="Registration" MaxLength="16" PlaceholderText="AB12 CDE" TextChanged="AddField_Changed" />
                     <TextBox x:Name="AddYearBox" Header="Model year" MaxLength="4" PlaceholderText="2004" TextChanged="AddField_Changed" />
                     <Grid ColumnSpacing="8">

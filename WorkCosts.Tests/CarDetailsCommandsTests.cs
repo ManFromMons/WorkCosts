@@ -49,7 +49,7 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
         Assert.Equal("545", created.Type.Model);
         Assert.Equal("E60", created.Type.ModelNumber);
         Assert.Equal(2004, created.Type.Year);
-        Assert.Equal("4.4 V8", created.Type.EngineType);
+        Assert.Null(created.Type.EndYear);
 
         var listed = await CarDetailsCommands.ListAsync(_db);
         Assert.Contains(listed, type => type.Id == created.Type.Id);
@@ -71,17 +71,49 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task CarDetailsCommands_RejectsDuplicateMakeModelNumberYearEngine()
+    public async Task CarDetailsCommands_RejectsDuplicateMakeModelModelNumberYear()
     {
         Assert.True((await CarDetailsCommands.CreateAsync(_db, Sample())).Saved);
+        var before = await _db.CarDetails.CountAsync();
         var duplicate = await CarDetailsCommands.CreateAsync(
             _db,
-            Sample() with { Model = "535", Make = "bmw", ModelNumber = "e60", EngineType = "4.4 v8" });
+            Sample() with { Make = "bmw", Model = "545", ModelNumber = "e60" });
         Assert.Equal(CarDetailsWriteStatus.DuplicateType, duplicate.Status);
-        Assert.Equal(1, await _db.CarDetails.CountAsync());
+        Assert.Equal(before, await _db.CarDetails.CountAsync());
 
-        var otherEngine = await CarDetailsCommands.CreateAsync(_db, Sample() with { EngineType = "3.0 I6" });
-        Assert.True(otherEngine.Saved);
+        var otherModel = await CarDetailsCommands.CreateAsync(_db, Sample() with { Model = "530" });
+        Assert.True(otherModel.Saved);
+    }
+
+    [Fact]
+    public async Task CarDetailsCommands_AllowsMissingEndYear()
+    {
+        var created = await CarDetailsCommands.CreateAsync(_db, Sample() with { EndYear = null });
+        Assert.True(created.Saved);
+        Assert.Null(created.Type!.EndYear);
+    }
+
+    [Fact]
+    public async Task CarDetailsCommands_RejectsEndYearBeforeYear()
+    {
+        var result = await CarDetailsCommands.CreateAsync(_db, Sample() with { EndYear = 2003 });
+        Assert.Equal(CarDetailsWriteStatus.YearOutOfRange, result.Status);
+    }
+
+    [Fact]
+    public async Task CarDetailsCommands_Create_DoesNotRequireEngine()
+    {
+        var created = await CarDetailsCommands.CreateAsync(_db, new CarDetailsInput("BMW", "545", "E60", 2004));
+        Assert.True(created.Saved);
+        Assert.Null(created.Type!.EndYear);
+    }
+
+    [Fact]
+    public void NormalizeTypeKey_DoesNotIncludeEngine()
+    {
+        Assert.Equal(
+            "BMW|5 SERIES (E60)|E60|2004",
+            CarDetailsCommands.NormalizeTypeKey("bmw", "5 series (E60)", "e60", 2004));
     }
 
     [Fact]
@@ -101,12 +133,6 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
         Assert.True(await CarDetailsCommands.ReplaceJobCarDetailsAsync(_db, job.Id, [type.Id]));
         Assert.Equal(CarDetailsDeleteResult.InUse, await CarDetailsCommands.TryDeleteAsync(_db, type.Id));
         Assert.NotNull(await CarDetailsCommands.GetAsync(_db, type.Id));
-    }
-
-    [Fact]
-    public async Task DbInitializer_DoesNotSeedCarDetails()
-    {
-        Assert.Empty(await _db.CarDetails.ToListAsync());
     }
 
     [Fact]
@@ -151,7 +177,7 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
     public async Task JobCarDetails_Replace_DedupesAndOrders()
     {
         var first = (await CarDetailsCommands.CreateAsync(_db, Sample())).Type!;
-        var second = (await CarDetailsCommands.CreateAsync(_db, Sample() with { EngineType = "3.0 I6" })).Type!;
+        var second = (await CarDetailsCommands.CreateAsync(_db, Sample() with { Model = "530" })).Type!;
         var job = await _db.Jobs.AsNoTracking().FirstAsync();
 
         Assert.False(await CarDetailsCommands.ReplaceJobCarDetailsAsync(_db, Guid.NewGuid(), [first.Id]));
@@ -191,7 +217,7 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
             setCarId: true));
         Assert.Equal(type.Id, (await GarageJobCommands.GetByIdAsync(_db, garageJob.Id))!.CarDetailsId);
 
-        var later = (await CarDetailsCommands.CreateAsync(_db, Sample() with { EngineType = "3.0 I6" })).Type!;
+        var later = (await CarDetailsCommands.CreateAsync(_db, Sample() with { Model = "530" })).Type!;
         var moved = await CarCommands.UpdateAsync(
             _db,
             _root,
@@ -234,7 +260,7 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
     public async Task ItemOfWork_Snapshot_DoesNotFollowLaterCarTypeChange()
     {
         var type = (await CarDetailsCommands.CreateAsync(_db, Sample())).Type!;
-        var later = (await CarDetailsCommands.CreateAsync(_db, Sample() with { EngineType = "3.0 I6" })).Type!;
+        var later = (await CarDetailsCommands.CreateAsync(_db, Sample() with { Model = "530" })).Type!;
         var car = await CreateCarAsync(type.Id);
         var garageJob = await GarageJobCommands.CreateAsync(_db, "Service");
         var item = await ItemOfWorkCommands.CreateAsync(_db, garageJob.Id, DateTimeOffset.Now, 1200, car.Id);
@@ -265,7 +291,7 @@ public sealed class CarDetailsCommandsTests : IAsyncLifetime
     }
 
     private static CarDetailsInput Sample() =>
-        new("BMW", "545", "E60", 2004, "4.4 V8");
+        new("BMW", "545", "E60", 2004);
 
     private static CarInput SampleCar() =>
         new("the daily", "BMW", "545", "E60", "4.4 V8", "AB12 CDE", 2004, "WBA12345678901234");

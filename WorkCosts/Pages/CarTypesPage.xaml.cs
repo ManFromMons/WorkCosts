@@ -111,7 +111,7 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
         {
             Id = type.Id,
             Title = $"{type.Make} {type.Model}",
-            Detail = $"{type.Make} · {type.ModelNumber} · {type.Year} · {type.EngineType}",
+            Detail = $"{type.Make} · {type.ModelNumber} · {FormatYears(type.Year, type.EndYear)}",
         }));
 
         _suppressSelection = true;
@@ -225,7 +225,7 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
         DetailModelBox.Text = type.Model;
         DetailModelNumberBox.Text = type.ModelNumber;
         DetailYearBox.Text = type.Year.ToString(CultureInfo.InvariantCulture);
-        DetailEngineBox.Text = type.EngineType;
+        DetailEndYearBox.Text = type.EndYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty;
         _suppressFields = false;
         SetStatus(DetailStatus, null);
         UpdateDetailSave();
@@ -322,7 +322,7 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        if (!TryRead(DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailYearBox, DetailEngineBox, out var input, out var error))
+        if (!TryRead(DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailYearBox, DetailEndYearBox, out var input, out var error))
         {
             SetStatus(DetailStatus, error);
             return false;
@@ -355,7 +355,7 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        if (!TryRead(AddMakeBox, AddModelBox, AddModelNumberBox, AddYearBox, AddEngineBox, out var input, out var error))
+        if (!TryRead(AddMakeBox, AddModelBox, AddModelNumberBox, AddYearBox, AddEndYearBox, out var input, out var error))
         {
             SetStatus(AddStatus, error);
             return false;
@@ -430,7 +430,7 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
         AddModelBox.Text = string.Empty;
         AddModelNumberBox.Text = string.Empty;
         AddYearBox.Text = string.Empty;
-        AddEngineBox.Text = string.Empty;
+        AddEndYearBox.Text = string.Empty;
         SetStatus(AddStatus, null);
         UpdateAddSave();
     }
@@ -440,7 +440,7 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
         || HasText(AddModelBox)
         || HasText(AddModelNumberBox)
         || HasText(AddYearBox)
-        || HasText(AddEngineBox);
+        || HasText(AddEndYearBox);
 
     private bool IsDetailDirty()
     {
@@ -453,33 +453,32 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
             || DetailModelBox.Text.Trim() != _loaded.Model
             || DetailModelNumberBox.Text.Trim() != _loaded.ModelNumber
             || DetailYearBox.Text.Trim() != _loaded.Year.ToString(CultureInfo.InvariantCulture)
-            || DetailEngineBox.Text.Trim() != _loaded.EngineType;
+            || DetailEndYearBox.Text.Trim() != (_loaded.EndYear?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
     }
 
     private void UpdateDetailSave() =>
         DetailSaveButton.IsEnabled = !_busy && _loaded is not null
-            && TryRead(DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailYearBox, DetailEngineBox, out _, out _);
+            && TryRead(DetailMakeBox, DetailModelBox, DetailModelNumberBox, DetailYearBox, DetailEndYearBox, out _, out _);
 
     private void UpdateAddSave() =>
         AddSaveButton.IsEnabled = !_busy
-            && TryRead(AddMakeBox, AddModelBox, AddModelNumberBox, AddYearBox, AddEngineBox, out _, out _);
+            && TryRead(AddMakeBox, AddModelBox, AddModelNumberBox, AddYearBox, AddEndYearBox, out _, out _);
 
     private static bool TryRead(
         TextBox make,
         TextBox model,
         TextBox modelNumber,
         TextBox yearBox,
-        TextBox engine,
+        TextBox endYearBox,
         out CarDetailsInput input,
         out string? error)
     {
-        input = new CarDetailsInput(make.Text, model.Text, modelNumber.Text, 0, engine.Text);
+        input = new CarDetailsInput(make.Text, model.Text, modelNumber.Text, 0);
         if (string.IsNullOrWhiteSpace(make.Text)
             || string.IsNullOrWhiteSpace(model.Text)
-            || string.IsNullOrWhiteSpace(modelNumber.Text)
-            || string.IsNullOrWhiteSpace(engine.Text))
+            || string.IsNullOrWhiteSpace(modelNumber.Text))
         {
-            error = "Fill in every field.";
+            error = "Fill in make, model, model number, and year.";
             return false;
         }
 
@@ -489,16 +488,38 @@ public sealed partial class CarTypesPage : Page, IUnsavedChangesSource
             return false;
         }
 
-        input = input with { Year = year };
+        int? endYear = null;
+        if (!string.IsNullOrWhiteSpace(endYearBox.Text)
+            && !int.TryParse(endYearBox.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var parsedEnd))
+        {
+            error = "Enter an end year, or leave it empty.";
+            return false;
+        }
+        else if (!string.IsNullOrWhiteSpace(endYearBox.Text))
+        {
+            endYear = int.Parse(endYearBox.Text.Trim(), NumberStyles.None, CultureInfo.InvariantCulture);
+        }
+
+        input = input with { Year = year, EndYear = endYear };
         if (year < CarDetailsCommands.MinModelYear || year > CarDetailsCommands.MaxModelYear(DateTimeOffset.Now))
         {
             error = $"Model year must be from {CarDetailsCommands.MinModelYear} to {CarDetailsCommands.MaxModelYear(DateTimeOffset.Now)}.";
             return false;
         }
 
+        if (endYear is int end
+            && (end < CarDetailsCommands.MinModelYear || end > CarDetailsCommands.MaxModelYear(DateTimeOffset.Now) || end < year))
+        {
+            error = "End year must be on or after the start year and in range.";
+            return false;
+        }
+
         error = null;
         return true;
     }
+
+    private static string FormatYears(int year, int? endYear) =>
+        endYear is int end ? $"{year}–{end}" : $"{year}–";
 
     private void SetBusy(bool busy)
     {
