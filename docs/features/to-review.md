@@ -167,9 +167,9 @@ _(none)_
 
 - **Feature:** [docs/features/16-car-details-seed.md](16-car-details-seed.md)
 - **Seq:** 16
-- **Status:** ready-for-review
+- **Status:** done
 - **Change set:** branch `feature/16-car-details-seed-Car-details-seed` — [PR #19](https://github.com/ManFromMons/WorkCosts/pull/19)
-- **Last note:** Squash PR https://github.com/ManFromMons/WorkCosts/pull/19 opened. Do not merge until this heading is done.
+- **Last note:** Feature file Status is `done`. PR #19 is ready.
 
 ### Work summary
 
@@ -188,7 +188,7 @@ _(none)_
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 ## 17-item-of-work-ui
 
 - **Feature:** [docs/features/17-item-of-work-ui.md](17-item-of-work-ui.md)
