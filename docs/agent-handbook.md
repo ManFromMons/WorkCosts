@@ -17,7 +17,7 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | Adding a supplier host | `/start-add-source` + a URL ([AGENTS.md](../AGENTS.md), [README.md](../README.md)) | Confirm Name/price on **≥3** pages ([confirm-samples.md](../.cursor/skills/add-product-source/confirm-samples.md)); story then [parsing/adding-a-source.md](parsing/adding-a-source.md) |
 | Implementing a ready story | `@start-implement`, Seq via `feature-queue`, or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
 | Rebuilding GNOME on Linux | `/start-port gnome` | [platforms/gnome-build-order.md](platforms/gnome-build-order.md); `scripts/Get-NextPortSlice.ps1` |
-| Seeing the Seq board | Skill `feature-queue` **or** the agent TUI | `scripts/Get-FeatureQueue.ps1` / `scripts/Start-AgentTui.ps1` |
+| Seeing the Seq board | Skill `feature-queue` **or** the agent TUI (GTK board spec: [agent-ops/agent-board.md](agent-ops/agent-board.md)) | `scripts/Get-FeatureQueue.ps1` / `scripts/Start-AgentTui.ps1` |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
 | Recording questions / review | Skill `update-to-review` **or** the TUI inbox panel | `git show origin/main:docs/features/to-review.md` |
 
@@ -226,6 +226,8 @@ dotnet build src/linux/WillIDIY.Gnome.slnx
 ---
 
 ## Agent ops TUI
+
+**Next board (not implemented yet):** [agent-ops/agent-board.md](agent-ops/agent-board.md) — unpackaged GTK4 + libadwaita (Gir.Core, C#, Linux and Windows), Cursor CLI only. Keep this Ink TUI until that story ships.
 
 Developer tooling (Ink + `@cursor/sdk`), not a Will I DIY? Seq story. **Not** on `WorkCosts.slnx`. Package: `tools/agent-tui/`. Inbox parse/patch tests: `npm test` in that folder (no live SDK in CI).
 
