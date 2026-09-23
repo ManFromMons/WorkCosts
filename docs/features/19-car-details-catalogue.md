@@ -3,8 +3,8 @@
 - **Id:** `docs/features/19-car-details-catalogue.md`
 - **Seq:** 19
 - **Depends-on:** `16-car-details-seed`
-- **Status:** ready-for-agent
-- **PR:** none
+- **Status:** done
+- **PR:** https://github.com/ManFromMons/WorkCosts/pull/20
 - **Windows:** Core + WinUI (Car types page and Cars engine label; no new destination)
 - **Related screens:** `docs/screens/car-types.md`, `docs/screens/cars.md`
 - **Related code:** `CarDetails`, `CarDetailsCommands`, `CarDetailsJsonSeed`, `CarDetailsJsonRow`, `DbInitializer`, `Car`, `CarCommands`, `CarTypesPage`, `CarsPage`
