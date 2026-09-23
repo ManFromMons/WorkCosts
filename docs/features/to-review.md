@@ -195,7 +195,7 @@ _(none)_
 - **Seq:** 19
 - **Status:** done
 - **Change set:** branch `feature/19-car-details-catalogue-Car-details-catalogue` - [PR #20](https://github.com/ManFromMons/WorkCosts/pull/20)
-- **Last note:** Type autocomplete and Make/Model sort accepted. PR #20 updated. Do not squash-merge until asked.
+- **Last note:** Squash-merged to `main` as `e97565c` (#20). Feature file Status is `done`. Feature branch deleted.
 
 ### Work summary
 
