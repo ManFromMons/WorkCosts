@@ -193,9 +193,9 @@ _(none)_
 
 - **Feature:** [docs/features/19-car-details-catalogue.md](19-car-details-catalogue.md)
 - **Seq:** 19
-- **Status:** ready-for-review
-- **Change set:** branch ``feature/19-car-details-catalogue-Car-details-catalogue``
-- **Last note:** Named tests passed (226 total). WinUI build succeeded. Squash PR https://github.com/ManFromMons/WorkCosts/pull/20 opened. Do not merge until this heading is done.
+- **Status:** done
+- **Change set:** branch `feature/19-car-details-catalogue-Car-details-catalogue` - [PR #20](https://github.com/ManFromMons/WorkCosts/pull/20)
+- **Last note:** Deviations accepted. Feature file Status next. Do not squash-merge until asked.
 
 ### Work summary
 
@@ -210,14 +210,14 @@ _(none)_
 
 ### Deviations to scan
 
-- [ ] ``scripts/Build-CarDetailsSeed.ps1`` wraps ``tools/BuildCarDetailsSeed`` (not in ``WorkCosts.slnx``).
-- [ ] Committed ``car-details.json`` was generated with ``-SkipWikidata``; no-parens chassis is the Tiresaddict model line.
-- [ ] Mapper tests use in-memory Tiresaddict rows instead of files under ``WorkCosts.Tests/Fixtures/car-details/``.
+- [x] ``scripts/Build-CarDetailsSeed.ps1`` wraps ``tools/BuildCarDetailsSeed`` (not in ``WorkCosts.slnx``).
+- [x] Committed ``car-details.json`` was generated with ``-SkipWikidata``; no-parens chassis is the Tiresaddict model line.
+- [x] Mapper tests use in-memory Tiresaddict rows instead of files under ``WorkCosts.Tests/Fixtures/car-details/``.
 
 ### Verify
 
 - [x] Tests from the feature file passed
-- [ ] Deviations accepted
+- [x] Deviations accepted
 ## 17-item-of-work-ui
 
 - **Feature:** [docs/features/17-item-of-work-ui.md](17-item-of-work-ui.md)
