@@ -16,7 +16,7 @@ Coder: when development is finished, set this heading **Status** to `ready-for-r
 
 Copy a new heading from `.cursor/skills/implement-feature/to-review-entry.md`. New stories use `## <seq>-<kebab>` (example `## 11-cars`) and a **Seq** field that matches `docs/features/<seq>-<kebab>.md`.
 
-Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in-progress`, `blocked`, `resume`, `ready-for-review`) live only here.
+Feature file **Status** stays `draft | ready-for-agent | done`. Work states (`in-progress`, `blocked`, `ready-for-review`, `ready-to-resume`, `ready-to-complete`, `done`) live only here. Old token `resume` means `ready-to-resume`.
 
 ## Entries
 
@@ -453,3 +453,33 @@ _(none)_
 
 - [x] Tests from the feature file passed
 - [x] Deviations accepted
+
+## agent-board
+
+- **Feature:** [docs/agent-ops/agent-board.md](../agent-ops/agent-board.md)
+- **Status:** ready-for-review
+- **Change set:** branch `feature/agent-board-Agent-board`
+- **Last note:** GTK Agent board implementation ready for review.
+
+### Work summary
+
+- Unpackaged GTK4 + libadwaita (Gir.Core, net9.0) Agent board under `tools/agent-board/` (`AgentBoard.slnx`, not on `WorkCosts.slnx`). Linux and Windows; start via `scripts/Start-AgentBoard.sh` / `.ps1`. Ink TUI kept.
+- Queue is a Seq dependency tree (not inverted). Working is the live pipeline. Next is a header GTK Button (Inbox also **r**). Story is read-only. Chat is Cursor CLI type-and-send: `agent -p --force --resume <id> --workspace <root> --output-format text`. Always `--force`. Same worktree.
+- Inbox overlay parses `## 11-cars`, per-question answers, Accept/Reject-with-reason, auto-status only (`blocked` / `ready-to-resume` / `ready-to-complete`). Close lands only `docs/features/to-review.md` on `main`. PR URL from inbox text when present.
+- Invoke-only skills `complete-review` and `resume-implementation`. Bash twins for land/merge/queue. `Test-GitBlob` no longer uses `cmd.exe`. GNOME product-port slices and `job-concept` omitted from the board.
+
+### Questions
+
+_(none)_
+
+### Deviations to scan
+
+- [ ] Split `AgentBoard.Core` (logic + xUnit) from the GTK project so tests do not load GTK.
+- [ ] Chat pane inserts decoded text with `InsertAtCursor`; SGR colours are parsed in Core (`AnsiDecoder`) but GTK tags/Pango markup are not applied in the widget yet.
+- [ ] `scripts/get-feature-queue.sh` is a thinner listing than `Get-FeatureQueue.ps1`; the board catalogue is C# (`QueueMembership`) and is what the tests lock.
+
+### Verify
+
+- [x] Tests from the feature file passed
+- [ ] Deviations accepted
+
