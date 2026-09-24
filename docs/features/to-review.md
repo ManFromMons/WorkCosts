@@ -458,7 +458,7 @@ _(none)_
 
 - **Feature:** [docs/agent-ops/agent-board.md](../agent-ops/agent-board.md)
 - **Status:** ready-for-review
-- **Change set:** branch `feature/agent-board-Agent-board`
+- **Change set:** branch `feature/agent-board-Agent-board` — [https://github.com/ManFromMons/WorkCosts/pull/21](https://github.com/ManFromMons/WorkCosts/pull/21)
 - **Last note:** GTK Agent board implementation ready for review.
 
 ### Work summary
