@@ -67,6 +67,12 @@ tools/agent-tui/dist/
 tools/agent-tui/.session-id
 tools/agent-tui/.plan-session.json
 
+# Agent board (GTK)
+tools/agent-board/.sessions.json
+tools/agent-board/**/bin/
+tools/agent-board/**/obj/
+
+
 # Local database files
 *.db
 *.db-shm

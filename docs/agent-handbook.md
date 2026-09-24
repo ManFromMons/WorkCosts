@@ -17,7 +17,7 @@ Canonical CLI docs: [cursor.com/docs/cli](https://cursor.com/docs/cli/overview) 
 | Adding a supplier host | `/start-add-source` + a URL ([AGENTS.md](../AGENTS.md), [README.md](../README.md)) | Confirm Name/price on **≥3** pages ([confirm-samples.md](../.cursor/skills/add-product-source/confirm-samples.md)); story then [parsing/adding-a-source.md](parsing/adding-a-source.md) |
 | Implementing a ready story | `@start-implement`, Seq via `feature-queue`, or skill `pickup-next-feature` | Feature file + [layout-grammar.md](layout-grammar.md) + named screens |
 | Rebuilding GNOME on Linux | `/start-port gnome` | [platforms/gnome-build-order.md](platforms/gnome-build-order.md); `scripts/Get-NextPortSlice.ps1` |
-| Seeing the Seq board | Skill `feature-queue` **or** the agent TUI (GTK board spec: [agent-ops/agent-board.md](agent-ops/agent-board.md)) | `scripts/Get-FeatureQueue.ps1` / `scripts/Start-AgentTui.ps1` |
+| Seeing the Seq board | GTK **Agent board** (preferred) or skill `feature-queue` / Ink TUI | `scripts/Start-AgentBoard.sh` · `scripts/Start-AgentBoard.ps1` · [agent-ops/agent-board.md](agent-ops/agent-board.md) |
 | Landing specs onto `main` | Skill `merge-planning` | `scripts/Merge-PlanningToMain.ps1` |
 | Recording questions / review | Skill `update-to-review` **or** the TUI inbox panel | `git show origin/main:docs/features/to-review.md` |
 
@@ -125,7 +125,7 @@ One file per surface. Change the matching file when you change that UI.
 
 **Feature file Status** (on the story): `draft` → `ready-for-agent` → `done`.
 
-**Work states** (inbox on `main` only): `in-progress`, `blocked`, `resume`, `ready-for-review`. Never put those on the feature file. When development is finished, the coder sets **Status** `ready-for-review` with a **Work summary**, **Questions**, and **Deviations**, lands that heading on `main`, and opens the squash PR. The human reviews the inbox plus the PR, answers on `main`, then the agent **recommences from review**. After **Status** `done`, add delivery notes; the human squash-merges.
+**Work states** (inbox on `main` only): `in-progress`, `blocked`, `ready-for-review`, `ready-to-resume`, `ready-to-complete`, `done`. Never put those on the feature file. Old inbox token `resume` means **`ready-to-resume`**. When development is finished, the coder sets **Status** `ready-for-review` with a **Work summary**, **Questions**, and **Deviations**, lands that heading on `main`, and opens the squash PR. The human reviews the inbox plus the PR, answers on `main`, then the agent **recommences from review**. After Verify + accepted deviations the heading is **`ready-to-complete`**; **`/complete-review` Continue** (after GitHub squash-merge) sets **`done`**. Then add delivery notes; the human squash-merges. The Agent board never squash-merges.
 
 **Queue:** integer **Seq** (never reuse) + **Depends-on** (kebab ids or `none`). Tree + start-by-Seq: skill `feature-queue` / `scripts/Get-FeatureQueue.ps1` (working tree overlay on `origin/main`). Pickup: lowest Seq that is `ready-for-agent` whose dependencies are `done`. Script: `scripts/Get-NextReadyFeature.ps1` (reads **`origin/main`**, not Planning).
 
@@ -159,8 +159,10 @@ All project skills live under `.cursor/skills/<name>/SKILL.md`. Folder name **mu
 | `add-product-source` | Yes | Discover HttpClient vs Chromium, fixture, failing tests, detector/parser/fetch. Same inbox/PR rules. |
 | `update-to-review` | Yes | Land **only** `docs/features/to-review.md` on `main` via `Update-ToReviewOnMain.ps1`. Handover package: work summary, questions, deviations. |
 | `merge-planning` | Yes | Rebase/squash Planning onto main, fast-forward, push both. Preserves to-review on main. |
+| `complete-review` | **No** | Close out `ready-to-complete` after GitHub squash-merge, or send back to `ready-for-review`. Does **not** squash-merge. |
+| `resume-implementation` | **No** | Attach the existing implement session and recommence from review (`ready-to-resume`). |
 
-**Invoke-only** skills (`start-implement`, `start-add-source`, `start-port`) are never applied from ambient chat. You must type `/start-implement`, `/start-add-source`, or `/start-port` (editor or CLI).
+**Invoke-only** skills (`start-implement`, `start-add-source`, `start-port`, `complete-review`, `resume-implementation`) are never applied from ambient chat. You must type the slash name (editor or CLI).
 
 Templates next to skills (agents read them when the skill says so):
 
@@ -191,6 +193,8 @@ powershell -File scripts/Get-FeatureQueue.ps1
 powershell -File scripts/Get-FeatureQueue.ps1 -Seq 5
 
 powershell -File scripts/Start-AgentTui.ps1
+powershell -File scripts/Start-AgentBoard.ps1
+bash scripts/Start-AgentBoard.sh
 
 pwsh -File scripts/Get-NextPortSlice.ps1
 pwsh -File scripts/Get-NextPortSlice.ps1 -List
@@ -207,6 +211,7 @@ VS Code / Cursor task labels: `merge-planning`, `update-to-review`, `next-ready-
 | `Get-FeatureQueue.ps1` | Prints the Seq dependency tree (working tree overlay). `-Seq N` prints `KEBAB` / `STARTABLE`. Fetch only. |
 | `Get-NextPortSlice.ps1` | Prints next GNOME slice id, `PORT_CAUGHT_UP`, `PORT_WAITING_ON_WINDOWS:<kebab>`, or `PLAYBOOK_MISSING`. `-List` / `-Slice`. Reads `origin/main`. |
 | `Start-AgentTui.ps1` | Lazygit-style TUI: Seq queue, `origin/main` to-review, Cursor SDK chat. Not on `WorkCosts.slnx`. |
+| `Start-AgentBoard.ps1` / `Start-AgentBoard.sh` | GTK Agent board. `dotnet test tools/agent-board/AgentBoard.Tests/AgentBoard.Tests.csproj`. |
 
 Build/test (any branch, for product code):
 
@@ -225,11 +230,24 @@ dotnet build src/linux/WillIDIY.Gnome.slnx
 
 ---
 
+## Agent board (GTK)
+
+Preferred Seq board: unpackaged **GTK4 + libadwaita** (Gir.Core, C#, Linux and Windows). Spec: [agent-ops/agent-board.md](agent-ops/agent-board.md). Solution: `tools/agent-board/AgentBoard.slnx` (not on `WorkCosts.slnx`). Agents are the Cursor CLI only (`agent -p --force --resume <id> --workspace <root>`). Keep `tools/agent-tui` until a later cutover.
+
+```bash
+bash scripts/Start-AgentBoard.sh
+dotnet test tools/agent-board/AgentBoard.Tests/AgentBoard.Tests.csproj --settings .runsettings
+```
+
+Windows: `powershell -File scripts/Start-AgentBoard.ps1` after GTK4 + libadwaita are on PATH (MSYS2). Missing GTK: the start script prints the install hint.
+
+**Next** is a header button (also **r** for Inbox). Queue is a Seq tree (not inverted). Working is the live pipeline. Story is read-only. Chat is type-and-send. Inbox is an overlay; close lands only `docs/features/to-review.md` on `main`. **q** detaches. **m** is the only key blocked by a dirty tree.
+
+GNOME **product-port** slices (`docs/platforms/gnome-build-order.md`) are not Queue rows. `/start-port gnome` stays the GNOME track.
+
 ## Agent ops TUI
 
-**Next board (not implemented yet):** [agent-ops/agent-board.md](agent-ops/agent-board.md) — unpackaged GTK4 + libadwaita (Gir.Core, C#, Linux and Windows), Cursor CLI only. Keep this Ink TUI until that story ships.
-
-Developer tooling (Ink + `@cursor/sdk`), not a Will I DIY? Seq story. **Not** on `WorkCosts.slnx`. Package: `tools/agent-tui/`. Inbox parse/patch tests: `npm test` in that folder (no live SDK in CI).
+Ink + `@cursor/sdk` board, still in-tree. **Not** on `WorkCosts.slnx`. Package: `tools/agent-tui/`. Inbox parse/patch tests: `npm test` in that folder (no live SDK in CI).
 
 ```powershell
 powershell -File scripts/Start-AgentTui.ps1

@@ -49,8 +49,12 @@ function Test-GitRef {
 
 function Test-GitBlob {
     param([Parameter(Mandatory)][string] $RevPath)
-    cmd.exe /c "git cat-file -e `"$RevPath`" 1>nul 2>nul" | Out-Null
+    git cat-file -e $RevPath 1>$null 2>$null
     return $LASTEXITCODE -eq 0
+}
+
+if ([string]::IsNullOrWhiteSpace($env:TEMP)) {
+    $env:TEMP = if ($env:TMPDIR) { $env:TMPDIR } else { '/tmp' }
 }
 
 $repoRoot = Get-GitText -GitArgs @('rev-parse', '--show-toplevel')

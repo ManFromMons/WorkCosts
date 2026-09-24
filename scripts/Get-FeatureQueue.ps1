@@ -128,7 +128,11 @@ function Get-InboxStatuses {
         $kebab = ($line -split '\s')[0].Trim()
         $status = Get-HeaderValue $block 'Status'
         if ($status) {
-            $map[$kebab] = ($status -split '\s')[0]
+            $token = ($status -split '\s')[0]
+            if ($token -eq 'resume') {
+                $token = 'ready-to-resume'
+            }
+            $map[$kebab] = $token
         }
     }
     return $map

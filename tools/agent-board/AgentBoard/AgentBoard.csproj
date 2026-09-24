@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>AgentBoard.GtkApp</RootNamespace>
+    <AssemblyName>AgentBoard</AssemblyName>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="GirCore.Adw-1" Version="0.6.3" />
+    <PackageReference Include="GirCore.Gtk-4.0" Version="0.6.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AgentBoard.Core\AgentBoard.Core.csproj" />
+  </ItemGroup>
+</Project>
